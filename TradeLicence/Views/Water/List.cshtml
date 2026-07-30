@@ -1,0 +1,77 @@
+@model IEnumerable<WaterConnection.Models.AddNewWaterConnection>
+
+@{
+    ViewData["Title"] = "View Applications";
+}
+
+<link rel="stylesheet" href="~/css/watercss/wc-list.css" />
+
+<div class="wl-page">
+    <div class="wl-shell">
+
+        <div class="wl-header">
+            <div>
+                <p class="wl-eyebrow">Puducherry Water Supply &amp; Sewerage</p>
+                <h2 class="wl-title">Water Connection Applications</h2>
+            </div>
+            <div class="wl-count"><strong>@Model.Count()</strong> applications</div>
+        </div>
+
+        <div class="wl-card">
+            <div class="wl-table-wrap">
+                <table class="wl-table">
+                    <thead>
+                        <tr>
+                            <th>Application ID</th>
+                            <th>Name</th>
+                            <th>Phone Number</th>
+                            <th>Email</th>
+                            <th>Purpose</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="wl-appid">@item.ApplicationId</td>
+                                <td class="wl-name">@item.Name</td>
+                                <td class="wl-muted">@item.PhoneNumber</td>
+                                <td class="wl-muted">@item.Email</td>
+                                <td><span class="wl-purpose">@item.Purpose</span></td>
+                                <td class="wl-muted">@item.CreatedDate.ToString("dd-MM-yyyy")</td>
+                                <td>
+                                    <div class="wl-actions">
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.ApplicationId"
+                                           class="wl-btn wl-btn-view">
+                                            View
+                                        </a>
+
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.ApplicationId"
+                                           class="wl-btn wl-btn-delete js-confirm-delete">
+                                            Delete
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                @if (!Model.Any())
+                {
+                    <div class="wl-empty">No applications submitted yet.</div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="~/js/waterjs/wc-list.js"></script>
+}
