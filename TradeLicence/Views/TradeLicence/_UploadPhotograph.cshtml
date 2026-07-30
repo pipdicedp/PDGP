@@ -1,0 +1,100 @@
+﻿    <fieldset class="tl-section">
+        <legend>Upload Photograph</legend>
+
+        <div class="row">
+
+            <!-- Applicant Photo -->
+            <div class="col-md-6">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-light">
+                        <strong>Applicant Photograph</strong>
+                    </div>
+
+                    <div class="card-body text-center">
+
+                        <img id="ApplicantPhotoPreview"
+                         src="~/images/no-image.jpg"
+                             alt="Applicant Photo"
+                             style="width:180px;height:180px;border:1px solid #ddd;padding:5px;object-fit:cover;" />
+
+                        <div class="mt-3">
+
+                            <input type="file"
+                                   id="ApplicantPhoto"
+                                   name="ApplicantPhoto"
+                                   class="form-control"
+                                   accept=".jpg,.jpeg,.png" />
+
+                        </div>
+
+                        <small class="text-muted">
+                            JPG, JPEG, PNG only
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Partner Photo -->
+            <div class="col-md-6">
+
+                <div class="card shadow-sm">
+
+                    <div class="card-header bg-light">
+                        <strong>Partner Photograph</strong>
+                    </div>
+
+                    <div class="card-body text-center">
+
+                        <img id="PartnerPhotoPreview"
+                             src="~/images/no-image.jpg"
+                             alt="Partner Photo"
+                             style="width:180px;height:180px;border:1px solid #ddd;padding:5px;object-fit:cover;" />
+
+                        <div class="mt-3">
+
+                            <input type="file"
+                                   id="PartnerPhoto"
+                                   name="PartnerPhoto"
+                                   class="form-control"
+                                   accept=".jpg,.jpeg,.png" />
+
+                        </div>
+
+                        <small class="text-muted">
+                            JPG, JPEG, PNG only
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </fieldset>
+
+    <div class="card-footer bg-white mt-3">
+
+        <div class="d-flex justify-content-center gap-3">
+
+            <button type="button"
+                    id="btnBackToMachinery"
+                    class="btn btn-secondary">
+                Previous
+            </button>
+
+            <button type="button"
+                    id="btnPhotoNext"
+                    class="btn btn-success">
+                Next
+            </button>
+
+        </div>
+
+    </div>

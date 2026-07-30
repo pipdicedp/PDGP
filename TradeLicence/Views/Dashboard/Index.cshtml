@@ -1,0 +1,213 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    var myApplications = (List<TradeLicence.Models.TradeLicenceApplication>)ViewBag.MyApplications;
+}
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/dashboard.css"
+          asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+        <div class="dashboard-body">
+
+            @* ===== NEW: Your Applications — only shows if the user has any ===== *@
+            @if (myApplications != null && myApplications.Any())
+            {
+                <div class="page-title">
+                    <h3>Your Applications</h3>
+                    <p>Continue a draft, or check the status of a submitted application.</p>
+                </div>
+
+                <div class="myapps-list">
+                    @foreach (var app in myApplications)
+                    {
+                        var statusClass = app.Status switch
+                        {
+                            "Draft" => "myapps-status-draft",
+                            "Submitted" => "myapps-status-submitted",
+                            "UnderReview" => "myapps-status-review",
+                            "Approved" => "myapps-status-approved",
+                            "Rejected" => "myapps-status-rejected",
+                            _ => "myapps-status-draft"
+                        };
+
+                        <div class="myapps-row">
+                            <div class="myapps-info">
+                                <span class="myapps-name">@(string.IsNullOrEmpty(app.ApplicantName) ? "Untitled application" : app.ApplicantName)</span>
+                                <span class="myapps-meta">
+                                    @(app.ApplicationNumber ?? "No application number yet")
+                                    &bull; Started @app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")
+                                </span>
+                            </div>
+                            <span class="myapps-status-badge @statusClass">@app.Status</span>
+                            @if (app.Status == "Draft")
+                            {
+                                <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Continue</a>
+                            }
+                            else
+                            {
+                                <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirm", "WizardSteps", new { applicationId = app.ApplicationId })">View</a>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <hr class="myapps-divider" />
+            }
+            @* ===== END new section ===== *@
+
+            <div class="page-title">
+                <h3>Single Sign On Dashboard</h3>
+                <p>Manage Trade Licence Applications</p>
+            </div>
+
+            <div class="dashboard-cards">
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        🏢
+                    </div>
+
+                    <h4>Trade Licence</h4>
+
+                    <p>
+                        Apply for New Trade Licence and Track Application Status
+                    </p>
+
+                    <a asp-controller="TradeLicence"
+                       asp-action="Apply"
+                        class="dashboard-btn">
+                        New Application
+                    </a>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        💧
+                    </div>
+
+                    <h4>Water Management</h4>
+
+                    <p>
+                        Apply for New Trade Licence and Track Application Status
+                    </p>
+
+                    <a asp-controller="Water"
+                       asp-action="Index"
+                       class="dashboard-btn">
+                        New Application
+                    </a>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        ⚡
+                    </div>
+
+                    <h4>Electricity Management</h4>
+
+                    <p>
+                        Apply for New Trade Licence and Track Application Status
+                    </p>
+
+                    <a asp-controller="TradeLicence"
+                       asp-action="Apply"
+                        class="dashboard-btn">
+                        New Application
+                    </a>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        🚐
+                    </div>
+
+                    <h4>Transport Management</h4>
+
+                    <p>
+                        Apply for New Trade Licence and Track Application Status
+                    </p>
+
+                    <a asp-controller="TradeLicence"
+                       asp-action="Apply"
+                       class="dashboard-btn">
+                        New Application
+                    </a>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        👷
+                    </div>
+
+                    <h4>Labor Department</h4>
+
+                    <p>
+                        Apply for New Trade Licence and Track Application Status
+                    </p>
+
+                    <a asp-controller="TradeLicence"
+                       asp-action="Apply"
+                       class="dashboard-btn">
+                        New Application
+                    </a>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        📝
+                    </div>
+
+                    <h4>Registration Department</h4>
+
+                    <p>
+                        Apply for New Trade Licence and Track Application Status
+                    </p>
+
+                    <a asp-controller="TradeLicence"
+                       asp-action="Apply"
+                        class="dashboard-btn">
+                        New Application
+                    </a>
+
+                </div>
+
+                <div class="dashboard-card">
+
+                    <div class="card-icon">
+                        📐
+                    </div>
+
+                    <h4>Survey Department</h4>
+
+                    <p>
+                        Apply for New Trade Licence and Track Application Status
+                    </p>
+
+                    <a asp-controller="TradeLicence"
+                       asp-action="Apply"
+                        class="dashboard-btn">
+                        New Application
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>

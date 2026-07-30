@@ -1,0 +1,147 @@
+﻿@model TradeLicence.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+    <link rel="stylesheet" href="~/css/login.css" />
+}
+
+<div class="tl-login-page-grid">
+
+    <!-- Services Enrolled Section -->
+    <div class="tl-login-services">
+        <div class="tl-service-card tl-service-primary">
+            <div class="tl-service-icon">📋</div>
+            <div class="tl-service-title">Services Enrolled</div>
+        </div>
+        <div class="tl-service-card tl-service-secondary">
+            <div class="tl-service-icon">✓</div>
+            <div class="tl-service-title">Empaneled Agency for Third Party Fire Safety Audit</div>
+        </div>
+        <div class="tl-service-card tl-service-tertiary">
+            <div class="tl-service-icon">📜</div>
+            <div class="tl-service-title">G.O/Timeline/Orders/Citizen Charter</div>
+        </div>
+        <div class="tl-service-card tl-service-quaternary">
+            <div class="tl-service-icon">📖</div>
+            <div class="tl-service-title">Acts &amp; Rules</div>
+        </div>
+        <div class="tl-service-card tl-service-quinary">
+            <div class="tl-service-icon">🔍</div>
+            <div class="tl-service-title">Know Your Approvals</div>
+        </div>
+        <div class="tl-service-card tl-service-senary">
+            <div class="tl-service-icon">🎯</div>
+            <div class="tl-service-title">Schemes</div>
+        </div>
+        <div class="tl-service-card tl-service-quaternary">
+            <div class="tl-service-icon">📖</div>
+            <div class="tl-service-title">Land Bank</div>
+        </div>
+        <div class="tl-service-card tl-service-quinary">
+            <div class="tl-service-icon">🔍</div>
+            <div class="tl-service-title">Focus Sectors</div>
+        </div>
+        <div class="tl-service-card tl-service-senary">
+            <div class="tl-service-icon">🎯</div>
+            <div class="tl-service-title">The Rates and Tariff Levied by the State</div>
+        </div>
+    </div>
+
+    <!-- Existing login panel — unchanged -->
+    <div class="tl-login-wrap">
+
+        <!-- Left panel: Puducherry branding + signature illustration -->
+        <div class="tl-login-brandpanel">
+            <div class="tl-login-brand-top">
+                <div class="tl-emblem">🏛</div>
+                <div>
+                    <div class="tl-login-brand-title">Online Trade Licence System</div>
+                    <div class="tl-login-brand-sub">Government of Puducherry</div>
+                </div>
+            </div>
+
+            <div class="tl-login-tagline">Statutory trade licences &amp; shop establishment registration for Puducherry — issued and tracked online.</div>
+        </div>
+
+        <!-- Right panel: login form -->
+        <div class="tl-login-formpanel">
+            <div class="tl-login-form-inner">
+
+                <div class="tl-login-topline">
+                    <span></span>
+                    <a href="@Url.Action("Register", "Account")" class="tl-login-register-link">New user? Register here</a>
+                </div>
+
+                <h1 class="tl-login-heading">Log in</h1>
+                <p class="tl-login-subheading">Access your trade licence applications and status.</p>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                {
+                    <div class="tl-login-alert">
+                        @foreach (var err in ViewData.ModelState[string.Empty].Errors)
+                        {
+                            <div>@err.ErrorMessage</div>
+                        }
+                    </div>
+                }
+
+                <form asp-controller="Account" asp-action="Login" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div class="tl-login-field">
+                        <label asp-for="Username">User Name</label>
+                        <input asp-for="Username" class="tl-login-input" autocomplete="username" maxlength="15" autofocus />
+                        <span asp-validation-for="Username" class="tl-login-fielderror"></span>
+                    </div>
+
+                    <div class="tl-login-field">
+                        <label asp-for="Password">Password</label>
+                        <div class="tl-login-password-wrap">
+                            <input asp-for="Password" type="password" id="passwordInput" class="tl-login-input" autocomplete="current-password" maxlength="15" />
+                            <button type="button" id="togglePassword" class="tl-login-eye" aria-label="Show password">👁</button>
+                        </div>
+                        <span asp-validation-for="Password" class="tl-login-fielderror"></span>
+                    </div>
+
+                    <div class="tl-login-field">
+                        <label>Captcha Verification</label>
+                        <div class="tl-login-captcha-row">
+                            <img id="captchaImg" src="@Url.Action("CaptchaImage", "Account")" alt="Captcha code" class="tl-login-captcha-img" />
+                            <button type="button" id="refreshCaptcha" class="tl-login-captcha-refresh" title="Get a new code" aria-label="Refresh captcha">⟳</button>
+                        </div>
+                        <input asp-for="CaptchaInput" class="tl-login-input" placeholder="Enter the code shown above" autocomplete="off" maxlength="6" />
+                        <span asp-validation-for="CaptchaInput" class="tl-login-fielderror"></span>
+                    </div>
+
+                    <button type="submit" class="tl-login-submit">Login</button>
+
+                    <div class="tl-login-forgot">
+                        <a href="@Url.Action("ForgotPassword", "Account")">Forgot password?</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const input = document.getElementById('passwordInput');
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            this.textContent = isHidden ? '🙈' : '👁';
+            this.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        });
+
+        document.getElementById('refreshCaptcha').addEventListener('click', function() {
+            const img = document.getElementById('captchaImg');
+            img.src = '@Url.Action("CaptchaImage", "Account")?t=' + Date.now();
+        });
+    </script>
+}

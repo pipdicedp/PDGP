@@ -1,0 +1,375 @@
+﻿@model TradeLicence.Models.WaterConnectionModel
+@{
+    ViewData["Title"] = " Puducherry Government New Water Connection";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/water.css"
+          asp-append-version="true" />
+}
+
+<div class="aq-page">
+
+    <div class="aq-progress-track"><div class="aq-progress-fill" id="aqProgressFill"></div></div>
+
+    <div class="aq-hero">
+
+        <div class="aq-hero-content">
+            <p class="aq-eyebrow">Government of Puducherry <span class="aq-dot">&middot;</span> Public Works Department</p>
+            <h1 class="aq-hero-title">Online Water Consumption Billing & Payment Collection System.</h1>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="aq-alert">
+            @TempData["Success"]
+        </div>
+    }
+
+    <form asp-action="Index" method="post" enctype="multipart/form-data">
+
+        @Html.AntiForgeryToken()
+
+        <div class="aq-flow">
+
+            <!-- ============================= -->
+            <!-- Applicant Details             -->
+            <!-- ============================= -->
+
+            <section class="aq-panel" data-stage="1" data-stage-name="Applicant details">
+                <span class="aq-panel-num">01</span>
+                <div class="aq-panel-head">
+                    <div class="aq-panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                    </div>
+                    <div>
+                        <h2>Applicant details</h2>
+                        <p>Tell us who is applying for the connection.</p>
+                    </div>
+                </div>
+                <div class="aq-grid">
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Name" class="aq-label">Name</label>
+                        <input asp-for="Name" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="PowerOfAttorney" class="aq-label">Power of Attorney</label>
+                        <input asp-for="PowerOfAttorney" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="FatherName" class="aq-label">Father Name</label>
+                        <input asp-for="FatherName" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="SpouseName" class="aq-label">Spouse Name</label>
+                        <input asp-for="SpouseName" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="PhoneNumber" class="aq-label">Phone Number</label>
+                        <input asp-for="PhoneNumber" class="aq-input" maxlength="10" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Email" class="aq-label">Email</label>
+                        <input asp-for="Email" class="aq-input" />
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ============================= -->
+            <!-- Communication Address         -->
+            <!-- ============================= -->
+
+            <section class="aq-panel" data-stage="2" data-stage-name="Communication address">
+                <span class="aq-panel-num">02</span>
+                <div class="aq-panel-head">
+                    <div class="aq-panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                    </div>
+                    <div>
+                        <h2>Communication address</h2>
+                        <p>Where we'll send updates about this application.</p>
+                    </div>
+                </div>
+                <div class="aq-grid">
+
+                    <div class="aq-col-3 aq-field">
+                        <label asp-for="CommDoorNo" class="aq-label">Door No.</label>
+                        <input asp-for="CommDoorNo" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-9 aq-field">
+                        <label asp-for="CommAddress1" class="aq-label">Address Line 1</label>
+                        <input asp-for="CommAddress1" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-12 aq-field">
+                        <label asp-for="CommAddress2" class="aq-label">Address Line 2</label>
+                        <input asp-for="CommAddress2" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="CommCity" class="aq-label">City</label>
+                        <input asp-for="CommCity" class="aq-input" />
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ============================= -->
+            <!-- Connection Address            -->
+            <!-- ============================= -->
+
+            <section class="aq-panel" data-stage="3" data-stage-name="Connection address">
+                <span class="aq-panel-num">03</span>
+                <div class="aq-panel-head">
+                    <div class="aq-panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7m-14 0v8a2 2 0 0 0 2 2h3m9-10l2 2m-2-2v8a2 2 0 0 1-2 2h-3m-4 0v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5m-4 0h4" /></svg>
+                    </div>
+                    <div>
+                        <h2>Connection address</h2>
+                        <p>Where the new water connection will be installed.</p>
+                    </div>
+                </div>
+                <div class="aq-grid">
+
+                    <div class="aq-col-3 aq-field">
+                        <label asp-for="ConnDoorNo" class="aq-label">Door No.</label>
+                        <input asp-for="ConnDoorNo" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-9 aq-field">
+                        <label asp-for="ConnAddress1" class="aq-label">Address Line 1</label>
+                        <input asp-for="ConnAddress1" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-12 aq-field">
+                        <label asp-for="ConnAddress2" class="aq-label">Address Line 2</label>
+                        <input asp-for="ConnAddress2" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="ConnCity" class="aq-label">City</label>
+                        <input asp-for="ConnCity" class="aq-input" />
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ============================= -->
+            <!-- Department Details            -->
+            <!-- ============================= -->
+
+            <section class="aq-panel" data-stage="4" data-stage-name="Department details">
+                <span class="aq-panel-num">04</span>
+                <div class="aq-panel-head">
+                    <div class="aq-panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6" /></svg>
+                    </div>
+                    <div>
+                        <h2>Department details</h2>
+                        <p>The office and contractor handling this connection.</p>
+                    </div>
+                </div>
+                <div class="aq-grid">
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Department" class="aq-label">Department</label>
+                        <select asp-for="Department" class="aq-input">
+                            <option value="">-- Select Department --</option>
+                            <option>Public Works Department</option>
+                        </select>
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Section" class="aq-label">Section</label>
+                        <select asp-for="Section" class="aq-input">
+                            <option value="">-- Select Section --</option>
+                            <option>P PUBLIC HEALTH DIVISION, PWD, PUDUCHERRY</option>
+                        </select>
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Contractor" class="aq-label">Contractor</label>
+                        <select asp-for="Contractor" class="aq-input">
+                            <option value="">-- Select Contractor --</option>
+                            <option>ABC Contractors</option>
+                            <option>XYZ Contractors</option>
+                        </select>
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Area" class="aq-label">Area</label>
+                        <select asp-for="Area" class="aq-input">
+                            <option value="">-- Select Area --</option>
+                            <option>Puducherry</option>
+                            <option>Lawspet</option>
+                            <option>Muthialpet</option>
+                            <option>Mudaliarpet</option>
+                        </select>
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Purpose" class="aq-label">purpose</label>
+                        <select asp-for="Purpose" class="aq-input">
+                            <option value="">-- Select purpose --</option>
+                            <option>Commercial </option>
+                            <option>Domestic</option>
+                        </select>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ============================= -->
+            <!-- Document Upload Details       -->
+            <!-- ============================= -->
+
+            <section class="aq-panel" data-stage="5" data-stage-name="Document upload">
+                <span class="aq-panel-num">05</span>
+                <div class="aq-panel-head">
+                    <div class="aq-panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+                    </div>
+                    <div>
+                        <h2>Document upload</h2>
+                        <p>Attach the supporting documents listed below.</p>
+                    </div>
+                </div>
+
+                <div class="aq-doc-list">
+
+                    <div class="aq-doc-row">
+                        <span class="aq-doc-chip">1</span>
+                        <span class="aq-doc-label">Name and Address Verification</span>
+                        <div class="aq-doc-control">
+                            <select asp-for="NameAddressDocument" class="aq-input">
+                                <option value="">--Select--</option>
+                                <option>Valid Govt Issued Photo ID</option>
+                                <option>Aadhaar Card or Voter ID</option>
+                            </select>
+                        </div>
+                        <div class="aq-doc-upload">
+                            <input asp-for="NameAddressFile" type="file" class="aq-input" />
+                        </div>
+                    </div>
+
+                    @* <div class="aq-doc-row">
+                        <span class="aq-doc-chip">2</span>
+                        <span class="aq-doc-label">Ownership Verification</span>
+                        <div class="aq-doc-control">
+                            <select asp-for="OwnershipDocument1" class="aq-input">
+                                <option value="">--Select--</option>
+                                <option>Sale Deed</option>
+                                <option>Link Document</option>
+                                <option>Affidavit and Indemnity</option>
+                            </select>
+                        </div>
+                        <div class="aq-doc-upload">
+                            <input asp-for="OwnershipFile1" type="file" class="aq-input" />
+                        </div>
+                    </div> *@
+
+                    <div class="aq-doc-row">
+                        <span class="aq-doc-chip">3</span>
+                        <span class="aq-doc-label">Ownership Verification</span>
+                        <div class="aq-doc-control">
+                            <select asp-for="OwnershipDocument2" class="aq-input">
+                                <option value="">--Select--</option>
+                                <option>Sale Deed</option>
+                                <option>Link Document</option>
+                                <option>Affidavit and Indemnity</option>
+                            </select>
+                        </div>
+                        <div class="aq-doc-upload">
+                            <input asp-for="OwnershipFile2" type="file" class="aq-input" />
+                        </div>
+                    </div>
+
+                    <div class="aq-doc-row">
+                        <span class="aq-doc-chip">4</span>
+                        <span class="aq-doc-label">Others</span>
+                        <div class="aq-doc-control">
+                            <select asp-for="OthersDocument" class="aq-input">
+                                <option value="">--Select--</option>
+                                <option>Others</option>
+                                <option>Affidavit and Indemnity</option>
+                            </select>
+                        </div>
+                        <div class="aq-doc-upload">
+                            <input asp-for="OthersFile" type="file" class="aq-input" />
+                        </div>
+                    </div>
+
+                    <div class="aq-doc-row">
+                        <span class="aq-doc-chip">5</span>
+                        <span class="aq-doc-label">Contractor Consent</span>
+                        <div class="aq-doc-control">
+                            <select asp-for="ContractorConsentDocument" class="aq-input">
+                                <option>Licensed Plumber Consent Letter</option>
+                            </select>
+                        </div>
+                        <div class="aq-doc-upload">
+                            <input asp-for="ContractorConsentFile" type="file" class="aq-input" />
+                        </div>
+                    </div>
+
+                    @* <div class="aq-doc-row">
+                        <span class="aq-doc-chip">6</span>
+                        <span class="aq-doc-label">Identity Card<span>PDF, max 1 MB</span></span>
+                        <div class="aq-doc-control aq-doc-static"></div>
+                        <div class="aq-doc-upload">
+                            <input asp-for="IdentityCardFile" type="file" accept=".pdf" class="aq-input" />
+                        </div>
+                    </div>
+
+                    <div class="aq-doc-row">
+                        <span class="aq-doc-chip">7</span>
+                        <span class="aq-doc-label">Road Cutting Permission<span>PDF, max 1 MB</span></span>
+                        <div class="aq-doc-control aq-doc-static"></div>
+                        <div class="aq-doc-upload">
+                            <input asp-for="RoadCuttingPermissionFile" type="file" accept=".pdf" class="aq-input" />
+                        </div>
+                    </div> *@
+
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ============================= -->
+        <!-- Action Buttons                -->
+        <!-- ============================= -->
+
+        <div class="aq-actions">
+
+            <button type="submit" class="aq-btn aq-btn-primary">
+                Save Application
+            </button>
+
+            <button type="reset" class="aq-btn aq-btn-ghost">
+                Reset
+            </button>
+
+            <a asp-action="List" class="aq-btn aq-btn-accent">
+                View Applications
+            </a>
+
+        </div>
+
+    </form>
+
+    <div class="aq-stage-pill" id="aqStagePill">
+        <span class="aq-stage-num" id="aqStageNum">01</span>
+        <span class="aq-stage-name" id="aqStageName">Applicant details</span>
+    </div>
+
+</div>

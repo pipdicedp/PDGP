@@ -1,0 +1,71 @@
+﻿<div class="tl-partner-card">
+
+    <fieldset class="tl-section">
+        <legend>Partners Details</legend>
+
+        <div class="row align-items-end">
+
+            <div class="col-md-3">
+                <label>Partner Name <span class="req">*</span></label>
+                <input type="text" id="PartnerName" class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label>Designation <span class="req">*</span></label>
+                <input type="text" id="Designation" class="form-control" />
+            </div>
+
+            <div class="col-md-5">
+                <label>Address <span class="req">*</span></label>
+                <input type="text" id="PartnerAddress" class="form-control" />
+            </div>
+
+            <div class="col-md-1">
+                <button type="button"
+                        id="btnAddPartner"
+                        class="btn-add-partner">
+                    Add
+                </button>
+            </div>
+
+        </div>
+
+        <div id="partnerTableContainer" style="display:none;">
+
+            <table class="tl-partner-table" id="tblPartners">
+
+                <thead>
+                    <tr>
+                        <th>Partner Name</th>
+                        <th>Designation</th>
+                        <th>Address</th>
+                        <th width="100">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </fieldset>
+
+    <div class="tl-partner-actions">
+
+        <button type="button"
+                id="btnBackToApplication"
+                class="btn btn-secondary">
+            Previous
+        </button>
+
+        <button type="button"
+                id="btnPartnerNext"
+                class="btn btn-success">
+            Next
+        </button>
+
+    </div>
+
+</div>

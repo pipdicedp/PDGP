@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Online Trade Licence System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header class="tl-topbar">
+        <div class="tl-topbar-container">
+            <div class="tl-brand">
+                <img src="@(Url.Content("~/Images/puducherry Logo.jpg"))" alt="Puducherry Logo" class="tl-logo" />
+                <div>
+                    <strong>GOVERNMENT OF PUDUCHERRY</strong><br />
+                    DEPARTMENT OF INDUSTRIES AND COMMERCE<br />
+                    <span class="tl-title">INVESTOR PORTAL</span>
+                </div>
+            </div>
+            <img src="@(Url.Content("~/Images/Government_of_Puducherry.png"))" alt="Government_of_Puducherry Logo" class="tr-logo" />
+        </div>
+    </header>
+
+    <!-- Navigation Menu -->
+    <nav class="tl-navbar">
+        <div class="container">
+            <ul class="tl-nav-menu">
+                <li><a href="#home">Home</a></li>
+                <li class="dropdown">
+                    <a href="#about">About Puducherry <span class="dropdown-arrow">▼</span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#about-sub1">About Sub 1</a></li>
+                        <li><a href="#about-sub2">About Sub 2</a></li>
+                    </ul>
+                </li>
+                <li><a href="#invest">Why Invest In Pondicherry</a></li>
+                <li class="dropdown">
+                    <a href="#investor">Investor Services <span class="dropdown-arrow">▼</span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#investor-sub1">Investor Sub 1</a></li>
+                        <li><a href="#investor-sub2">Investor Sub 2</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#investor">Dashboard <span class="dropdown-arrow">▼</span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#investor-sub1">Main Dashboard</a></li>
+                        <li><a href="#investor-sub2">Other Dashboard</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#investor">CIS <span class="dropdown-arrow">▼</span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#investor-sub1">Main Dashboard</a></li>
+                        <li><a href="#investor-sub2">Other Dashboard</a></li>
+                    </ul>
+                </li>
+                <li class="dropdown">
+                    <a href="#investor">Downloads <span class="dropdown-arrow">▼</span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#investor-sub1">Main Dashboard</a></li>
+                        <li><a href="#investor-sub2">Other Dashboard</a></li>
+                    </ul>
+                </li>
+                <li><a href="#verification">ThirdParty Verification</a></li>
+                <li><a href="#payment">Unified Payments Gateway</a></li>
+                <li><a href="#testing">Testing Centre Directory</a></li>
+                <li class="dropdown">
+                    <a href="#eodb">EoDB G.Os <span class="dropdown-arrow">▼</span></a>
+                    <ul class="dropdown-menu">
+                        <li><a href="#eodb-sub1">EoDB Sub 1</a></li>
+                        <li><a href="#eodb-sub2">EoDB Sub 2</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Info Section -->
+    <section class="tl-info-section">
+        <div class="container">
+            <div class="tl-info-grid">
+                <div class="tl-info-card">
+                    <h3>Investor Portal</h3>
+                    <p>Investor Portal is a common enterprise application for Ease of Doing Business. It is a web based configurable framework developed for the department of Industries and Commerce. It provides a single platform to all entrepreneur for decision support, availing online services and information access on for entire UT of Puducherry.</p>
+                </div>
+                <div class="tl-info-card">
+                    <h3>OnlineService Offered :</h3>
+                    <ul class="tl-services-list">
+                        <li>DPIIT - BRAP points compliance</li>
+                        <li>Online Application, Status Tracking, Online Download Final Certificate, Dashboard</li>
+                        <li>Investor Feedback and Queries handling mechanism</li>
+                        <li>Information wizard to guide to know your approvals</li>
+                        <li>SWS - Single Window System</li>
+                        <li>CAF - Common Application Form</li>
+                        <li>Centralized Inspection System(CIS)</li>
+                        <li>Draft Regulation submission and feedback capturing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container tl-container">
+        @RenderBody()
+    </main>
+
+    <footer class="tl-footer">
+        <p>Designed &amp; Developed by National Informatics Centre, Puducherry UT Unit</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

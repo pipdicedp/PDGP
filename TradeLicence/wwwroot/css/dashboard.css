@@ -1,0 +1,244 @@
+body {
+    background: linear-gradient( 135deg, #e6f4f1, #f5f9fa );
+}
+
+.dashboard-wrapper {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.dashboard-header {
+    background: #1a3a52;
+    color: white;
+    border-radius: 12px;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.dashboard-logo {
+    width: 70px;
+    height: 70px;
+    background: white;
+    border-radius: 8px;
+    padding: 5px;
+    object-fit: contain;
+}
+
+.header-left h2 {
+    margin: 0;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.header-left p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.header-right {
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.dashboard-body {
+    margin-top: 25px;
+    background: white;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.08);
+}
+
+.page-title {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+    .page-title h3 {
+        color: #1a3a52;
+        font-size: 36px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .page-title p {
+        color: #666;
+        font-size: 16px;
+    }
+
+.dashboard-cards {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 30px !important;
+    padding: 20px !important;
+    border-radius: 12px !important;
+}
+.dashboard-card {
+    width: 230px !important;
+    min-height: 120px !important;
+    background: white !important;
+    border: 2px solid #e5e5e5 !important;
+    border-radius: 12px !important;
+    padding: 18px !important;
+    text-align: center !important;
+    box-shadow: 0 5px 10px rgba(0,0,0,.08) !important;
+    transition: 0.3s !important;
+}
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+    }
+
+.card-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+}
+
+.dashboard-card h4 {
+    color: #1a3a52;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.dashboard-card p {
+    color: #555;
+    font-size: 13px;
+    min-height: 50px;
+}
+
+.dashboard-btn {
+    display: inline-block;
+    width: 100%;
+    padding: 12px;
+    background: #0f2438;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+    .dashboard-btn:hover {
+        background: #163552;
+        color: #fff;
+    }
+
+
+/* =====================================
+   Your Applications list — append this block to the END of your
+   existing wwwroot/css/dashboard.css. All classes are prefixed
+   "myapps-" so nothing here can collide with your existing
+   .dashboard-card / .page-title / .btn-logout rules.
+===================================== */
+
+.myapps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.myapps-row {
+    background: #fff;
+    border: 1px solid #DCD7CB;
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.myapps-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.myapps-name {
+    font-weight: 600;
+    color: #1C2321;
+    font-size: 0.94rem;
+}
+
+.myapps-meta {
+    font-size: 0.78rem;
+    color: #6B7280;
+    margin-top: 2px;
+}
+
+.myapps-status-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.myapps-status-draft {
+    background: #FCE8D6;
+    color: #8A4A12;
+}
+
+.myapps-status-submitted {
+    background: #DCEAFB;
+    color: #1D4E89;
+}
+
+.myapps-status-review {
+    background: #E4EFEE;
+    color: #1a3a52;
+}
+
+.myapps-status-approved {
+    background: #DCF3E4;
+    color: #1D6E3E;
+}
+
+.myapps-status-rejected {
+    background: #FBEAE8;
+    color: #7A241D;
+}
+
+.myapps-btn {
+    background: #1a3a52;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background .15s ease;
+}
+
+    .myapps-btn:hover {
+        background: #0f2438;
+        color: #fff;
+    }
+
+.myapps-btn-view {
+    background: #6B7280;
+}
+
+    .myapps-btn-view:hover {
+        background: #4B5563;
+    }
+
+.myapps-divider {
+    border: none;
+    border-top: 1px solid #DCD7CB;
+    margin: 24px 0;
+}

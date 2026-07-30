@@ -1,0 +1,178 @@
+﻿
+    <fieldset class="tl-section">
+
+        <legend>Upload Documents</legend>
+
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover">
+
+                <thead class="table-success">
+
+                    <tr>
+                        <th width="40%">Document Name</th>
+                        <th width="40%">Upload File</th>
+                        <th width="20%">Action</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    <tr>
+                        <td>Aadhaar Copy</td>
+
+                        <td>
+                            <input type="file"
+                                   id="AadhaarFile"
+                                   class="form-control"
+                                   accept=".pdf,.jpg,.jpeg,.png" />
+                        </td>
+
+                        <td>
+
+                            <button type="button"
+                                    id="btnPreviewAadhaar"
+                                    class="btn btn-info btn-sm"
+                                    disabled>
+                                Preview
+                            </button>
+
+                            <button type="button"
+                                    id="btnRemoveAadhaar"
+                                    class="btn btn-danger btn-sm"
+                                    disabled>
+                                Remove
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+                        <td>Property Tax Receipt</td>
+
+                        <td>
+                            <input type="file"
+                                   id="PropertyTaxFile"
+                                   class="form-control"
+                                   accept=".pdf,.jpg,.jpeg,.png" />
+                        </td>
+
+                        <td>
+
+                            <button type="button"
+                                    id="btnPreviewPropertyTax"
+                                    class="btn btn-info btn-sm"
+                                    disabled>
+                                Preview
+                            </button>
+
+                            <button type="button"
+                                    id="btnRemovePropertyTax"
+                                    class="btn btn-danger btn-sm"
+                                    disabled>
+                                Remove
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                    <tr>
+                        <td>Building Plan</td>
+
+                        <td>
+                            <input type="file"
+                                   id="BuildingPlanFile"
+                                   class="form-control"
+                                   accept=".pdf,.jpg,.jpeg,.png" />
+                        </td>
+
+                        <td>
+
+                            <button type="button"
+                                    id="btnPreviewBuildingPlan"
+                                    class="btn btn-info btn-sm"
+                                    disabled>
+                                Preview
+                            </button>
+
+                            <button type="button"
+                                    id="btnRemoveBuildingPlan"
+                                    class="btn btn-danger btn-sm"
+                                    disabled>
+                                Remove
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </fieldset>
+
+    <div class="card-footer bg-white">
+
+        <div class="d-flex justify-content-center gap-3">
+
+            <button type="button"
+                    id="btnBackToPhoto"
+                    class="btn btn-secondary">
+                Previous
+            </button>
+
+            <button type="button"
+                id="btnDocumentNext"
+                    class="btn btn-success">
+                Next
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Preview Modal -->
+
+<div class="modal fade"
+     id="documentPreviewModal"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    Document Preview
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <iframe id="documentViewer"
+                        width="100%"
+                        height="650"
+                        style="border:none;">
+                </iframe>
+
+            </div>
+
+        </div>
+
+    </div>

@@ -1,0 +1,419 @@
+/* =====================================
+   Login page styles — fully scoped under .tl-login-wrap.
+   Deliberately does NOT touch body, html, or * — this file loads
+   alongside site.css (both are active on every page now that Login
+   uses the shared _Layout), so anything unscoped here would leak into
+   every other page again, exactly like the earlier bug.
+===================================== */
+
+.tl-login-wrap {
+	display: grid;
+	grid-template-columns: 38% 62%;
+	width: 100%;
+	max-width: 900px;
+	height: auto;
+	margin: 10px auto;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 10px 30px rgba(26,58,82,0.12);
+}
+
+	.tl-login-wrap * {
+		box-sizing: border-box;
+	}
+
+/* ---------- Left: brand panel ---------- */
+.tl-login-brandpanel {
+	background-color: #1a3a52;
+	background-image: url('/images/login-bg.jpg');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	color: #E4EFEE;
+	padding: 28px 30px;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	overflow: hidden;
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+}
+
+	.tl-login-brandpanel::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(180deg, rgba(26,58,82,0.15) 0%, rgba(15,45,56,0.05) 40%, rgba(15,45,56,0.55) 100%);
+		pointer-events: none;
+	}
+
+.tl-login-brand-top, .tl-login-tagline {
+	position: relative;
+	z-index: 1;
+}
+
+.tl-login-brandpanel::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: linear-gradient(90deg, #D4A017 0%, #D4A017 33%, #fff 33%, #fff 67%, #1a3a52 67%);
+}
+
+.tl-login-brand-top {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 6px;
+}
+
+.tl-login-wrap .tl-emblem {
+	width: 34px;
+	height: 34px;
+	border-radius: 50%;
+	background: #F6F4EE;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 17px;
+	flex-shrink: 0;
+}
+
+.tl-login-brand-title {
+	font-family: 'Source Serif 4', serif;
+	font-weight: 700;
+	font-size: 1.05rem;
+	line-height: 1.25;
+}
+
+.tl-login-brand-sub {
+	font-size: 0.78rem;
+	color: #A9C4C0;
+	margin-top: 2px;
+}
+
+.tl-login-tagline {
+	font-size: 0.85rem;
+	color: #C7DAD7;
+	line-height: 1.55;
+	max-width: 280px;
+	margin-top: auto;
+}
+
+/* ---------- Right: form panel ---------- */
+.tl-login-formpanel {
+	background: #FFFFFF;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 28px 36px;
+	overflow-y: auto;
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+	color: #1C2321;
+}
+
+.tl-login-form-inner {
+	width: 100%;
+	max-width: 360px;
+}
+
+.tl-login-topline {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 22px;
+}
+
+.tl-login-register-link {
+	color: #1a3a52;
+	font-weight: 600;
+	font-size: 0.85rem;
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+}
+
+	.tl-login-register-link:hover {
+		border-bottom-color: #1a3a52;
+	}
+
+.tl-login-heading {
+	font-family: 'Source Serif 4', serif;
+	font-weight: 700;
+	font-size: 1.65rem;
+	color: #1a3a52;
+	margin: 0 0 5px;
+}
+
+.tl-login-subheading {
+	color: #6B7280;
+	font-size: 0.86rem;
+	margin: 0 0 22px;
+}
+
+.tl-login-alert {
+	background: #FBEAE8;
+	border-left: 3px solid #B3261E;
+	color: #7A241D;
+	font-size: 0.8rem;
+	padding: 8px 12px;
+	border-radius: 4px;
+	margin-bottom: 14px;
+}
+
+.tl-login-field {
+	margin-bottom: 16px;
+}
+
+	.tl-login-field label {
+		display: block;
+		font-weight: 600;
+		font-size: 0.8rem;
+		color: #3B4441;
+		margin-bottom: 5px;
+	}
+
+.tl-login-wrap .tl-login-input {
+	width: 100%;
+	font-family: 'Public Sans', sans-serif;
+	border: 1px solid #DCD7CB;
+	border-radius: 6px;
+	padding: 10px 13px;
+	font-size: 0.9rem;
+	background: #FFFFFF;
+	color: #1C2321;
+	transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+	.tl-login-wrap .tl-login-input:focus {
+		outline: none;
+		border-color: #1a3a52;
+		box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.15);
+	}
+
+.tl-login-fielderror {
+	color: #B3261E;
+	font-size: 0.76rem;
+	display: block;
+	margin-top: 4px;
+}
+
+.tl-login-password-wrap {
+	position: relative;
+}
+
+.tl-login-eye {
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0.9rem;
+	line-height: 1;
+	padding: 4px;
+}
+
+.tl-login-captcha-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.tl-login-captcha-img {
+	border: 1px solid #DCD7CB;
+	border-radius: 6px;
+	display: block;
+	height: 42px;
+}
+
+.tl-login-captcha-refresh {
+	background: #E4EFEE;
+	border: 1px solid #DCD7CB;
+	border-radius: 6px;
+	width: 34px;
+	height: 34px;
+	font-size: 0.95rem;
+	color: #1a3a52;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+	.tl-login-captcha-refresh:hover {
+		background: #d5e6e4;
+	}
+
+.tl-login-wrap .tl-login-submit {
+	width: 100%;
+	background: #1a3a52;
+	color: #fff;
+	border: none;
+	border-radius: 6px;
+	padding: 11px;
+	font-weight: 700;
+	font-size: 0.92rem;
+	cursor: pointer;
+	margin-top: 4px;
+	transition: background .15s ease;
+}
+
+	.tl-login-wrap .tl-login-submit:hover {
+		background: #0f2438;
+	}
+
+.tl-login-forgot {
+	text-align: center;
+	margin-top: 12px;
+}
+
+	.tl-login-forgot a {
+		color: #6B7280;
+		font-size: 0.8rem;
+		text-decoration: none;
+	}
+
+		.tl-login-forgot a:hover {
+			color: #1a3a52;
+			text-decoration: underline;
+		}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+	.tl-login-wrap {
+		grid-template-columns: 1fr;
+		height: auto;
+		max-width: 380px;
+	}
+
+	.tl-login-brandpanel {
+		padding: 18px;
+		min-height: 140px;
+	}
+
+	.tl-login-tagline {
+		display: none;
+	}
+
+	.tl-login-formpanel {
+		padding: 24px;
+	}
+}
+
+/* =====================================
+   Page grid — places the Services list to the LEFT of the existing
+   login panel (.tl-login-wrap, untouched above). Scoped classes only,
+   nothing here touches body/html/* so it's safe alongside site.css.
+===================================== */
+
+.tl-login-page-grid {
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	gap: 24px;
+	max-width: 1160px;
+	margin: 10px auto;
+	padding: 0 16px;
+	flex-wrap: wrap;
+}
+
+.tl-login-wrap {
+	/* now sits inside the flex grid instead of being centered alone */
+	margin: 0;
+	flex: 1 1 480px;
+}
+
+/* ---------- Services Enrolled list ---------- */
+.tl-login-services {
+	flex: 1 1 300px;
+	max-width: 340px;
+	display: flex;
+	flex-direction: column;
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 6px 20px rgba(26,58,82,0.10);
+	background: #fff;
+}
+
+.tl-service-card {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 18px;
+	color: #fff;
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+	font-weight: 600;
+	font-size: 0.86rem;
+	line-height: 1.3;
+	border-bottom: 1px solid rgba(255,255,255,0.12);
+	text-decoration: none;
+	cursor: pointer;
+	transition: filter 0.15s ease;
+	flex: 1 1 0;
+}
+
+	.tl-service-card:hover {
+		filter: brightness(1.15);
+	}
+
+	.tl-service-card:last-child {
+		border-bottom: none;
+	}
+
+.tl-service-icon {
+	font-size: 0.78rem;
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: #D4A017;
+	color: #1a3a52;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.tl-service-title {
+	flex: 1;
+}
+
+/* Unified navy palette — alternating shades of the login panel's own
+   navy (#1a3a52), instead of six unrelated colours, so this list reads
+   as one branded component with the login card rather than a
+   different, clashing widget bolted on next to it. */
+.tl-service-primary {
+	background: #1a3a52;
+}
+/* base navy — matches brand panel exactly */
+.tl-service-secondary {
+	background: #234a68;
+}
+/* +1 step lighter */
+.tl-service-tertiary {
+	background: #15304a;
+}
+/* +1 step darker */
+.tl-service-quaternary {
+	background: #2a5678;
+}
+/* +2 step lighter */
+.tl-service-quinary {
+	background: #0f2438;
+}
+/* darkest — matches submit button hover */
+.tl-service-senary {
+	background: #234a68;
+}
+/* repeat lighter, keeps rhythm without needing more colours */
+
+@media (max-width: 900px) {
+	.tl-login-page-grid {
+		flex-direction: column;
+		align-items: center;
+	}
+
+	.tl-login-services {
+		max-width: 480px;
+		width: 100%;
+	}
+}

@@ -1,0 +1,78 @@
+﻿<div class="tl-partner-card">
+
+    <fieldset class="tl-section">
+        <legend>Machinery Details</legend>
+
+        <div class="row">
+
+            <div class="col-md-4">
+                <label>Machinery Name</label>
+                <input type="text"
+                       id="MachineryName"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label>Quantity</label>
+                <input type="number"
+                       id="Quantity"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-3">
+                <label>Horse Power</label>
+                <input type="number"
+                       step="0.01"
+                       id="HorsePower"
+                       class="form-control" />
+            </div>
+
+            <div class="col-md-2">
+                <button type="button"
+                        id="btnAddMachinery"
+                        class="btn btn-primary mt-4">
+                    Add
+                </button>
+            </div>
+
+        </div>
+
+        <div id="machineryTableContainer" style="display:none;">
+
+            <table class="table table-bordered mt-3"
+                   id="tblMachinery">
+
+                <thead class="table-success">
+                    <tr>
+                        <th>Machinery Name</th>
+                        <th>Quantity</th>
+                        <th>Horse Power</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+
+            </table>
+
+        </div>
+
+    </fieldset>
+
+    <div class="tl-partner-actions">
+
+        <button type="button"
+                id="btnBackToPartner"
+                class="btn btn-secondary">
+            Previous
+        </button>
+
+        <button type="button"
+                id="btnMachineryNext"
+                class="btn btn-success">
+            Next
+        </button>
+
+    </div>
+
+</div>
