@@ -1,4 +1,4 @@
-@model IEnumerable<WaterConnection.Models.AddNewWaterConnection>
+@model IEnumerable<WaterConnection.Models.WaterConnectionApplication>
 
 @{
     ViewData["Title"] = "View Applications";
@@ -27,6 +27,7 @@
                             <th>Phone Number</th>
                             <th>Email</th>
                             <th>Purpose</th>
+                            <th>Status</th>
                             <th>Created</th>
                             <th>Action</th>
                         </tr>
@@ -39,8 +40,9 @@
                                 <td class="wl-name">@item.Name</td>
                                 <td class="wl-muted">@item.PhoneNumber</td>
                                 <td class="wl-muted">@item.Email</td>
-                                <td><span class="wl-purpose">@item.Purpose</span></td>
-                                <td class="wl-muted">@item.CreatedDate.ToString("dd-MM-yyyy")</td>
+                                <td><span class="wl-purpose">@item.Purpose?.PurposeName</span></td>
+                                <td class="wl-muted">@item.Status</td>
+                                <td class="wl-muted">@item.ApplicationDate.ToString("dd-MM-yyyy")</td>
                                 <td>
                                     <div class="wl-actions">
                                         <a asp-action="Details"

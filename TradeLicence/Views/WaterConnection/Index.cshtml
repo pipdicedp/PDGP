@@ -1,13 +1,10 @@
-﻿@model TradeLicence.Models.WaterConnectionModel
+@model WaterConnection.Models.WaterConnectionFormViewModel
+
 @{
     ViewData["Title"] = " Puducherry Government New Water Connection";
-    Layout = "~/Views/Shared/_UserLayout.cshtml";
 }
-@section Styles {
-    <link rel="stylesheet"
-          href="~/css/water.css"
-          asp-append-version="true" />
-}
+
+<link rel="stylesheet" href="~/css/watercss/wc-form.css" />
 
 <div class="aq-page">
 
@@ -15,9 +12,37 @@
 
     <div class="aq-hero">
 
+        <div class="aq-hero-bg" aria-hidden="true">
+            <div class="aq-ocean">
+                <div class="aq-ocean-layer aq-ocean-layer--back">
+                    <div class="aq-ocean-track aq-ocean-track--slow">
+                        <svg class="aq-ocean-svg" viewBox="0 0 2400 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0,100 Q75,54 150,100 T300,100 T450,100 T600,100 T750,100 T900,100 T1050,100 T1200,100 T1350,100 T1500,100 T1650,100 T1800,100 T1950,100 T2100,100 T2250,100 T2400,100 L2400,200 L0,200 Z" fill="var(--aq-accent)" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="aq-ocean-layer aq-ocean-layer--front">
+                    <div class="aq-ocean-track aq-ocean-track--fast">
+                        <svg class="aq-ocean-svg" viewBox="0 0 2400 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0,118 Q50,154 100,118 T200,118 T300,118 T400,118 T500,118 T600,118 T700,118 T800,118 T900,118 T1000,118 T1100,118 T1200,118 T1300,118 T1400,118 T1500,118 T1600,118 T1700,118 T1800,118 T1900,118 T2000,118 T2100,118 T2200,118 T2300,118 T2400,118 L2400,200 L0,200 Z" fill="var(--aq-accent-deep)" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <span class="aq-bubble" style="left:6%"></span>
+            <span class="aq-bubble" style="left:18%"></span>
+            <span class="aq-bubble" style="left:32%"></span>
+            <span class="aq-bubble" style="left:48%"></span>
+            <span class="aq-bubble" style="left:63%"></span>
+            <span class="aq-bubble" style="left:78%"></span>
+            <span class="aq-bubble" style="left:91%"></span>
+        </div>
+
         <div class="aq-hero-content">
             <p class="aq-eyebrow">Government of Puducherry <span class="aq-dot">&middot;</span> Public Works Department</p>
-            <h1 class="aq-hero-title">Online Water Consumption Billing & Payment Collection System.</h1>
+            <h1 class="aq-hero-title">
+                Online Water Consumption Billing & Payment Collection System </h1>
+           
         </div>
     </div>
 
@@ -182,52 +207,101 @@
                 <div class="aq-grid">
 
                     <div class="aq-col-6 aq-field">
-                        <label asp-for="Department" class="aq-label">Department</label>
-                        <select asp-for="Department" class="aq-input">
+                        <label asp-for="DeptCode" class="aq-label">Department</label>
+                        <select asp-for="DeptCode" id="DeptCode" class="aq-input" asp-items="Model.Departments">
                             <option value="">-- Select Department --</option>
-                            <option>Public Works Department</option>
                         </select>
+                        <span asp-validation-for="DeptCode" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
-                        <label asp-for="Section" class="aq-label">Section</label>
-                        <select asp-for="Section" class="aq-input">
+                        <label asp-for="SectionCode" class="aq-label">Section</label>
+                        <select asp-for="SectionCode" id="SectionCode" class="aq-input" asp-items="Model.Sections">
                             <option value="">-- Select Section --</option>
-                            <option>P PUBLIC HEALTH DIVISION, PWD, PUDUCHERRY</option>
                         </select>
+                        <span asp-validation-for="SectionCode" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
-                        <label asp-for="Contractor" class="aq-label">Contractor</label>
-                        <select asp-for="Contractor" class="aq-input">
+                        <label asp-for="ContractorCode" class="aq-label">Contractor</label>
+                        <select asp-for="ContractorCode" id="ContractorCode" class="aq-input" asp-items="Model.Contractors">
                             <option value="">-- Select Contractor --</option>
-                            <option>ABC Contractors</option>
-                            <option>XYZ Contractors</option>
                         </select>
+                        <span asp-validation-for="ContractorCode" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
-                        <label asp-for="Area" class="aq-label">Area</label>
-                        <select asp-for="Area" class="aq-input">
+                        <label asp-for="AreaCode" class="aq-label">Area</label>
+                        <select asp-for="AreaCode" id="AreaCode" class="aq-input" asp-items="Model.Areas">
                             <option value="">-- Select Area --</option>
-                            <option>Puducherry</option>
-                            <option>Lawspet</option>
-                            <option>Muthialpet</option>
-                            <option>Mudaliarpet</option>
                         </select>
+                        <span asp-validation-for="AreaCode" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
-                        <label asp-for="Purpose" class="aq-label">purpose</label>
-                        <select asp-for="Purpose" class="aq-input">
-                            <option value="">-- Select purpose --</option>
-                            <option>Commercial </option>
-                            <option>Domestic</option>
+                        <label asp-for="PurposeCode" class="aq-label">Purpose</label>
+                        <select asp-for="PurposeCode" class="aq-input" asp-items="Model.Purposes">
+                            <option value="">-- Select Purpose --</option>
                         </select>
+                        <span asp-validation-for="PurposeCode" class="aq-error"></span>
                     </div>
 
                 </div>
             </section>
+
+            <!-- ============================= -->
+            <!-- Additional Details            -->
+            <!-- ============================= -->
+            @* <section class="aq-panel" data-stage="5" data-stage-name="Additional details">
+                <span class="aq-panel-num">05</span>
+                <div class="aq-panel-head">
+                    <div class="aq-panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s6 7 6 12a6 6 0 0 1-12 0c0-5 6-12 6-12z" /></svg>
+                    </div>
+                    <div>
+                        <h2>Additional details</h2>
+                        <p>Purpose of use and pipe contractor information.</p>
+                    </div>
+                </div>
+                <div class="aq-grid">
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="Purpose" class="aq-label">Purpose</label>
+                        <select asp-for="Purpose" class="aq-input">
+                            <option value="">-- Select Purpose --</option>
+                            <option>Domestic</option>
+                            <option>Commercial</option>
+                            <option>Industrial</option>
+                        </select>
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="ApplicantName" class="aq-label">Name of Applicant</label>
+                        <input asp-for="ApplicantName" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-12 aq-field">
+                        <label asp-for="ConnectionAddress" class="aq-label">Address to which Connection Required</label>
+                        <input asp-for="ConnectionAddress" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-12 aq-field">
+                        <label asp-for="PermanentAddress" class="aq-label">Present / Permanent Address</label>
+                        <input asp-for="PermanentAddress" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="PwdContractorName" class="aq-label">Name of P.W.D. Pipe Contractor</label>
+                        <input asp-for="PwdContractorName" class="aq-input" />
+                    </div>
+
+                    <div class="aq-col-6 aq-field">
+                        <label asp-for="PwdContractorAddress" class="aq-label">Address of P.W.D. Pipe Contractor</label>
+                        <input asp-for="PwdContractorAddress" class="aq-input" />
+                    </div>
+
+                </div>
+            </section> *@
 
             <!-- ============================= -->
             <!-- Document Upload Details       -->
@@ -251,11 +325,10 @@
                         <span class="aq-doc-chip">1</span>
                         <span class="aq-doc-label">Name and Address Verification</span>
                         <div class="aq-doc-control">
-                            <select asp-for="NameAddressDocument" class="aq-input">
+                            <select asp-for="NaVerifyCode" class="aq-input" asp-items="Model.NameAddressVerifications">
                                 <option value="">--Select--</option>
-                                <option>Valid Govt Issued Photo ID</option>
-                                <option>Aadhaar Card or Voter ID</option>
                             </select>
+                            <span asp-validation-for="NaVerifyCode" class="aq-error"></span>
                         </div>
                         <div class="aq-doc-upload">
                             <input asp-for="NameAddressFile" type="file" class="aq-input" />
@@ -282,15 +355,13 @@
                         <span class="aq-doc-chip">3</span>
                         <span class="aq-doc-label">Ownership Verification</span>
                         <div class="aq-doc-control">
-                            <select asp-for="OwnershipDocument2" class="aq-input">
+                            <select asp-for="OwnFileCode" class="aq-input" asp-items="Model.OwnershipVerifications">
                                 <option value="">--Select--</option>
-                                <option>Sale Deed</option>
-                                <option>Link Document</option>
-                                <option>Affidavit and Indemnity</option>
                             </select>
+                            <span asp-validation-for="OwnFileCode" class="aq-error"></span>
                         </div>
                         <div class="aq-doc-upload">
-                            <input asp-for="OwnershipFile2" type="file" class="aq-input" />
+                            <input asp-for="OwnershipFile" type="file" class="aq-input" />
                         </div>
                     </div>
 
@@ -373,3 +444,13 @@
     </div>
 
 </div>
+
+@section Scripts
+{
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script src="~/js/waterjs/wc-form.js"></script>
+    <script src="~/js/waterjs/wc-cascade.js"></script>
+}
