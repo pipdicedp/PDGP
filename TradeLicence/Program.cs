@@ -4,6 +4,7 @@ using TradeLicence.Data;
 using TradeLicence.Interfaces;
 using TradeLicence.Repositories;
 using TradeLicence.Services;
+using WaterConnection.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,8 @@ builder.Services.AddScoped<ITradeLicenceRepository, TradeLicenceRepository>();
 builder.Services.AddScoped<ITradeLicenceService, TradeLicenceService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<WaterApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddDistributedMemoryCache();   // required by session
