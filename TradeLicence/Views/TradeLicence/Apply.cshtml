@@ -23,6 +23,7 @@
 
 <form asp-controller="TradeLicence" asp-action="Apply" method="post" id="tradeLicenceForm">
     @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ApplicationId" id="ApplicationId" />
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
     <div class="tl-toplinks">
@@ -55,233 +56,233 @@
 
     <!-- Application tab -->
     <div id="application-section">
-    <!-- ============ Applicant (Trade Owner) Details ============ -->
-    <fieldset class="tl-section">
-        <legend>Applicant (Trade Owner) Details</legend>
-        <div class="tl-grid-2">
-            <div class="form-group">
-                <label asp-for="ApplicantName"></label> <span class="req">*</span>
-                <input asp-for="ApplicantName" class="form-control" />
-                <span asp-validation-for="ApplicantName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ApplicantResidentialAddress"></label> <span class="req">*</span>
-                <textarea asp-for="ApplicantResidentialAddress" class="form-control" rows="2"></textarea>
-                <span asp-validation-for="ApplicantResidentialAddress" class="text-danger"></span>
-            </div>
+        <!-- ============ Applicant (Trade Owner) Details ============ -->
+        <fieldset class="tl-section">
+            <legend>Applicant (Trade Owner) Details</legend>
+            <div class="tl-grid-2">
+                <div class="form-group">
+                    <label asp-for="ApplicantName"></label> <span class="req">*</span>
+                    <input asp-for="ApplicantName" class="form-control" />
+                    <span asp-validation-for="ApplicantName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ApplicantResidentialAddress"></label> <span class="req">*</span>
+                    <textarea asp-for="ApplicantResidentialAddress" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="ApplicantResidentialAddress" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <label asp-for="ApplicantFatherHusbandName"></label> <span class="req">*</span>
-                <input asp-for="ApplicantFatherHusbandName" class="form-control" />
-                <span asp-validation-for="ApplicantFatherHusbandName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AgeOfApplicant"></label> <span class="req">*</span>
-                <input asp-for="AgeOfApplicant" type="number" class="form-control" />
-                <span asp-validation-for="AgeOfApplicant" class="text-danger"></span>
-            </div>
+                <div class="form-group">
+                    <label asp-for="ApplicantFatherHusbandName"></label> <span class="req">*</span>
+                    <input asp-for="ApplicantFatherHusbandName" class="form-control" />
+                    <span asp-validation-for="ApplicantFatherHusbandName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="AgeOfApplicant"></label> <span class="req">*</span>
+                    <input asp-for="AgeOfApplicant" type="number" class="form-control" />
+                    <span asp-validation-for="AgeOfApplicant" class="text-danger"></span>
+                </div>
 
-            <div class="form-group">
-                <label asp-for="MobileNumber"></label> <span class="req">*</span>
-                <input asp-for="MobileNumber" class="form-control" maxlength="10" />
-                <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                <div class="form-group">
+                    <label asp-for="MobileNumber"></label> <span class="req">*</span>
+                    <input asp-for="MobileNumber" class="form-control" maxlength="10" />
+                    <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="OwnershipType"></label> <span class="req">*</span>
+                    <select asp-for="OwnershipType" asp-items="ViewBag.OwnershipTypes" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="OwnershipType" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="OwnershipType"></label> <span class="req">*</span>
-                <select asp-for="OwnershipType" asp-items="ViewBag.OwnershipTypes" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="OwnershipType" class="text-danger"></span>
+        </fieldset>
+
+        <!-- ============ Trade Place Details ============ -->
+        <fieldset class="tl-section">
+            <legend>Trade Place Details</legend>
+            <div class="tl-grid-2">
+                <div class="form-group">
+                    <label asp-for="MunicipalityId">Municipality / Commune of the Place in which Licence Required</label> <span class="req">*</span>
+                    <select asp-for="MunicipalityId" asp-items="ViewBag.Municipalities" id="MunicipalityId" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="MunicipalityId" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="WardId">Ward of the Place</label> <span class="req">*</span>
+                    <select asp-for="WardId" asp-items="ViewBag.Wards" id="WardId" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="WardId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="AreaId">Area of the Place</label> <span class="req">*</span>
+                    <select asp-for="AreaId" asp-items="ViewBag.Areas" id="AreaId" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="AreaId" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="StreetId">Street of the Place</label> <span class="req">*</span>
+                    <select asp-for="StreetId" asp-items="ViewBag.Streets" id="StreetId" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="StreetId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="DoorNumber"></label> <span class="req">*</span>
+                    <select asp-for="DoorNumber" id="DoorNumber" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="DoorNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="FloorNumber"></label> <span class="req">*</span>
+                    <select asp-for="FloorNumber" class="form-control">
+                        <option value="">---Please Select---</option>
+                        <option>Ground Floor</option>
+                        <option>First Floor</option>
+                        <option>Second Floor</option>
+                        <option>Third Floor & Above</option>
+                    </select>
+                    <span asp-validation-for="FloorNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShopNumber"></label>
+                    <input asp-for="ShopNumber" class="form-control" />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="PropertyTaxAssessmentNumber"></label> <span class="req">*</span>
+                    <input asp-for="PropertyTaxAssessmentNumber" class="form-control" />
+                    <span asp-validation-for="PropertyTaxAssessmentNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="TradePlaceCommunicationAddress"></label> <span class="req">*</span>
+                    <textarea asp-for="TradePlaceCommunicationAddress" id="TradePlaceCommunicationAddress" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="TradePlaceCommunicationAddress" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="TotalAreaCoveredSqFt"></label> <span class="req">*</span>
+                    <input asp-for="TotalAreaCoveredSqFt" type="number" step="0.01" class="form-control" />
+                    <span asp-validation-for="TotalAreaCoveredSqFt" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="NumberOfFloors"></label> <span class="req">*</span>
+                    <input asp-for="NumberOfFloors" type="number" class="form-control" />
+                    <span asp-validation-for="NumberOfFloors" class="text-danger"></span>
+                </div>
             </div>
+        </fieldset>
+
+        <!-- ============ Trade Details ============ -->
+        <fieldset class="tl-section">
+            <legend>Trade Details</legend>
+            <div class="tl-grid-2">
+                <div class="form-group">
+                    <label asp-for="NameAndStyleOfFactory">Name and Style of the factory, workplace, workshop</label> <span class="req">*</span>
+                    <input asp-for="NameAndStyleOfFactory" class="form-control" />
+                    <span asp-validation-for="NameAndStyleOfFactory" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="OtherParticulars"></label> <span class="req">*</span>
+                    <select asp-for="OtherParticulars" asp-items="ViewBag.OtherParticularsList" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="OtherParticulars" class="text-danger"></span>
+                </div>
+
+                <div class="form-group tl-col-full">
+                    <label asp-for="PurposeOfLicence">Purpose for which the licence is required</label> <span class="req">*</span>
+                    <select asp-for="PurposeOfLicence" asp-items="ViewBag.PurposeList" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="PurposeOfLicence" class="text-danger"></span>
+                </div>
+
+                <div class="form-group tl-col-full">
+                    <label asp-for="AdditionalPurpose">Additional purpose for which the licence is required</label>
+                    <input asp-for="AdditionalPurpose" class="form-control" />
+                </div>
+
+                <div class="form-group tl-col-full">
+                    <label asp-for="PurposeOfLicenceRequiredText">Purpose for which the licence is required</label> <span class="req">*</span>
+                    <input asp-for="PurposeOfLicenceRequiredText" class="form-control" />
+                    <span asp-validation-for="PurposeOfLicenceRequiredText" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="NumberOfManagerSupervisor"></label> <span class="req">*</span>
+                    <input asp-for="NumberOfManagerSupervisor" type="number" class="form-control" />
+                    <span asp-validation-for="NumberOfManagerSupervisor" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="NumberOfStaffWorker"></label> <span class="req">*</span>
+                    <input asp-for="NumberOfStaffWorker" type="number" class="form-control" />
+                    <span asp-validation-for="NumberOfStaffWorker" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="DateOfCommencement"></label> <span class="req">*</span>
+                    <input asp-for="DateOfCommencement" type="date" class="form-control" />
+                    <span asp-validation-for="DateOfCommencement" class="text-danger"></span>
+
+                    <label asp-for="LicencePeriod" class="mt-2"></label> <span class="req">*</span>
+                    <select asp-for="LicencePeriod" asp-items="ViewBag.LicencePeriods" class="form-control">
+                        <option value="">---Please Select---</option>
+                    </select>
+                    <span asp-validation-for="LicencePeriod" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CurrentDemandYear"></label>
+                    <input asp-for="CurrentDemandYear" class="form-control" readonly />
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="BuildingOwnerName"></label> <span class="req">*</span>
+                    <input asp-for="BuildingOwnerName" class="form-control" />
+                    <span asp-validation-for="BuildingOwnerName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="BuildingOwnerAddress"></label> <span class="req">*</span>
+                    <button type="button" id="btnCopyAddress" class="btn btn-sm btn-secondary">Copy Trade Place Communication Address</button>
+                    <textarea asp-for="BuildingOwnerAddress" id="BuildingOwnerAddress" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="BuildingOwnerAddress" class="text-danger"></span>
+                </div>
+
+                <div class="form-group tl-col-full">
+                    <label asp-for="RentEstimatedRentPerMonth">Rent or Estimated Rent of the building or land (per month)</label>
+                    <input asp-for="RentEstimatedRentPerMonth" type="number" step="0.01" class="form-control" />
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ============ Documents Checklist ============ -->
+        <fieldset class="tl-section">
+            <legend>Documents Checklist</legend>
+            <p class="tl-note">
+                <strong>Note:</strong> Please select minimum two documents relevant to the License required
+                (other than Aadhaar, Photos and Address proofs) and attach a copy of those documents
+                along with printed Trade Licence application to local body.
+            </p>
+            <div class="tl-checklist">
+                @foreach (var doc in documentList)
+                {
+                    <label class="tl-checklist-item">
+                        <input type="checkbox" name="selectedDocuments" value="@doc.DocumentItemId" /> @doc.DocumentName
+                    </label>
+                }
+            </div>
+        </fieldset>
+
+        <div class="tl-actions">
+            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="submit" id="btnSaveDraft" formaction="@Url.Action("SaveDraft")" class="btn btn-primary">Save Draft</button>
+            <button type="button" id="btnNext" class="btn btn-success">Next &raquo;</button>
         </div>
-    </fieldset>
-
-    <!-- ============ Trade Place Details ============ -->
-    <fieldset class="tl-section">
-        <legend>Trade Place Details</legend>
-        <div class="tl-grid-2">
-            <div class="form-group">
-                <label asp-for="MunicipalityId">Municipality / Commune of the Place in which Licence Required</label> <span class="req">*</span>
-                <select asp-for="MunicipalityId" asp-items="ViewBag.Municipalities" id="MunicipalityId" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="MunicipalityId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="WardId">Ward of the Place</label> <span class="req">*</span>
-                <select asp-for="WardId" asp-items="ViewBag.Wards" id="WardId" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="WardId" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="AreaId">Area of the Place</label> <span class="req">*</span>
-                <select asp-for="AreaId" asp-items="ViewBag.Areas" id="AreaId" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="AreaId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StreetId">Street of the Place</label> <span class="req">*</span>
-                <select asp-for="StreetId" asp-items="ViewBag.Streets" id="StreetId" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="StreetId" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="DoorNumber"></label> <span class="req">*</span>
-                <select asp-for="DoorNumber" id="DoorNumber" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="DoorNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FloorNumber"></label> <span class="req">*</span>
-                <select asp-for="FloorNumber" class="form-control">
-                    <option value="">---Please Select---</option>
-                    <option>Ground Floor</option>
-                    <option>First Floor</option>
-                    <option>Second Floor</option>
-                    <option>Third Floor & Above</option>
-                </select>
-                <span asp-validation-for="FloorNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ShopNumber"></label>
-                <input asp-for="ShopNumber" class="form-control" />
-            </div>
-
-            <div class="form-group">
-                <label asp-for="PropertyTaxAssessmentNumber"></label> <span class="req">*</span>
-                <input asp-for="PropertyTaxAssessmentNumber" class="form-control" />
-                <span asp-validation-for="PropertyTaxAssessmentNumber" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TradePlaceCommunicationAddress"></label> <span class="req">*</span>
-                <textarea asp-for="TradePlaceCommunicationAddress" id="TradePlaceCommunicationAddress" class="form-control" rows="2"></textarea>
-                <span asp-validation-for="TradePlaceCommunicationAddress" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="TotalAreaCoveredSqFt"></label> <span class="req">*</span>
-                <input asp-for="TotalAreaCoveredSqFt" type="number" step="0.01" class="form-control" />
-                <span asp-validation-for="TotalAreaCoveredSqFt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NumberOfFloors"></label> <span class="req">*</span>
-                <input asp-for="NumberOfFloors" type="number" class="form-control" />
-                <span asp-validation-for="NumberOfFloors" class="text-danger"></span>
-            </div>
-        </div>
-    </fieldset>
-
-    <!-- ============ Trade Details ============ -->
-    <fieldset class="tl-section">
-        <legend>Trade Details</legend>
-        <div class="tl-grid-2">
-            <div class="form-group">
-                <label asp-for="NameAndStyleOfFactory">Name and Style of the factory, workplace, workshop</label> <span class="req">*</span>
-                <input asp-for="NameAndStyleOfFactory" class="form-control" />
-                <span asp-validation-for="NameAndStyleOfFactory" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="OtherParticulars"></label> <span class="req">*</span>
-                <select asp-for="OtherParticulars" asp-items="ViewBag.OtherParticularsList" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="OtherParticulars" class="text-danger"></span>
-            </div>
-
-            <div class="form-group tl-col-full">
-                <label asp-for="PurposeOfLicence">Purpose for which the licence is required</label> <span class="req">*</span>
-                <select asp-for="PurposeOfLicence" asp-items="ViewBag.PurposeList" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="PurposeOfLicence" class="text-danger"></span>
-            </div>
-
-            <div class="form-group tl-col-full">
-                <label asp-for="AdditionalPurpose">Additional purpose for which the licence is required</label>
-                <input asp-for="AdditionalPurpose" class="form-control" />
-            </div>
-
-            <div class="form-group tl-col-full">
-                <label asp-for="PurposeOfLicenceRequiredText">Purpose for which the licence is required</label> <span class="req">*</span>
-                <input asp-for="PurposeOfLicenceRequiredText" class="form-control" />
-                <span asp-validation-for="PurposeOfLicenceRequiredText" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="NumberOfManagerSupervisor"></label> <span class="req">*</span>
-                <input asp-for="NumberOfManagerSupervisor" type="number" class="form-control" />
-                <span asp-validation-for="NumberOfManagerSupervisor" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="NumberOfStaffWorker"></label> <span class="req">*</span>
-                <input asp-for="NumberOfStaffWorker" type="number" class="form-control" />
-                <span asp-validation-for="NumberOfStaffWorker" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="DateOfCommencement"></label> <span class="req">*</span>
-                <input asp-for="DateOfCommencement" type="date" class="form-control" />
-                <span asp-validation-for="DateOfCommencement" class="text-danger"></span>
-
-                <label asp-for="LicencePeriod" class="mt-2"></label> <span class="req">*</span>
-                <select asp-for="LicencePeriod" asp-items="ViewBag.LicencePeriods" class="form-control">
-                    <option value="">---Please Select---</option>
-                </select>
-                <span asp-validation-for="LicencePeriod" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CurrentDemandYear"></label>
-                <input asp-for="CurrentDemandYear" class="form-control" readonly />
-            </div>
-
-            <div class="form-group">
-                <label asp-for="BuildingOwnerName"></label> <span class="req">*</span>
-                <input asp-for="BuildingOwnerName" class="form-control" />
-                <span asp-validation-for="BuildingOwnerName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="BuildingOwnerAddress"></label> <span class="req">*</span>
-                <button type="button" id="btnCopyAddress" class="btn btn-sm btn-secondary">Copy Trade Place Communication Address</button>
-                <textarea asp-for="BuildingOwnerAddress" id="BuildingOwnerAddress" class="form-control" rows="2"></textarea>
-                <span asp-validation-for="BuildingOwnerAddress" class="text-danger"></span>
-            </div>
-
-            <div class="form-group tl-col-full">
-                <label asp-for="RentEstimatedRentPerMonth">Rent or Estimated Rent of the building or land (per month)</label>
-                <input asp-for="RentEstimatedRentPerMonth" type="number" step="0.01" class="form-control" />
-            </div>
-        </div>
-    </fieldset>
-
-    <!-- ============ Documents Checklist ============ -->
-    <fieldset class="tl-section">
-        <legend>Documents Checklist</legend>
-        <p class="tl-note">
-            <strong>Note:</strong> Please select minimum two documents relevant to the License required
-            (other than Aadhaar, Photos and Address proofs) and attach a copy of those documents
-            along with printed Trade Licence application to local body.
-        </p>
-        <div class="tl-checklist">
-            @foreach (var doc in documentList)
-            {
-                <label class="tl-checklist-item">
-                    <input type="checkbox" name="selectedDocuments" value="@doc.DocumentItemId" /> @doc.DocumentName
-                </label>
-            }
-        </div>
-    </fieldset>
-
-    <div class="tl-actions">
-        <button type="reset" class="btn btn-secondary">Reset</button>
-        <button type="submit" id="btnSaveDraft" formaction="@Url.Action("SaveDraft")" class="btn btn-primary">Save Draft</button>
-        <button type="button" id="btnNext" class="btn btn-success">Next &raquo;</button>
-    </div>
     </div>
 
     <!-- Partners Details tab (hidden until application validated) -->
@@ -315,7 +316,8 @@
             getWardsUrl: '@Url.Action("GetWards", "TradeLicence")',
             getAreasUrl: '@Url.Action("GetAreas", "TradeLicence")',
             getStreetsUrl: '@Url.Action("GetStreets", "TradeLicence")',
-            getDoorNumbersUrl: '@Url.Action("GetDoorNumbers", "TradeLicence")'
+            getDoorNumbersUrl: '@Url.Action("GetDoorNumbers", "TradeLicence")',
+            saveApplicationDetailsUrl: '@Url.Action("SaveApplicationDetails", "TradeLicence")'
         };
     </script>
     <script src="~/js/tradelicence-apply.js" asp-append-version="true"></script>

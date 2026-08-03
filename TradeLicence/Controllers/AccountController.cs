@@ -30,20 +30,31 @@ namespace TradeLicence.Controllers
         {
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
             // ---- 1. CAPTCHA check FIRST, before touching the database at all ----
-            // This is what actually stops scripted brute-force attempts: a bot
-            // has to solve a fresh CAPTCHA on every single POST, so credential-
-            // stuffing at scale becomes impractical even before rate limiting.
             var expectedCode = HttpContext.Session.GetString("CaptchaCode");
             HttpContext.Session.Remove("CaptchaCode"); // single-use, whether it matches or not
 
-            if (string.IsNullOrEmpty(expectedCode) ||
-                !string.Equals(model.CaptchaInput?.Trim(), expectedCode, StringComparison.OrdinalIgnoreCase))
+            bool captchaValid = !string.IsNullOrEmpty(expectedCode) &&
+                string.Equals(model.CaptchaInput?.Trim(), expectedCode, StringComparison.OrdinalIgnoreCase);
+
+            // A fresh CAPTCHA image is generated every time this view is redisplayed
+            // (the <img> tag always calls CaptchaImage() again), so whatever the user
+            // typed for the OLD image is now meaningless. Clear it from both the model
+            // AND ModelState — asp-for reads ModelState's attempted value first, so
+            // clearing only the model property is not enough; the old text would still
+            // reappear in the textbox otherwise.
+            var typedPassword = model.Password; // keep the real value for verification below
+            model.CaptchaInput = string.Empty;
+            model.Password = string.Empty;      // cleared for redisplay only — browsers
+                                                // silently refill a wrong password otherwise
+            ModelState.Remove(nameof(model.CaptchaInput));
+            ModelState.Remove(nameof(model.Password));
+
+            if (!captchaValid)
             {
                 ModelState.AddModelError(nameof(model.CaptchaInput), "The code entered does not match the image. Please try again.");
                 return View(model);
@@ -54,9 +65,6 @@ namespace TradeLicence.Controllers
             // ---- 2. Look up the user ----
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == model.Username);
 
-            // Deliberately generic error message for both "no such user" and "wrong
-            // password" — a distinct message for each would let an attacker enumerate
-            // valid usernames.
             const string genericError = "Invalid username or password.";
 
             if (user == null)
@@ -71,7 +79,7 @@ namespace TradeLicence.Controllers
                 return View(model);
             }
 
-            var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
+            var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, typedPassword);
             if (verifyResult == PasswordVerificationResult.Failed)
             {
                 user.FailedLoginAttempts++;
@@ -122,27 +130,6 @@ namespace TradeLicence.Controllers
             return Content(svg, "image/svg+xml");
         }
 
-        /// <summary>
-        /// DEVELOPMENT ONLY — creates one working test login so you can try the
-        /// page before a Register module exists. Guarded by environment check;
-        /// remove this action entirely before deploying anywhere non-Development.
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> SeedTestUser([FromServices] IWebHostEnvironment env)
-        {
-            if (!env.IsDevelopment()) return NotFound();
-
-            if (await _context.Users.AnyAsync(u => u.Username == "testuser"))
-                return Content("Test user already exists. Username: testuser / Password: Test@12345");
-
-            var user = new ApplicationUser { Username = "testuser" };
-            user.PasswordHash = _passwordHasher.HashPassword(user, "Test@12345");
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            return Content("Created. Username: testuser / Password: Test@12345");
-        }
-
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -152,4 +139,5 @@ namespace TradeLicence.Controllers
             return RedirectToAction("Login");
         }
     }
+
 }

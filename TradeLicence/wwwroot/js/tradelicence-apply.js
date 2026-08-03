@@ -438,20 +438,65 @@
                     if (!validator.element(this)) valid = false;
                 });
 
-                if (valid) {
-                    $('#application-section').hide();
-                    $('#partners-section').show();
-                    $('.tl-step-badge').text('Step: 2 of 7');
-                    renderWizardLinks('partners');
-                    window.scrollTo(0, 0);
-                } else {
+                if (!valid) {
                     // scroll to first error
                     var $err = $('.input-validation-error').first();
                     if ($err.length) {
                         var top = $err.offset().top - 80;
                         window.scrollTo({ top: top, behavior: 'smooth' });
                     }
+                    return;
                 }
+
+                // Client-side validation is only a UX shortcut — the real check,
+                // and the actual database save, happens server-side. Partners
+                // Details only becomes reachable once this succeeds.
+                var $btn = $('#btnNext');
+                var originalText = $btn.text();
+                $btn.prop('disabled', true).text('Saving...');
+                clearWizardMessage();
+
+                var formEl = document.getElementById('tradeLicenceForm');
+                var formData = new FormData(formEl);
+                var url = (window.TradeLicenceApi && window.TradeLicenceApi.saveApplicationDetailsUrl) || '/TradeLicence/SaveApplicationDetails';
+
+                fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(async function (r) {
+                        var data = await r.json().catch(function () { return {}; });
+                        if (!r.ok) {
+                            var err = new Error('Validation failed');
+                            err.payload = data;
+                            throw err;
+                        }
+                        return data;
+                    })
+                    .then(function (data) {
+                        // Store the ApplicationId so subsequent steps (Add Partner,
+                        // machinery, uploads, etc.) know which record to attach to.
+                        var idField = document.getElementById('ApplicationId');
+                        if (idField) idField.value = data.applicationId;
+                        // If the Partners partial reads a separately-named hidden
+                        // field for its AJAX calls, keep that in sync too.
+                        var partnersIdField = document.getElementById('applicationId');
+                        if (partnersIdField) partnersIdField.value = data.applicationId;
+
+                        $('#application-section').hide();
+                        $('#partners-section').show();
+                        $('.tl-step-badge').text('Step: 2 of 7');
+                        renderWizardLinks('partners');
+                        window.scrollTo(0, 0);
+                    })
+                    .catch(function (err) {
+                        console.error('Failed to save application details', err.payload || err);
+                        showWizardMessage('Please correct the highlighted errors before continuing — the application could not be saved.', 'danger');
+                    })
+                    .finally(function () {
+                        $btn.prop('disabled', false).text(originalText);
+                    });
             });
 
             $('#btnBackToApplication').on('click', function () {

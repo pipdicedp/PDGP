@@ -17,6 +17,10 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
     <!-- Add relational provider so ModelBuilder relational extensions (ToTable, HasColumnType, HasDefaultValue) are available -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

@@ -94,6 +94,7 @@ namespace TradeLicence.Models
 
         public string Status { get; set; } = "Draft";
 
+
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
         public DateTime? ModifiedDate { get; set; }
