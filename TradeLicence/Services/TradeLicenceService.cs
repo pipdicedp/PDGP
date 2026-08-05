@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -22,6 +23,9 @@ namespace TradeLicence.Services
             model.CreatedDate = DateTime.UtcNow;
             await _repo.AddApplicationAsync(model);
 
+            // Save parent application first to generate ApplicationId
+            await _repo.SaveChangesAsync();
+
             if (selectedDocuments != null)
             {
                 foreach (var docId in selectedDocuments)
@@ -32,9 +36,10 @@ namespace TradeLicence.Services
                         DocumentItemId = docId
                     });
                 }
-            }
 
-            await _repo.SaveChangesAsync();
+                // Save child documents
+                await _repo.SaveChangesAsync();
+            }
         }
 
         public async Task SubmitApplicationAsync(TradeLicenceApplication model, List<int>? selectedDocuments)
@@ -93,6 +98,15 @@ namespace TradeLicence.Services
             _repo.RemovePartner(partner);
             await _repo.SaveChangesAsync();
             return true;
+        }
+        public async Task<bool> UpdateCurrentStepAsync(int applicationId, int step)
+        {
+            var result = await _repo.UpdateCurrentStepAsync(applicationId, step);
+            if (result)
+            {
+                await _repo.SaveChangesAsync();
+            }
+            return result;
         }
 
         public async Task<List<Municipality>> GetMunicipalitiesAsync() => await _repo.GetMunicipalitiesAsync();

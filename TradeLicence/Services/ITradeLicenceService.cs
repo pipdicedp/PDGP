@@ -15,6 +15,7 @@ namespace TradeLicence.Services
         Task<List<Street>> GetStreetsAsync(int areaId);
         Task<List<DoorNumberLookup>> GetDoorNumbersAsync(int streetId);
         Task<List<DocumentChecklistItem>> GetDocumentChecklistAsync();
+        Task<bool> UpdateCurrentStepAsync(int applicationId, int step);
 
         Task<List<TradeLicencePartner>> GetPartnersAsync(int applicationId);
         Task<TradeLicencePartner> AddPartnerAsync(int applicationId, string partnerName, string designation, string address);

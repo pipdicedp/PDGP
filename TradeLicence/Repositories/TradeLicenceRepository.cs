@@ -81,5 +81,21 @@ namespace TradeLicence.Repositories
         {
             _context.TradeLicencePartners.Remove(partner);
         }
+
+        public async Task<bool> UpdateCurrentStepAsync(int applicationId, int step)
+        {
+            var application = await _context.TradeLicenceApplications.FindAsync(applicationId);
+            if (application == null) return false;
+
+            // Never move the step backward — if the user somehow re-triggers an
+            // earlier step's Next after already being further along, don't lose
+            // their progress marker.
+            if (step > application.CurrentStep)
+            {
+                application.CurrentStep = step;
+            }
+
+            return true;
+        }
     }
 }

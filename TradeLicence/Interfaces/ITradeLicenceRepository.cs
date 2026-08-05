@@ -22,6 +22,7 @@ namespace TradeLicence.Interfaces
         Task<TradeLicencePartner?> GetPartnerAsync(int partnerId);
         void RemovePartner(TradeLicencePartner partner);
 
+        Task<bool> UpdateCurrentStepAsync(int applicationId, int step);
         Task SaveChangesAsync();
     }
 }

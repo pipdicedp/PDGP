@@ -10,6 +10,36 @@
         });
     }
 
+    function getApplicationId() {
+        var idField = document.getElementById('ApplicationId') || document.getElementById('applicationId');
+        return idField ? idField.value : null;
+    }
+
+    function getAntiForgeryToken() {
+        var tokenField = document.querySelector('input[name="__RequestVerificationToken"]');
+        return tokenField ? tokenField.value : null;
+    }
+
+    /// Tells the server the user has reached this step, so "Continue" from the
+    /// dashboard reopens the wizard at the right tab instead of always starting
+    /// over at Application Details. Fire-and-forget-ish: logs failures but never
+    /// blocks the user from moving forward client-side, since this is a progress
+    /// marker, not a data save.
+    function advanceStep(step) {
+        var applicationId = getApplicationId();
+        var token = getAntiForgeryToken();
+        if (!applicationId || !token) return;
+
+        var body = new URLSearchParams({ applicationId: applicationId, step: step });
+        fetch('/TradeLicence/AdvanceStep', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'RequestVerificationToken': token },
+            body: body
+        }).catch(function (err) {
+            console.warn('Failed to record wizard progress for step ' + step, err);
+        });
+    }
+
     // Helper: show inline message below wizard links
     function showWizardMessage(msg, type) {
         var container = document.getElementById('tl-wizard-message');
@@ -92,9 +122,11 @@
                     document.querySelectorAll('.tl-step-badge').forEach(b => b.textContent = 'Step: 1 of 7');
                     // focus first missing required field
                     focusFirstInvalid();
-                } else {
-                    showWizardMessage('This tab is not implemented yet.', 'info');
                 }
+                // else
+                // {
+                //     showWizardMessage('This tab is not implemented yet.', 'info');
+                // }
                 return;
             }
             // Show application section when clicked
@@ -119,7 +151,8 @@
         const doorEl = document.getElementById('DoorNumber');
 
         // Initialize wizard links
-        renderWizardLinks('application');
+        var startTab = window.TradeLicenceStartTab || 'application';
+        renderWizardLinks(startTab);
         attachWizardHandlers();
 
         // Clear wizard message when user modifies any application field
@@ -431,7 +464,8 @@
             var form = $('#tradeLicenceForm');
             var validator = form.validate();
 
-            $('#btnNext').on('click', function () {
+            $('#btnNext').on('click', function (e) {
+                e.preventDefault();
                 var valid = true;
                 $('#application-section').find(':input').each(function () {
                     if ($(this).is(':disabled') || $(this).attr('type') === 'button') return;
@@ -439,7 +473,6 @@
                 });
 
                 if (!valid) {
-                    // scroll to first error
                     var $err = $('.input-validation-error').first();
                     if ($err.length) {
                         var top = $err.offset().top - 80;
@@ -448,55 +481,44 @@
                     return;
                 }
 
-                // Client-side validation is only a UX shortcut — the real check,
-                // and the actual database save, happens server-side. Partners
-                // Details only becomes reachable once this succeeds.
-                var $btn = $('#btnNext');
-                var originalText = $btn.text();
-                $btn.prop('disabled', true).text('Saving...');
-                clearWizardMessage();
+                // Save application details before proceeding
+                var formElement = document.getElementById('tradeLicenceForm');
+                var formData = new FormData(formElement);
+                var saveUrl = (window.TradeLicenceApi?.saveApplicationDetailsUrl || '/TradeLicence/SaveApplicationDetails');
+                var token = getAntiForgeryToken();
 
-                var formEl = document.getElementById('tradeLicenceForm');
-                var formData = new FormData(formEl);
-                var url = (window.TradeLicenceApi && window.TradeLicenceApi.saveApplicationDetailsUrl) || '/TradeLicence/SaveApplicationDetails';
-
-                fetch(url, {
+                fetch(saveUrl, {
                     method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: { 'RequestVerificationToken': token },
+                    body: formData
                 })
-                    .then(async function (r) {
-                        var data = await r.json().catch(function () { return {}; });
-                        if (!r.ok) {
-                            var err = new Error('Validation failed');
-                            err.payload = data;
-                            throw err;
+                .then(function(response) {
+                    if (!response.ok) {
+                        return response.json().then(function(data) {
+                            throw new Error('Save failed: ' + (data.errors ? JSON.stringify(data.errors) : response.statusText));
+                        });
+                    }
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.success) {
+                        if (data.applicationId) {
+                            document.getElementById('ApplicationId').value = data.applicationId;
                         }
-                        return data;
-                    })
-                    .then(function (data) {
-                        // Store the ApplicationId so subsequent steps (Add Partner,
-                        // machinery, uploads, etc.) know which record to attach to.
-                        var idField = document.getElementById('ApplicationId');
-                        if (idField) idField.value = data.applicationId;
-                        // If the Partners partial reads a separately-named hidden
-                        // field for its AJAX calls, keep that in sync too.
-                        var partnersIdField = document.getElementById('applicationId');
-                        if (partnersIdField) partnersIdField.value = data.applicationId;
-
                         $('#application-section').hide();
                         $('#partners-section').show();
                         $('.tl-step-badge').text('Step: 2 of 7');
                         renderWizardLinks('partners');
+                        advanceStep(2);
                         window.scrollTo(0, 0);
-                    })
-                    .catch(function (err) {
-                        console.error('Failed to save application details', err.payload || err);
-                        showWizardMessage('Please correct the highlighted errors before continuing — the application could not be saved.', 'danger');
-                    })
-                    .finally(function () {
-                        $btn.prop('disabled', false).text(originalText);
-                    });
+                    } else {
+                        showWizardMessage('Failed to save application details.', 'danger');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Error saving application:', err);
+                    showWizardMessage('Error saving application. See console for details.', 'danger');
+                });
             });
 
             $('#btnBackToApplication').on('click', function () {
@@ -529,6 +551,15 @@
                 }
                 // otherwise let the form submit normally to its formaction
             });
+        }
+
+        // Resume at the correct step when reopening an existing draft
+        // (e.g. via "Continue" from the dashboard). window.TradeLicenceStartTab
+        // is rendered server-side from the application's CurrentStep.
+        if (startTab && startTab !== 'application' && typeof showWizardSection === 'function') {
+            showWizardSection(startTab);
+            var stepNumbers = { application: 1, partners: 2, machinery: 3, photo: 4, documents: 5, shops: 6, confirm: 7 };
+            $('.tl-step-badge').text('Step: ' + (stepNumbers[startTab] || 1) + ' of 7');
         }
     }
 
@@ -587,6 +618,7 @@
 
     $('#btnPartnerNext').on('click', function () {
 
+        advanceStep(3);
         showWizardSection('machinery');
 
         $('.tl-step-badge').text('Step: 3 of 7');
@@ -609,6 +641,7 @@
 
     $('#btnMachineryNext').on('click', function () {
 
+        advanceStep(4);
         showWizardSection('photo');
 
         $('.tl-step-badge').text('Step: 4 of 7');
@@ -631,6 +664,7 @@
 
     $('#btnPhotoNext').on('click', function () {
 
+        advanceStep(5);
         showWizardSection('documents');
 
         $('.tl-step-badge').text('Step: 5 of 7');
@@ -669,6 +703,7 @@
 
     $('#btnDocumentNext').on('click', function () {
 
+        advanceStep(6);
         showWizardSection('shops');
 
         $('.tl-step-badge').text('Step: 6 of 7');
@@ -690,6 +725,7 @@
     });
     $('#btnShopsNext').on('click', function () {
 
+        advanceStep(7);
         showWizardSection('confirm');
 
         $('.tl-step-badge').text('Step: 7 of 7');
