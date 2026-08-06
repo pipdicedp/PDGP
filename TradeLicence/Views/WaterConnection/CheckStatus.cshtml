@@ -1,0 +1,65 @@
+@model WaterConnection.Models.WaterConnectionStatusViewModel
+
+@{
+    ViewData["Title"] = "Check Application Status";
+}
+
+<link rel="stylesheet" href="~/css/watercss/wc-landing.css" />
+
+<div class="ws-page">
+    <div class="ws-shell">
+
+        <div class="ws-header">
+            <p class="ws-eyebrow">Government of Puducherry</p>
+            <h1 class="ws-title">Check Application Status</h1>
+            <p class="ws-subtitle">
+                Enter the Application ID you received when you submitted your water
+                connection application.
+            </p>
+        </div>
+
+        <div class="ws-card">
+            <form asp-action="CheckStatus" asp-controller="WaterConnection" method="post" novalidate>
+                @Html.AntiForgeryToken()
+                <div class="ws-form-row">
+                    <div class="ws-field">
+                        <label asp-for="ApplicationId" class="ws-label">Application ID</label>
+                        <input asp-for="ApplicationId" type="number" min="1" class="ws-input" placeholder="e.g. 14" />
+                    </div>
+                    <button type="submit" class="ws-btn">Check Status</button>
+                </div>
+                @if (Model.Searched && !Model.ApplicationId.HasValue)
+                {
+                    <div class="ws-error">Please enter an Application ID.</div>
+                }
+            </form>
+
+            @if (Model.Searched && Model.ApplicationId.HasValue)
+            {
+                <div class="ws-result">
+                    @if (Model.Found)
+                    {
+                        <div class="ws-found">
+                            <div class="ws-found-meta">
+                                <span class="ws-found-label">Application #@Model.ApplicationId</span>
+                                <span class="ws-found-name">@Model.ApplicantName</span>
+                                @if (Model.ApplicationDate.HasValue)
+                                {
+                                    <span class="ws-found-date">Submitted on @Model.ApplicationDate.Value.ToString("dd-MM-yyyy")</span>
+                                }
+                            </div>
+                            <span class="ws-status-badge">@Model.Status</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="ws-not-found">Application ID not found.</div>
+                    }
+                </div>
+            }
+        </div>
+
+        <a asp-action="Home" class="ws-back">← Back to Water Connection</a>
+
+    </div>
+</div>

@@ -23,9 +23,13 @@ namespace WaterConnection.Models
 
         public bool IsRequired { get; set; } = true;
 
-        // Stored (unique) file name inside wwwroot/uploads
-        [StringLength(400)]
-        public string? FilePath { get; set; }
+        // File_Path is varbinary(max) in the DB — holds the actual file bytes,
+        // not a disk path. Property is named FileContent in code to avoid confusion,
+        // but is mapped to the File_Path column (see WaterApplicationDbContext).
+        // No separate column exists for the original filename/MIME type, so the
+        // content type is detected from the bytes themselves when serving the file
+        // back out (see WaterConnectionController.Document).
+        public byte[]? FileContent { get; set; }
 
         public DateTime UploadedOn { get; set; } = DateTime.Now;
     }
