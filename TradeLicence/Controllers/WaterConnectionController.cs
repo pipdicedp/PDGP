@@ -9,12 +9,17 @@ namespace WaterConnection.Controllers
     public class WaterConnectionController : Controller
     {
         private readonly WaterApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
 
-        public WaterConnectionController(WaterApplicationDbContext context, IWebHostEnvironment environment)
+        public WaterConnectionController(WaterApplicationDbContext context)
         {
             _context = context;
-            _environment = environment;
+        }
+
+        // Landing page for the Water Connection module: choose to apply or check status.
+        [HttpGet]
+        public IActionResult Home()
+        {
+            return View();
         }
 
         // Display Form
@@ -29,6 +34,8 @@ namespace WaterConnection.Controllers
         // Save Form
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequestFormLimits(MultipartBodyLengthLimit = 26_214_400)] // 25 MB
+        [RequestSizeLimit(26_214_400)]
         public async Task<IActionResult> Index(WaterConnectionFormViewModel model)
         {
             if (ModelState.IsValid)
@@ -77,14 +84,15 @@ namespace WaterConnection.Controllers
                     .Select(x => x.DocumentName)
                     .FirstOrDefaultAsync();
 
-                AddDocument(application.ApplicationId, "NameAddress", naDocText, model.NameAddressFile);
-                AddDocument(application.ApplicationId, "Ownership", ownDocText, model.OwnershipFile);
-                AddDocument(application.ApplicationId, "Others", model.OthersDocument, model.OthersFile);
-                AddDocument(application.ApplicationId, "ContractorConsent", model.ContractorConsentDocument, model.ContractorConsentFile);
+                await AddDocument(application.ApplicationId, "NameAddress", naDocText, model.NameAddressFile);
+                await AddDocument(application.ApplicationId, "Ownership", ownDocText, model.OwnershipFile);
+                await AddDocument(application.ApplicationId, "Others", model.OthersDocument, model.OthersFile);
+                await AddDocument(application.ApplicationId, "ContractorConsent", model.ContractorConsentDocument, model.ContractorConsentFile);
 
                 await _context.SaveChangesAsync();
 
                 TempData["Success"] = "Application submitted successfully.";
+                TempData["SuccessApplicationId"] = application.ApplicationId;
                 return RedirectToAction("Index");
             }
 
@@ -93,10 +101,19 @@ namespace WaterConnection.Controllers
         }
 
         // Queue a document row for a newly created application; skipped if no file was chosen.
-        private void AddDocument(int applicationId, string purpose, string? option, IFormFile? file)
+        // The file's bytes are read straight into the entity -- Application_Documents.File_Path
+        // is varbinary(max), so this goes to the DB, not the local disk.
+        private async Task AddDocument(int applicationId, string purpose, string? option, IFormFile? file)
         {
             if (file == null || file.Length == 0)
                 return;
+
+            byte[] content;
+            using (var memoryStream = new MemoryStream())
+            {
+                await file.CopyToAsync(memoryStream);
+                content = memoryStream.ToArray();
+            }
 
             _context.ApplicationDocuments.Add(new ApplicationDocument
             {
@@ -104,34 +121,9 @@ namespace WaterConnection.Controllers
                 DocumentPurpose = purpose,
                 DocumentOption = option,
                 IsRequired = true,
-                FilePath = UploadFile(file),
+                FileContent = content,
                 UploadedOn = DateTime.Now
             });
-        }
-
-        // Upload File
-        private string UploadFile(IFormFile? file)
-        {
-            if (file == null || file.Length == 0)
-                return string.Empty;
-
-            string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            string uniqueFileName = Guid.NewGuid().ToString() + "_" + file.FileName;
-
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                file.CopyTo(stream);
-            }
-
-            return uniqueFileName;
         }
 
         // View All Applications
@@ -172,33 +164,105 @@ namespace WaterConnection.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var application = await _context.WaterConnectionApplications
-                .Include(a => a.Documents)
                 .FirstOrDefaultAsync(x => x.ApplicationId == id);
 
             if (application != null)
             {
-                // Remove uploaded files from disk (DB rows cascade automatically via FK_Doc_Application)
-                if (application.Documents != null)
-                {
-                    string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-                    foreach (var doc in application.Documents)
-                    {
-                        if (string.IsNullOrWhiteSpace(doc.FilePath))
-                            continue;
-
-                        var fullPath = Path.Combine(uploadsFolder, doc.FilePath);
-                        if (System.IO.File.Exists(fullPath))
-                        {
-                            System.IO.File.Delete(fullPath);
-                        }
-                    }
-                }
-
+                // Application_Documents rows (and their file bytes) cascade-delete
+                // automatically via FK_Doc_Application -- nothing to clean up on disk.
                 _context.WaterConnectionApplications.Remove(application);
                 await _context.SaveChangesAsync();
             }
 
             return RedirectToAction("List");
+        }
+
+        // Check Application Status -- show the search form
+        [HttpGet]
+        public IActionResult CheckStatus()
+        {
+            return View(new WaterConnectionStatusViewModel());
+        }
+
+        // Check Application Status -- look up by Application_Id and show its Status
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CheckStatus(WaterConnectionStatusViewModel model)
+        {
+            model.Searched = true;
+            model.Found = false;
+            model.Status = null;
+            model.ApplicantName = null;
+            model.ApplicationDate = null;
+
+            if (model.ApplicationId.HasValue)
+            {
+                var application = await _context.WaterConnectionApplications
+                    .Where(a => a.ApplicationId == model.ApplicationId.Value)
+                    .Select(a => new { a.Status, a.Name, a.ApplicationDate })
+                    .FirstOrDefaultAsync();
+
+                if (application != null)
+                {
+                    model.Found = true;
+                    model.Status = application.Status;
+                    model.ApplicantName = application.Name;
+                    model.ApplicationDate = application.ApplicationDate;
+                }
+            }
+
+            return View(model);
+        }
+
+        // Serve a document's bytes straight out of the database so it can be viewed/downloaded.
+        // There's no column for the original filename/MIME type, so the content type is
+        // detected from the bytes themselves (the schema only has File_Path).
+        [HttpGet]
+        public async Task<IActionResult> Document(int id, bool download = false)
+        {
+            var doc = await _context.ApplicationDocuments
+                .FirstOrDefaultAsync(d => d.DocumentId == id);
+
+            if (doc == null || doc.FileContent == null || doc.FileContent.Length == 0)
+                return NotFound();
+
+            var (contentType, extension) = DetectFileType(doc.FileContent);
+            var baseName = string.IsNullOrWhiteSpace(doc.DocumentPurpose) ? "document" : doc.DocumentPurpose;
+            var fileName = $"{baseName}-{doc.DocumentId}{extension}";
+
+            // The 3-arg File(bytes, contentType, fileDownloadName) overload always sends
+            // Content-Disposition: attachment, which forces a download even inside an
+            // <iframe> preview. Setting the header ourselves as "inline" lets the browser
+            // render PDFs/images in place; ?download=true still forces a real download
+            // (e.g. for a "Download" button) via "attachment" instead.
+            var disposition = download ? "attachment" : "inline";
+            Response.Headers.Append("Content-Disposition", $"{disposition}; filename=\"{fileName}\"");
+
+            return File(doc.FileContent, contentType);
+        }
+
+        // Identifies common document/image formats by their byte signature ("magic numbers"),
+        // since the DB only stores raw bytes -- no filename or MIME type column exists to read from.
+        private static (string ContentType, string Extension) DetectFileType(byte[] bytes)
+        {
+            if (bytes.Length >= 4 && bytes[0] == 0x25 && bytes[1] == 0x50 && bytes[2] == 0x44 && bytes[3] == 0x46)
+                return ("application/pdf", ".pdf");
+
+            if (bytes.Length >= 3 && bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF)
+                return ("image/jpeg", ".jpg");
+
+            if (bytes.Length >= 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47
+                && bytes[4] == 0x0D && bytes[5] == 0x0A && bytes[6] == 0x1A && bytes[7] == 0x0A)
+                return ("image/png", ".png");
+
+            if (bytes.Length >= 6 && bytes[0] == 0x47 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x38
+                && (bytes[4] == 0x37 || bytes[4] == 0x39) && bytes[5] == 0x61)
+                return ("image/gif", ".gif");
+
+            if (bytes.Length >= 2 && bytes[0] == 0x42 && bytes[1] == 0x4D)
+                return ("image/bmp", ".bmp");
+
+            return ("application/octet-stream", string.Empty);
         }
 
         // ---- Cascading dropdown endpoints (Section -> Contractor -> Area follow the DB's FK chain) ----

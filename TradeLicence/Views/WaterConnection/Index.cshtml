@@ -48,8 +48,20 @@
 
     @if (TempData["Success"] != null)
     {
-        <div class="aq-alert">
-            @TempData["Success"]
+        <div class="modal fade" id="aqSuccessModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content aq-success-modal">
+                    <div class="modal-body aq-success-body">
+                        <div class="aq-success-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                        </div>
+                        <h4 class="aq-success-title">@TempData["Success"]</h4>
+                        <p class="aq-success-appid">Your Application ID is <strong>#@TempData["SuccessApplicationId"]</strong></p>
+                        <p class="aq-success-note">Please note your Application ID for future reference.</p>
+                        <button type="button" class="aq-btn aq-btn-accent aq-success-close" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 
@@ -453,4 +465,16 @@
 
     <script src="~/js/waterjs/wc-form.js"></script>
     <script src="~/js/waterjs/wc-cascade.js"></script>
+
+    @if (TempData["Success"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var aqSuccessModalEl = document.getElementById("aqSuccessModal");
+                if (aqSuccessModalEl) {
+                    new bootstrap.Modal(aqSuccessModalEl).show();
+                }
+            });
+        </script>
+    }
 }

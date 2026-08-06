@@ -728,3 +728,62 @@
 .input-validation-error {
     border-color: #c0392b !important;
 }
+
+/* ---- Success popup (shown after a successful submission) ---- */
+
+.aq-success-modal {
+    border: none;
+    border-radius: var(--aq-radius-lg);
+    box-shadow: var(--aq-shadow-hover);
+    overflow: hidden;
+}
+
+.aq-success-body {
+    padding: 40px 36px 32px;
+    text-align: center;
+}
+
+.aq-success-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 18px;
+    border-radius: 50%;
+    background: var(--aq-success-tint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .aq-success-icon svg {
+        width: 28px;
+        height: 28px;
+        stroke: var(--aq-success);
+    }
+
+.aq-success-title {
+    font-size: 19px;
+    font-weight: 650;
+    color: var(--aq-ink);
+    margin: 0 0 10px;
+}
+
+.aq-success-appid {
+    font-size: 15px;
+    color: var(--aq-ink-soft);
+    margin: 0 0 6px;
+}
+
+    .aq-success-appid strong {
+        color: var(--aq-accent-deep);
+        font-weight: 700;
+    }
+
+.aq-success-note {
+    font-size: 13px;
+    color: var(--aq-muted);
+    margin: 0 0 24px;
+}
+
+.aq-success-close {
+    min-width: 140px;
+}

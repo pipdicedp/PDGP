@@ -11,6 +11,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Documents are now stored as bytes directly in the DB (Application_Documents.File_Path
+// is varbinary(max)), so raise the default request body limit to comfortably fit
+// scanned ID/ownership documents. Adjust if you expect larger files.
+builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 26_214_400; // 25 MB
+});
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 26_214_400; // 25 MB
+});
+
 // Application services and repositories
 builder.Services.AddScoped<ITradeLicenceRepository, TradeLicenceRepository>();
 builder.Services.AddScoped<ITradeLicenceService, TradeLicenceService>();
