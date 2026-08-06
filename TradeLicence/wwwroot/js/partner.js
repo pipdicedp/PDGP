@@ -1,93 +1,99 @@
 $(document).ready(function () {
 
-    // Reads the ApplicationId from the hidden field rendered by
-    // _PartnerDetails.cshtml (<input type="hidden" id="hdnApplicationId" ... />)
     var applicationId = $('#hdnApplicationId').val();
 
     function getAntiForgeryToken() {
         return $('input[name="__RequestVerificationToken"]').val();
     }
 
-    $('#btnAddPartner').on('click', function () {
+    // ---- Add: local grid only, nothing hits the database yet ----
+    // Use event delegation with $(document) to handle dynamically loaded content
+    $(document).on('click', '#btnAddPartner', function () {
+        alert("Hii");
 
-        var partnerName = $('#PartnerName').val();
-        var designation = $('#Designation').val();
-        var address = $('#PartnerAddress').val();
+        var partnerName = $('#PartnerName').val().trim();
+        var designation = $('#Designation').val().trim();
+        var address = $('#PartnerAddress').val().trim();
 
         if (!partnerName || !designation || !address) {
             alert('Please enter all partner details');
             return;
         }
 
-        $.ajax({
-            url: '/TradeLicence/NewLicence/Apply/AddPartner',
-            type: 'POST',
-            headers: { 'RequestVerificationToken': getAntiForgeryToken() },
-            data: {
-                applicationId: applicationId,
-                partnerName: partnerName,
-                designation: designation,
-                address: address
-            },
-            success: function (data) {
-                // data.partnerId / partnerName / designation / address come back
-                // from the server — this is what makes the row's Delete button
-                // able to target the correct database row afterwards.
-                $('#tblPartners tbody').append(`
-                <tr data-partner-id="${data.partnerId}">
-                    <td>${data.partnerName}</td>
-                    <td>${data.designation}</td>
-                    <td>${data.address}</td>
-                    <td>
-                        <button type="button"
-                                class="btn btn-danger btn-sm btnRemovePartner">
-                            Delete
-                        </button>
-                    </td>
-                </tr>
-            `);
+        $('#tblPartners tbody').append(`
+        <tr>
+            <td>${partnerName}</td>
+            <td>${designation}</td>
+            <td>${address}</td>
+            <td>
+                <button type="button"
+                        class="btn btn-danger btn-sm btnRemovePartner">
+                    Delete
+                </button>
+            </td>
+        </tr>
+    `);
 
-                // Show table after first record added
-                $('#partnerTableContainer').show();
+        // Show table after first record added
+        $('#partnerTableContainer').show();
 
-                // Clear fields
-                $('#PartnerName').val('');
-                $('#Designation').val('');
-                $('#PartnerAddress').val('');
-                $('#PartnerName').focus();
-            },
-            error: function (xhr) {
-                var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Failed to add partner. Please try again.';
-                alert(msg);
-            }
-        });
+        // Clear fields
+        $('#PartnerName').val('');
+        $('#Designation').val('');
+        $('#PartnerAddress').val('');
+        $('#PartnerName').focus();
     });
 
-    $(document).on("click", ".btnRemovePartner", function () {
+    // ---- Remove a row from the grid before it's saved ----
+    $(document).on('click', '.btnRemovePartner', function () {
+        $(this).closest('tr').remove();
+        if ($('#tblPartners tbody tr').length === 0) {
+            $('#partnerTableContainer').hide();
+        }
+    });
 
-        var $row = $(this).closest("tr");
-        var partnerId = $row.data('partner-id');
+    // ---- Save: sends every row currently in the grid to the server at once ----
+    $(document).on('click', '#btnSavePartners', function () {
 
-        if (!partnerId) {
-            // Row has no partner-id — it was never actually saved (shouldn't
-            // happen with the AJAX version above, but fail safely).
-            $row.remove();
+        var partners = [];
+        $('#tblPartners tbody tr').each(function () {
+            var cells = $(this).find('td');
+            partners.push({
+                partnerName: $(cells[0]).text().trim(),
+                designation: $(cells[1]).text().trim(),
+                address: $(cells[2]).text().trim()
+            });
+        });
+
+        if (partners.length === 0) {
+            alert('Please add at least one partner before saving.');
             return;
         }
 
+        var applicationId = $('#hdnApplicationId').val();
+
+        var $btn = $(this);
+        var originalText = $btn.text();
+        $btn.prop('disabled', true).text('Saving...');
+
         $.ajax({
-            url: '/TradeLicence/NewLicence/Apply/DeletePartner',
+            url: '/TradeLicence/NewLicence/Apply/SaveAllPartners',
             type: 'POST',
+            contentType: 'application/json',
             headers: { 'RequestVerificationToken': getAntiForgeryToken() },
-            data: { partnerId: partnerId },
+            data: JSON.stringify({
+                applicationId: applicationId,
+                partners: partners
+            }),
             success: function () {
-                $row.remove();
-                if ($('#tblPartners tbody tr').length === 0) {
-                    $('#partnerTableContainer').hide();
-                }
+                alert('Partners saved successfully.');
             },
-            error: function () {
-                alert('Failed to delete partner. Please try again.');
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Failed to save partners. Please try again.';
+                alert(msg);
+            },
+            complete: function () {
+                $btn.prop('disabled', false).text(originalText);
             }
         });
     });

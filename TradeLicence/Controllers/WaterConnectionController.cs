@@ -150,6 +150,7 @@ namespace WaterConnection.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
+            
             var application = await _context.WaterConnectionApplications
                 .Include(a => a.Department)
                 .Include(a => a.Section)

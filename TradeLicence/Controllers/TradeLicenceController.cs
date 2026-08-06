@@ -252,5 +252,36 @@ namespace TradeLicence.Controllers
             if (!deleted) return NotFound();
             return Ok();
         }
+
+        /// <summary>
+        /// Saves ALL partner rows currently in the grid in a single request,
+        /// called by the "Save" button below the Partners grid. Each row was only
+        /// held client-side until now — nothing hits the database until this runs.
+        /// </summary>
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAllPartners")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllPartners([FromBody] SavePartnersRequest request)
+        {
+            if (request?.Partners == null || request.Partners.Count == 0)
+                return BadRequest(new { error = "Please add at least one partner before saving." });
+
+            //if (request.ApplicationId <= 0)
+            //    return BadRequest(new { error = "Invalid application." });
+
+            foreach (var p in request.Partners)
+            {
+                if (string.IsNullOrWhiteSpace(p.PartnerName) ||
+                    string.IsNullOrWhiteSpace(p.Designation) ||
+                    string.IsNullOrWhiteSpace(p.Address))
+                {
+                    continue; // skip any incomplete row defensively
+                }
+
+                await _service.AddPartnerAsync(request.ApplicationId, p.PartnerName, p.Designation, p.Address);
+            }
+
+            return Ok(new { success = true });
+        }
     }
 }
