@@ -1,0 +1,140 @@
+﻿@model List<TradeLicence.Models.TradeLicenceApplication>
+@{
+    ViewData["Title"] = "Application Status Tracking";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    // ---- status counts for the summary cards ----
+    int draftCount = Model.Count(a => a.Status == "Draft");
+    int submittedCount = Model.Count(a => a.Status == "Submitted");
+    int progressCount = Model.Count(a => a.Status == "UnderReview");
+    int approvedCount = Model.Count(a => a.Status == "Approved");
+    int rejectedCount = Model.Count(a => a.Status == "Rejected");
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="status-page-header">
+        Application Status Tracking
+    </div>
+
+    <div class="dashboard-body">
+
+        <div class="page-title">
+            <h3>Your Applications</h3>
+            <p>Track every Trade Licence application you have started or submitted.</p>
+        </div>
+
+        @* ===== Status summary cards ===== *@
+        <div class="status-stats">
+            <div class="stat-card stat-card-draft">
+                <div class="stat-label">Draft</div>
+                <div class="stat-value">@draftCount</div>
+            </div>
+            <div class="stat-card stat-card-submitted">
+                <div class="stat-label">Submitted</div>
+                <div class="stat-value">@submittedCount</div>
+            </div>
+            <div class="stat-card stat-card-progress">
+                <div class="stat-label">In Progress</div>
+                <div class="stat-value">@progressCount</div>
+            </div>
+            <div class="stat-card stat-card-approved">
+                <div class="stat-label">Approved</div>
+                <div class="stat-value">@approvedCount</div>
+            </div>
+            <div class="stat-card stat-card-rejected">
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value">@rejectedCount</div>
+            </div>
+        </div>
+
+        @* ===== Table controls: show-entries + search, like the screenshot ===== *@
+        <div class="status-table-controls">
+            <div class="status-show-entries">
+                Show
+                <select id="statusPageSize">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                entries
+            </div>
+            <div class="status-search">
+                Search: <input type="text" id="statusSearchBox" placeholder="Search applications..." />
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <p class="tl-note">You haven't started any applications yet.</p>
+        }
+        else
+        {
+            <div style="overflow-x:auto;">
+                <table class="tl-partner-table" id="statusTable">
+                    <thead>
+                        <tr>
+                            <th>Sl No.</th>
+                            <th>Application ID</th>
+                            <th>Applicant Name</th>
+                            <th>Purpose</th>
+                            <th>Date of Application</th>
+                            <th>Current Status</th>
+                            <th>Time Elapsed (Days)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int slNo = 1;
+                        }
+                        @foreach (var app in Model)
+                        {
+                            var statusClass = app.Status switch
+                            {
+                                "Draft" => "myapps-status-draft",
+                                "Submitted" => "myapps-status-submitted",
+                                "UnderReview" => "myapps-status-review",
+                                "Approved" => "myapps-status-approved",
+                                "Rejected" => "myapps-status-rejected",
+                                _ => "myapps-status-draft"
+                            };
+                            var daysElapsed = (DateTime.Now.Date - app.CreatedDate.Date).Days;
+
+                            <tr>
+                                <td>@slNo</td>
+                                <td>@(app.ApplicationNumber ?? "—")</td>
+                                <td>@(string.IsNullOrEmpty(app.ApplicantName) ? "—" : app.ApplicantName)</td>
+                                <td>@(string.IsNullOrEmpty(app.PurposeOfLicence) ? "Trade Licence" : app.PurposeOfLicence)</td>
+                                <td>@app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
+                                <td><span class="myapps-status-badge @statusClass">@app.Status</span></td>
+                                <td>@daysElapsed</td>
+                                <td>
+                                    @if (app.Status == "Draft")
+                                    {
+                                        <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Continue</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>
+                                    }
+                                </td>
+                            </tr>
+                            slNo++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/status.js" asp-append-version="true"></script>
+}

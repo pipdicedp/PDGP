@@ -8,8 +8,7 @@ $(document).ready(function () {
 
     // ---- Add: local grid only, nothing hits the database yet ----
     // Use event delegation with $(document) to handle dynamically loaded content
-    $(document).on('click', '#btnAddPartner', function () {
-        alert("Hii");
+    $(document).on('click', '#btnAddPartner', function () {      
 
         var partnerName = $('#PartnerName').val().trim();
         var designation = $('#Designation').val().trim();

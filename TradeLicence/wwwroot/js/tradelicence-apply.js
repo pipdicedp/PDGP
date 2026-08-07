@@ -492,33 +492,40 @@
                     headers: { 'RequestVerificationToken': token },
                     body: formData
                 })
-                .then(function(response) {
-                    if (!response.ok) {
-                        return response.json().then(function(data) {
-                            throw new Error('Save failed: ' + (data.errors ? JSON.stringify(data.errors) : response.statusText));
-                        });
-                    }
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data.success) {
-                        if (data.applicationId) {
-                            document.getElementById('ApplicationId').value = data.applicationId;
+                    .then(function (response) {
+                        if (!response.ok) {
+                            return response.json().then(function (data) {
+                                throw new Error('Save failed: ' + (data.errors ? JSON.stringify(data.errors) : response.statusText));
+                            });
                         }
-                        $('#application-section').hide();
-                        $('#partners-section').show();
-                        $('.tl-step-badge').text('Step: 2 of 7');
-                        renderWizardLinks('partners');
-                        advanceStep(2);
-                        window.scrollTo(0, 0);
-                    } else {
-                        showWizardMessage('Failed to save application details.', 'danger');
-                    }
-                })
-                .catch(function(err) {
-                    console.error('Error saving application:', err);
-                    showWizardMessage('Error saving application. See console for details.', 'danger');
-                });
+                        return response.json();
+                    })
+                    .then(function (data) {
+                        if (data.success) {
+                            if (data.applicationId) {
+                                document.getElementById('ApplicationId').value = data.applicationId;
+
+                                // Keep the Partners tab's own hidden field in sync too —
+                                // it was rendered at page-load time (often with 0 for a
+                                // brand-new application) and never updated after this
+                                // save, which was sending applicationId=0 to SaveAllPartners.
+                                var hdnAppId = document.getElementById('hdnApplicationId');
+                                if (hdnAppId) hdnAppId.value = data.applicationId;
+                            }
+                            $('#application-section').hide();
+                            $('#partners-section').show();
+                            $('.tl-step-badge').text('Step: 2 of 7');
+                            renderWizardLinks('partners');
+                            advanceStep(2);
+                            window.scrollTo(0, 0);
+                        } else {
+                            showWizardMessage('Failed to save application details.', 'danger');
+                        }
+                    })
+                    .catch(function (err) {
+                        console.error('Error saving application:', err);
+                        showWizardMessage('Error saving application. See console for details.', 'danger');
+                    });
             });
 
             $('#btnBackToApplication').on('click', function () {

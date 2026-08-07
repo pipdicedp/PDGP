@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
 using TradeLicence.Models;
+using TradeLicence.Interfaces;
 
 namespace TradeLicence.Controllers
 {
@@ -279,6 +280,27 @@ namespace TradeLicence.Controllers
                 }
 
                 await _service.AddPartnerAsync(request.ApplicationId, p.PartnerName, p.Designation, p.Address);
+            }
+
+            return Ok(new { success = true });
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAllMachinery")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllMachinery([FromBody] SaveMachineryRequest request)
+        {
+            if (request?.Machinery == null || request.Machinery.Count == 0)
+                return BadRequest(new { error = "Please add at least one machinery item before saving." });
+
+            //if (request.ApplicationId <= 0)
+            //    return BadRequest(new { error = "Invalid application." });
+
+            foreach (var m in request.Machinery)
+            {
+                if (string.IsNullOrWhiteSpace(m.MachineryName)) continue; // skip incomplete rows defensively
+
+                await _service.AddMachineryAsync(request.ApplicationId, m.MachineryName, m.Quantity, m.HorsePower);
             }
 
             return Ok(new { success = true });

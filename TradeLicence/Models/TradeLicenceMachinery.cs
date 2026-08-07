@@ -18,4 +18,17 @@ namespace TradeLicence.Models
 
         public virtual TradeLicenceApplication? Application { get; set; }
     }
+
+    public class MachineryInput
+    {
+        public string MachineryName { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public decimal HorsePower { get; set; }
+    }
+
+    public class SaveMachineryRequest
+    {
+        public int ApplicationId { get; set; }
+        public List<MachineryInput> Machinery { get; set; } = new();
+    }
 }

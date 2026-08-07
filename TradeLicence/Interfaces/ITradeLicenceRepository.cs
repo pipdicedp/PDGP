@@ -20,6 +20,8 @@ namespace TradeLicence.Interfaces
         Task AddPartnerAsync(TradeLicencePartner partner);
         Task<List<TradeLicencePartner>> GetPartnersAsync(int applicationId);
         Task<TradeLicencePartner?> GetPartnerAsync(int partnerId);
+        Task AddMachineryAsync(TradeLicenceMachinery machinery);
+        Task<int> GetNextApplicationSequenceNumberAsync();
         void RemovePartner(TradeLicencePartner partner);
 
         Task<bool> UpdateCurrentStepAsync(int applicationId, int step);

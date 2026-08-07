@@ -19,6 +19,7 @@ namespace TradeLicence.Services
 
         Task<List<TradeLicencePartner>> GetPartnersAsync(int applicationId);
         Task<TradeLicencePartner> AddPartnerAsync(int applicationId, string partnerName, string designation, string address);
+        Task<TradeLicenceMachinery> AddMachineryAsync(int applicationId, string machineryName, int quantity, decimal horsePower);
         Task<bool> DeletePartnerAsync(int partnerId);
     }
 }

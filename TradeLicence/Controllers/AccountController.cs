@@ -28,6 +28,7 @@ namespace TradeLicence.Controllers
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
         {
+            ViewBag.RegisterModel = new RegisterViewModel();
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
         [HttpPost]
@@ -111,7 +112,83 @@ namespace TradeLicence.Controllers
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
 
-            return RedirectToAction("Index", "Dashboard");
+            return RedirectToAction("Status", "Dashboard");
+        }
+
+        /// <summary>
+        /// Handles the "New User? Register Here" modal on the Login page.
+        /// On validation failure (server-side or duplicate username/email),
+        /// re-renders the Login view with the register modal re-opened and
+        /// the entered values preserved, instead of losing the form.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return await RedisplayLoginWithRegisterErrors(model);
+            }
+
+            var usernameTaken = await _context.Users.AnyAsync(u => u.Username == model.Username);
+            if (usernameTaken)
+            {
+                ModelState.AddModelError(nameof(model.Username), "This username is already taken.");
+            }
+
+            var emailTaken = await _context.Users.AnyAsync(u => u.Email == model.Email);
+            if (emailTaken)
+            {
+                ModelState.AddModelError(nameof(model.Email), "This email is already registered.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return await RedisplayLoginWithRegisterErrors(model);
+            }
+
+            var newUser = new ApplicationUser
+            {
+                Username = model.Username,
+                Email = model.Email,
+                FullName = model.FullName,
+                DateOfBirth = model.DateOfBirth,
+                PANNumber = model.PANNumber.ToUpperInvariant(),
+                MobileNumber = model.MobileNumber,
+                Address = model.Address,
+                CreatedDate = DateTime.UtcNow,
+                IsLocked = false,
+                FailedLoginAttempts = 0
+            };
+            newUser.PasswordHash = _passwordHasher.HashPassword(newUser, model.Password);
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            // Sign the new user in immediately, same claims as the normal login flow.
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, newUser.Username),
+                new(ClaimTypes.NameIdentifier, newUser.UserId.ToString())
+            };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity),
+                new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30) });
+
+            return RedirectToAction("Login", "Account");
+        }
+
+        private Task<IActionResult> RedisplayLoginWithRegisterErrors(RegisterViewModel model)
+        {
+            model.Password = string.Empty;
+            model.ConfirmPassword = string.Empty;
+            ModelState.Remove(nameof(model.Password));
+            ModelState.Remove(nameof(model.ConfirmPassword));
+
+            ViewBag.RegisterModel = model;
+            ViewBag.ShowRegisterModal = true;
+            return Task.FromResult<IActionResult>(View("Login", new LoginViewModel()));
         }
 
         /// <summary>
