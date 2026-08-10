@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Water Connection";
+}
+
+<link rel="stylesheet" href="~/css/watercss/wc-landing.css" />
+
+<div class="wh-page">
+    <div class="wh-shell">
+
+        <div class="wh-header">
+            <p class="wh-eyebrow">Government of Puducherry</p>
+            <h1 class="wh-title">Water Connection</h1>
+            <p class="wh-subtitle">
+                Apply for a new domestic or commercial water connection, or check the
+                status of an application you've already submitted.
+            </p>
+        </div>
+
+        <div class="wh-grid">
+
+            <a asp-action="Index" class="wh-card">
+                <div class="wh-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s7 7.58 7 12a7 7 0 1 1-14 0c0-4.42 7-12 7-12z"></path></svg>
+                </div>
+                <h2 class="wh-card-title">Apply for New Water Connection</h2>
+                <p class="wh-card-desc">
+                    Fill out the application form with your details, department/area
+                    information, and required documents.
+                </p>
+                <span class="wh-card-cta">
+                    Start application
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+                </span>
+            </a>
+
+            <a asp-action="CheckStatus" class="wh-card">
+                <div class="wh-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+                </div>
+                <h2 class="wh-card-title">Check Application Status</h2>
+                <p class="wh-card-desc">
+                    Already applied? Enter your Application ID to see its current
+                    status.
+                </p>
+                <span class="wh-card-cta">
+                    Check status
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+                </span>
+            </a>
+
+        </div>
+
+    </div>
+</div>

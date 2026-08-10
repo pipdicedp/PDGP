@@ -189,7 +189,7 @@ namespace WaterConnection.Data
                 entity.Property(e => e.DocumentPurpose).HasColumnName("Document_Purpose");
                 entity.Property(e => e.DocumentOption).HasColumnName("Document_Option");
                 entity.Property(e => e.IsRequired).HasColumnName("Is_Required");
-                entity.Property(e => e.FilePath).HasColumnName("File_Path");
+                entity.Property(e => e.FileContent).HasColumnName("File_Path").HasColumnType("varbinary(max)");
                 entity.Property(e => e.UploadedOn).HasColumnName("Uploaded_On");
 
                 entity.HasOne(e => e.Application)
