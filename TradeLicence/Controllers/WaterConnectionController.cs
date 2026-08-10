@@ -129,7 +129,6 @@ namespace WaterConnection.Controllers
                 ApplicationId = applicationId,
                 DocumentPurpose = purpose,
                 DocumentOption = option,
-                IsRequired = true,
                 FileContent = content,
                 UploadedOn = DateTime.Now
             });
