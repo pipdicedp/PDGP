@@ -417,3 +417,61 @@
 		width: 100%;
 	}
 }
+
+.register-modal {
+	border-radius: 12px;
+	overflow: hidden;
+	border: none;
+}
+
+	.register-modal .modal-header {
+		background: #1a3a52;
+		color: white;
+		padding: 15px 20px;
+	}
+
+		.register-modal .modal-header h4 {
+			margin: 0;
+			font-size: 20px;
+		}
+
+	.register-modal .input-group-text {
+		background: #1a3a52;
+		color: white;
+		border: none;
+		width: 45px;
+		justify-content: center;
+	}
+
+	.register-modal .form-control {
+		border: 1px solid #dcd7cb;
+	}
+
+		.register-modal .form-control:focus {
+			border-color: #1a3a52;
+			box-shadow: 0 0 0 0.2rem rgba(26,58,82,.15);
+		}
+
+.btn-register {
+	background: #1a3a52;
+	color: white;
+	padding: 8px 25px;
+}
+
+	.btn-register:hover {
+		background: #0f2438;
+		color: white;
+	}
+
+.btn-cancel {
+	background: #f3f4f6;
+	color: #1a3a52;
+}
+
+.modal-backdrop.show {
+	opacity: 0.4;
+}
+
+.modal-content {
+	box-shadow: 0 10px 40px rgba(0,0,0,.25);
+}

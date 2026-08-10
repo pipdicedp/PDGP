@@ -101,6 +101,8 @@ namespace TradeLicence.Models
 
         public string? CreatedByUserId { get; set; }
 
+        public int CurrentStep { get; set; } = 1;
+
         // Navigation properties
         public virtual ICollection<ApplicationDocument>? ApplicationDocuments { get; set; }
         public virtual ICollection<TradeLicencePartner>? Partners { get; set; }

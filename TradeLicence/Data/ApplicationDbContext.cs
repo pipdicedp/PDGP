@@ -17,7 +17,6 @@ namespace TradeLicence.Data
         public DbSet<DoorNumberLookup> DoorNumbers { get; set; } = null!;
         public DbSet<DocumentChecklistItem> DocumentChecklistItems { get; set; } = null!;
         public DbSet<ApplicationDocument> ApplicationDocuments { get; set; } = null!; 
-
         public DbSet<TradeLicencePartner> TradeLicencePartners { get; set; } = null!;
         public DbSet<TradeLicenceMachinery> TradeLicenceMachineries { get; set; } = null!;
         public DbSet<TradeLicencePhotograph> TradeLicencePhotographs { get; set; }

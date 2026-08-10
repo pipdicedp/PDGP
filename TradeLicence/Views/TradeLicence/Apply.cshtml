@@ -287,20 +287,20 @@
 
     <!-- Partners Details tab (hidden until application validated) -->
     <div id="partners-section" style="display:none;">
-        <partial name="_PartnerDetails" model="Model.Partners" />
+        <partial name="_PartnerDetails" model="Model.ApplicationId" />
     </div>
     <div id="machinery-section" style="display:none;">
-        <partial name="_MachineryDetails" model="Model.Machineries" />
+        <partial name="_MachineryDetails" model="Model.ApplicationId" />
     </div>
     <div id="photo-section" style="display:none;">
-        <partial name="_UploadPhotograph" model="Model.Photographs" />
+        <partial name="_UploadPhotograph" model="Model.ApplicationId" />
     </div>
     <!-- Upload Documents Tab -->
     <div id="documents-section" style="display:none;">
-        <partial name="_UploadDocuments" model="Model.Documents" />
+        <partial name="_UploadDocuments" model="Model.ApplicationId" />
     </div>
     <div id="shops-section" style="display:none;">
-        <partial name="_ShopEstablishment" model="Model.ShopRegistration" />
+        <partial name="_ShopEstablishment" model="Model.ApplicationId" />
     </div>
     <div id="confirm-section" style="display:none;">
         <partial name="_Confirm" />
@@ -319,8 +319,11 @@
             getDoorNumbersUrl: '@Url.Action("GetDoorNumbers", "TradeLicence")',
             saveApplicationDetailsUrl: '@Url.Action("SaveApplicationDetails", "TradeLicence")'
         };
+        window.TradeLicenceStartTab = '@(ViewBag.StartTab ?? "application")';
     </script>
     <script src="~/js/tradelicence-apply.js" asp-append-version="true"></script>
+    <script src="~/js/partner.js" asp-append-version="true"></script>
+    <script src="~/js/machinery_details.js" asp-append-version="true"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.TradeLicenceApply && typeof window.TradeLicenceApply.init === 'function') {

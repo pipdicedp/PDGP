@@ -72,7 +72,11 @@
 
                 <div class="tl-login-topline">
                     <span></span>
-                    <a href="@Url.Action("Register", "Account")" class="tl-login-register-link">New user? Register here</a>
+                    <a href="#" data-bs-toggle="modal"
+                       data-bs-target="#registerModal"
+                       class="tl-login-register-link">
+                        New User? Register Here
+                    </a>
                 </div>
 
                 <h1 class="tl-login-heading">Log in</h1>
@@ -127,11 +131,14 @@
         </div>
     </div>
 
+    <partial name="_RegisterModal" model="(TradeLicence.Models.RegisterViewModel)(ViewBag.RegisterModel ?? new TradeLicence.Models.RegisterViewModel())" />
+
 </div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('togglePassword').addEventListener('click', function() {
+        document.getElementById('togglePassword').addEventListener('click', function () {
             const input = document.getElementById('passwordInput');
             const isHidden = input.type === 'password';
             input.type = isHidden ? 'text' : 'password';
@@ -139,9 +146,21 @@
             this.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         });
 
-        document.getElementById('refreshCaptcha').addEventListener('click', function() {
+        document.getElementById('refreshCaptcha').addEventListener('click', function () {
             const img = document.getElementById('captchaImg');
             img.src = '@Url.Action("CaptchaImage", "Account")?t=' + Date.now();
         });
+
+        @if (ViewBag.ShowRegisterModal == true)
+            {
+                <text>
+                        document.addEventListener('DOMContentLoaded', function () {
+                                var modalEl = document.getElementById('registerModal');
+                        if (modalEl && window.bootstrap) {
+                            new bootstrap.Modal(modalEl).show();
+                                }
+                            });
+                </text>
+        }
     </script>
 }

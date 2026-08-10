@@ -24,4 +24,17 @@ namespace TradeLicence.Models
 
         public virtual TradeLicenceApplication? Application { get; set; }
     }
+
+    public class PartnerInput
+    {
+        public string PartnerName { get; set; } = string.Empty;
+        public string Designation { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+    }
+
+    public class SavePartnersRequest
+    {
+        public int ApplicationId { get; set; }
+        public List<PartnerInput> Partners { get; set; } = new();
+    }
 }

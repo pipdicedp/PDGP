@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -19,7 +20,17 @@ namespace TradeLicence.Services
         public async Task SaveDraftAsync(TradeLicenceApplication model, List<int>? selectedDocuments)
         {
             model.Status = "Draft";
-            model.CreatedDate = DateTime.UtcNow;
+
+            if (model.ApplicationId == 0)
+            {
+                model.CreatedDate = DateTime.UtcNow;
+            }
+
+            if (string.IsNullOrEmpty(model.ApplicationNumber))
+            {
+                model.ApplicationNumber = await GenerateApplicationNumberAsync();   // <-- was the hardcoded TL/GUID line
+            }
+
             await _repo.AddApplicationAsync(model);
 
             if (selectedDocuments != null)
@@ -28,7 +39,7 @@ namespace TradeLicence.Services
                 {
                     await _repo.AddApplicationDocumentAsync(new ApplicationDocument
                     {
-                        ApplicationId = model.ApplicationId,
+                        Application = model,
                         DocumentItemId = docId
                     });
                 }
@@ -37,11 +48,20 @@ namespace TradeLicence.Services
             await _repo.SaveChangesAsync();
         }
 
+
         public async Task SubmitApplicationAsync(TradeLicenceApplication model, List<int>? selectedDocuments)
         {
             model.Status = "Submitted";
-            model.CreatedDate = DateTime.UtcNow;
-            model.ApplicationNumber = $"TL/{DateTime.UtcNow.Year}/{Guid.NewGuid().ToString()[..6].ToUpper()}";
+
+            if (model.ApplicationId == 0)
+            {
+                model.CreatedDate = DateTime.UtcNow;
+            }
+
+            if (string.IsNullOrEmpty(model.ApplicationNumber))
+            {
+                model.ApplicationNumber = await GenerateApplicationNumberAsync();
+            }
 
             await _repo.AddApplicationAsync(model);
 
@@ -51,7 +71,7 @@ namespace TradeLicence.Services
                 {
                     await _repo.AddApplicationDocumentAsync(new ApplicationDocument
                     {
-                        ApplicationId = model.ApplicationId,
+                        Application = model,
                         DocumentItemId = docId
                     });
                 }
@@ -93,6 +113,35 @@ namespace TradeLicence.Services
             _repo.RemovePartner(partner);
             await _repo.SaveChangesAsync();
             return true;
+        }
+        public async Task<bool> UpdateCurrentStepAsync(int applicationId, int step)
+        {
+            var result = await _repo.UpdateCurrentStepAsync(applicationId, step);
+            if (result)
+            {
+                await _repo.SaveChangesAsync();
+            }
+            return result;
+        }
+
+        public async Task<TradeLicenceMachinery> AddMachineryAsync(int applicationId, string machineryName, int quantity, decimal horsePower)
+        {
+            var machinery = new TradeLicenceMachinery
+            {
+                ApplicationId = applicationId,
+                MachineryName = machineryName.Trim(),
+                Quantity = quantity,
+                HorsePower = horsePower
+            };
+            await _repo.AddMachineryAsync(machinery);
+            await _repo.SaveChangesAsync();
+            return machinery;
+        }
+        private async Task<string> GenerateApplicationNumberAsync()
+        {
+            var datePart = DateTime.Now.ToString("ddMMyyyy");
+            var sequenceNumber = await _repo.GetNextApplicationSequenceNumberAsync();
+            return $"{datePart}{sequenceNumber:D2}";
         }
 
         public async Task<List<Municipality>> GetMunicipalitiesAsync() => await _repo.GetMunicipalitiesAsync();

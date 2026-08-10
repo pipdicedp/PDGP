@@ -13,6 +13,11 @@ namespace TradeLicence.Models
         [Required, StringLength(100)] public string Username { get; set; } = string.Empty;
         [Required] public string PasswordHash { get; set; } = string.Empty;
         [StringLength(150)] public string? Email { get; set; }
+        [StringLength(150)] public string? FullName { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        [StringLength(10)] public string? PANNumber { get; set; }
+        [StringLength(10)] public string? MobileNumber { get; set; }
+        [StringLength(500)] public string? Address { get; set; }
         public bool IsLocked { get; set; }
         public int FailedLoginAttempts { get; set; }
         public DateTime? LastLoginDate { get; set; }

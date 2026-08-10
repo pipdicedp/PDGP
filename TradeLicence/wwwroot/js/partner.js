@@ -1,10 +1,18 @@
 $(document).ready(function () {
 
-    $('#btnAddPartner').on('click', function () {
+    var applicationId = $('#hdnApplicationId').val();
 
-        var partnerName = $('#PartnerName').val();
-        var designation = $('#Designation').val();
-        var address = $('#PartnerAddress').val();
+    function getAntiForgeryToken() {
+        return $('input[name="__RequestVerificationToken"]').val();
+    }
+
+    // ---- Add: local grid only, nothing hits the database yet ----
+    // Use event delegation with $(document) to handle dynamically loaded content
+    $(document).on('click', '#btnAddPartner', function () {      
+
+        var partnerName = $('#PartnerName').val().trim();
+        var designation = $('#Designation').val().trim();
+        var address = $('#PartnerAddress').val().trim();
 
         if (!partnerName || !designation || !address) {
             alert('Please enter all partner details');
@@ -18,7 +26,7 @@ $(document).ready(function () {
             <td>${address}</td>
             <td>
                 <button type="button"
-                        class="btn btn-danger btn-sm btnDeletePartner">
+                        class="btn btn-danger btn-sm btnRemovePartner">
                     Delete
                 </button>
             </td>
@@ -32,13 +40,61 @@ $(document).ready(function () {
         $('#PartnerName').val('');
         $('#Designation').val('');
         $('#PartnerAddress').val('');
+        $('#PartnerName').focus();
     });
 
-    $(document).on("click",
-        ".btnRemovePartner",
-        function () {
+    // ---- Remove a row from the grid before it's saved ----
+    $(document).on('click', '.btnRemovePartner', function () {
+        $(this).closest('tr').remove();
+        if ($('#tblPartners tbody tr').length === 0) {
+            $('#partnerTableContainer').hide();
+        }
+    });
 
-            $(this).closest("tr").remove();
+    // ---- Save: sends every row currently in the grid to the server at once ----
+    $(document).on('click', '#btnSavePartners', function () {
+
+        var partners = [];
+        $('#tblPartners tbody tr').each(function () {
+            var cells = $(this).find('td');
+            partners.push({
+                partnerName: $(cells[0]).text().trim(),
+                designation: $(cells[1]).text().trim(),
+                address: $(cells[2]).text().trim()
+            });
         });
+
+        if (partners.length === 0) {
+            alert('Please add at least one partner before saving.');
+            return;
+        }
+
+        var applicationId = $('#hdnApplicationId').val();
+
+        var $btn = $(this);
+        var originalText = $btn.text();
+        $btn.prop('disabled', true).text('Saving...');
+
+        $.ajax({
+            url: '/TradeLicence/NewLicence/Apply/SaveAllPartners',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { 'RequestVerificationToken': getAntiForgeryToken() },
+            data: JSON.stringify({
+                applicationId: applicationId,
+                partners: partners
+            }),
+            success: function () {
+                alert('Partners saved successfully.');
+            },
+            error: function (xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.error) || 'Failed to save partners. Please try again.';
+                alert(msg);
+            },
+            complete: function () {
+                $btn.prop('disabled', false).text(originalText);
+            }
+        });
+    });
 
 });

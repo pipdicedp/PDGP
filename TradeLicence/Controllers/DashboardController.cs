@@ -36,5 +36,24 @@ namespace TradeLicence.Controllers
             // it hardcodes the 7 dashboard cards directly in the markup.
             return View();
         }
+
+        // GET: /Dashboard/Status
+        // Powers the new Screenshot(112)-style "Application Status Tracking" page —
+        // status summary cards + searchable table, same colour theme as Index.
+        [HttpGet]
+        public async Task<IActionResult> Status()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = int.TryParse(userIdClaim, out var id) ? id : (int?)null;
+
+            var myApplications = userId == null
+                ? new List<TradeLicenceApplication>()
+                : await _context.TradeLicenceApplications
+                    .Where(a => a.UserId == userId)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync();
+
+            return View(myApplications);
+        }
     }
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
 using TradeLicence.Models;
+using TradeLicence.Interfaces;
 
 namespace TradeLicence.Controllers
 {
@@ -21,18 +22,67 @@ namespace TradeLicence.Controllers
 
         // GET: /TradeLicence/Apply
         [HttpGet]
-        public async Task<IActionResult> Apply()
+        public async Task<IActionResult> Apply(int? id)
         {
             await PopulateDropdownsAsync();
-            var model = new TradeLicenceApplication
+
+            TradeLicenceApplication model;
+
+            if (id.HasValue)
             {
-                IsApplicationForTradeLicence = true,
-                IsRegistrationForShopsEstablishment = true,
-                DateOfCommencement = DateTime.Today
-            };
+                var existing = await _service.GetApplicationAsync(id.Value);
+                if (existing == null) return NotFound();
+                model = existing;
+            }
+            else
+            {
+                model = new TradeLicenceApplication
+                {
+                    IsApplicationForTradeLicence = true,
+                    IsRegistrationForShopsEstablishment = true,
+                    DateOfCommencement = DateTime.Today,
+                    CurrentStep = 1
+                };
+            }
+
+            // Tells the page/JS which tab to open on load — "application", "partners",
+            // "machinery", "photo", "documents", "shops", or "confirm".
+            ViewBag.StartTab = StepNumberToTabName(model.CurrentStep);
+
             return View(model);
         }
 
+        private static string StepNumberToTabName(int step) => step switch
+        {
+            1 => "application",
+            2 => "partners",
+            3 => "machinery",
+            4 => "photo",
+            5 => "documents",
+            6 => "shops",
+            7 => "confirm",
+            _ => "application"
+        };
+
+        /// <summary>
+        /// Called by each wizard step's "Next" button (Partners, Machinery, Photo,
+        /// Documents, Shops) once that step's own client-side checks pass, so the
+        /// database always reflects the furthest step the user has actually reached.
+        /// This is what lets "Continue" from the dashboard reopen the correct tab
+        /// instead of always starting at Application Details.
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AdvanceStep(int applicationId, int step)
+        {
+            if (applicationId <= 0 || step < 1 || step > 7)
+                return BadRequest(new { success = false, error = "Invalid applicationId or step." });
+
+            var updated = await _service.UpdateCurrentStepAsync(applicationId, step);
+            if (!updated) return NotFound();
+
+            return Ok(new { success = true });
+        }
         // POST: /TradeLicence/Apply  (Save Draft)
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -70,13 +120,10 @@ namespace TradeLicence.Controllers
                 return BadRequest(new { success = false, errors });
             }
 
+            if (model.CurrentStep < 2) model.CurrentStep = 2;   // <-- ADD THIS LINE
+
             await _service.SaveDraftAsync(model, selectedDocuments);
 
-            // SaveDraftAsync is expected to populate model.ApplicationId after the
-            // insert (EF Core sets the identity value on the same entity instance
-            // once SaveChangesAsync runs). If ApplicationId comes back as 0 here,
-            // check that ITradeLicenceService.SaveDraftAsync doesn't detach/clone
-            // the entity before saving.
             return Ok(new { success = true, applicationId = model.ApplicationId });
         }
 
@@ -205,6 +252,58 @@ namespace TradeLicence.Controllers
             var deleted = await _service.DeletePartnerAsync(partnerId);
             if (!deleted) return NotFound();
             return Ok();
+        }
+
+        /// <summary>
+        /// Saves ALL partner rows currently in the grid in a single request,
+        /// called by the "Save" button below the Partners grid. Each row was only
+        /// held client-side until now — nothing hits the database until this runs.
+        /// </summary>
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAllPartners")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllPartners([FromBody] SavePartnersRequest request)
+        {
+            if (request?.Partners == null || request.Partners.Count == 0)
+                return BadRequest(new { error = "Please add at least one partner before saving." });
+
+            //if (request.ApplicationId <= 0)
+            //    return BadRequest(new { error = "Invalid application." });
+
+            foreach (var p in request.Partners)
+            {
+                if (string.IsNullOrWhiteSpace(p.PartnerName) ||
+                    string.IsNullOrWhiteSpace(p.Designation) ||
+                    string.IsNullOrWhiteSpace(p.Address))
+                {
+                    continue; // skip any incomplete row defensively
+                }
+
+                await _service.AddPartnerAsync(request.ApplicationId, p.PartnerName, p.Designation, p.Address);
+            }
+
+            return Ok(new { success = true });
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAllMachinery")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllMachinery([FromBody] SaveMachineryRequest request)
+        {
+            if (request?.Machinery == null || request.Machinery.Count == 0)
+                return BadRequest(new { error = "Please add at least one machinery item before saving." });
+
+            //if (request.ApplicationId <= 0)
+            //    return BadRequest(new { error = "Invalid application." });
+
+            foreach (var m in request.Machinery)
+            {
+                if (string.IsNullOrWhiteSpace(m.MachineryName)) continue; // skip incomplete rows defensively
+
+                await _service.AddMachineryAsync(request.ApplicationId, m.MachineryName, m.Quantity, m.HorsePower);
+            }
+
+            return Ok(new { success = true });
         }
     }
 }
