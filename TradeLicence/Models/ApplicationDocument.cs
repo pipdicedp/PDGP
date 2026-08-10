@@ -21,7 +21,6 @@ namespace WaterConnection.Models
         [StringLength(200)]
         public string? DocumentOption { get; set; }
 
-        public bool IsRequired { get; set; } = true;
 
         // File_Path is varbinary(max) in the DB — holds the actual file bytes,
         // not a disk path. Property is named FileContent in code to avoid confusion,

@@ -38,6 +38,14 @@ namespace WaterConnection.Controllers
         [RequestSizeLimit(26_214_400)]
         public async Task<IActionResult> Index(WaterConnectionFormViewModel model)
         {
+            // Server-side PDF enforcement: client-side (wc-attachments.js) is the first
+            // line of defense, but a request can always bypass JS, so re-check here against
+            // the file's actual bytes before trusting anything.
+            ValidatePdfUpload(model.NameAddressFile, nameof(model.NameAddressFile));
+            ValidatePdfUpload(model.OwnershipFile, nameof(model.OwnershipFile));
+            ValidatePdfUpload(model.OthersFile, nameof(model.OthersFile));
+            ValidatePdfUpload(model.ContractorConsentFile, nameof(model.ContractorConsentFile));
+
             if (ModelState.IsValid)
             {
                 var application = new WaterConnectionApplication
@@ -96,6 +104,7 @@ namespace WaterConnection.Controllers
                 return RedirectToAction("Index");
             }
 
+            ViewBag.ValidationFailed = true;
             PopulateDropdowns(model);
             return View(model);
         }
@@ -120,7 +129,6 @@ namespace WaterConnection.Controllers
                 ApplicationId = applicationId,
                 DocumentPurpose = purpose,
                 DocumentOption = option,
-                IsRequired = true,
                 FileContent = content,
                 UploadedOn = DateTime.Now
             });
@@ -142,7 +150,6 @@ namespace WaterConnection.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            
             var application = await _context.WaterConnectionApplications
                 .Include(a => a.Department)
                 .Include(a => a.Section)
@@ -264,6 +271,43 @@ namespace WaterConnection.Controllers
                 return ("image/bmp", ".bmp");
 
             return ("application/octet-stream", string.Empty);
+        }
+
+        // Adds a ModelState error if a mandatory upload isn't actually a PDF. A missing
+        // file is left to the [Required] attribute -- this only judges files that were
+        // provided.
+        private void ValidatePdfUpload(IFormFile? file, string fieldName)
+        {
+            if (file == null || file.Length == 0)
+                return;
+
+            if (!IsPdfFile(file))
+            {
+                ModelState.AddModelError(fieldName, "Only PDF files are allowed.");
+            }
+        }
+
+        // Checks both the extension and the file's own byte signature ("%PDF") -- the
+        // extension alone can be renamed, so the header is what actually decides this.
+        private static bool IsPdfFile(IFormFile file)
+        {
+            if (!string.Equals(Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            try
+            {
+                using var stream = file.OpenReadStream();
+                var header = new byte[4];
+                var bytesRead = stream.Read(header, 0, header.Length);
+                stream.Position = 0; // rewind so AddDocument can still read the full file afterward
+
+                return bytesRead == 4
+                    && header[0] == 0x25 && header[1] == 0x50 && header[2] == 0x44 && header[3] == 0x46; // "%PDF"
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         // ---- Cascading dropdown endpoints (Section -> Contractor -> Area follow the DB's FK chain) ----
