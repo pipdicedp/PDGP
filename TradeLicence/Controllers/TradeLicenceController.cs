@@ -1,31 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
 using TradeLicence.Models;
 using TradeLicence.Interfaces;
+using System.IO;
 
 namespace TradeLicence.Controllers
 {
+    [Authorize]
     public class TradeLicenceController : Controller
     {
         private readonly Services.ITradeLicenceService _service;
+        private readonly ApplicationDbContext _context;
 
-        public TradeLicenceController(Services.ITradeLicenceService service)
+        public TradeLicenceController(Services.ITradeLicenceService service, ApplicationDbContext context)
         {
             _service = service;
+            _context = context;
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Index()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = int.TryParse(userIdClaim, out var id) ? id : (int?)null;
+
+            var myApplications = userId == null
+                ? new List<TradeLicenceApplication>()
+                : await _context.TradeLicenceApplications
+                    .Where(a => a.UserId == userId)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync();
+
+            ViewBag.MyApplications = myApplications;
+
+            // No strongly-typed Model needed — your Index.cshtml doesn't use @model,
+            // it hardcodes the 7 dashboard cards directly in the markup.
+            return View();
         }
 
         // GET: /TradeLicence/Apply
         [HttpGet]
         public async Task<IActionResult> Apply(int? id)
         {
-            await PopulateDropdownsAsync();
-
             TradeLicenceApplication model;
 
             if (id.HasValue)
@@ -44,6 +69,12 @@ namespace TradeLicence.Controllers
                     CurrentStep = 1
                 };
             }
+
+            // Populated AFTER the model is loaded — Wards/Areas/Streets need the
+            // existing MunicipalityId/WardId/AreaId to pre-select correctly for a
+            // draft being reopened. Calling this before model existed meant those
+            // three dropdowns always rendered empty for any existing application.
+            await PopulateDropdownsAsync(model);
 
             // Tells the page/JS which tab to open on load — "application", "partners",
             // "machinery", "photo", "documents", "shops", or "confirm".
@@ -91,10 +122,15 @@ namespace TradeLicence.Controllers
             // Draft saves skip full validation so partially-filled forms can be stored
             ModelState.Clear();
 
+            if (model.UserId == null)
+            {
+                model.UserId = GetCurrentUserId();
+            }
+
             await _service.SaveDraftAsync(model, selectedDocuments);
 
             TempData["Message"] = "Draft saved successfully.";
-            return RedirectToAction(nameof(Apply));
+            return RedirectToAction(nameof(Apply), new { id = model.ApplicationId });
         }
 
         /// <summary>
@@ -122,26 +158,43 @@ namespace TradeLicence.Controllers
 
             if (model.CurrentStep < 2) model.CurrentStep = 2;   // <-- ADD THIS LINE
 
+            if (model.UserId == null)
+            {
+                model.UserId = GetCurrentUserId();
+            }
+
             await _service.SaveDraftAsync(model, selectedDocuments);
 
             return Ok(new { success = true, applicationId = model.ApplicationId });
         }
 
-        // POST: /TradeLicence/Apply (Submit / Next step)
+        // POST: /TradeLicence/Apply (Final Submit — called via AJAX from the Confirm tab)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Apply(TradeLicenceApplication model, List<int> selectedDocuments)
         {
             if (!ModelState.IsValid)
             {
-                await PopulateDropdownsAsync(model);
-                return View(model);
+                var errors = ModelState
+                    .Where(kvp => kvp.Value != null && kvp.Value.Errors.Count > 0)
+                    .ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+                return BadRequest(new { success = false, errors });
+            }
+
+            if (model.UserId == null)
+            {
+                model.UserId = GetCurrentUserId();
             }
 
             await _service.SubmitApplicationAsync(model, selectedDocuments);
 
-            // Step 1 of 7 -> proceed to Partners Details in a real flow
-            return RedirectToAction(nameof(Confirmation), new { id = model.ApplicationId });
+            var pdfBytes = await _service.GenerateAcknowledgementPdfAsync(model.ApplicationId);
+            var fileName = $"Acknowledgement_{model.ApplicationNumber ?? model.ApplicationId.ToString()}.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
         }
 
         [HttpGet]
@@ -150,6 +203,36 @@ namespace TradeLicence.Controllers
             var application = await _service.GetApplicationAsync(id);
             if (application == null) return NotFound();
             return View(application);
+        }
+
+        // Downloads the acknowledgement slip as a PDF directly — no print dialog.
+        [HttpGet]
+        public async Task<IActionResult> DownloadAcknowledgement(int id)
+        {
+            var application = await _service.GetApplicationAsync(id);
+            if (application == null) return NotFound();
+
+            var pdfBytes = await _service.GenerateAcknowledgementPdfAsync(id);
+            var fileName = $"Acknowledgement_{application.ApplicationNumber ?? id.ToString()}.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        // Called by the Confirm tab to fill in the read-only summary
+        // (Applicant Name / Trade Name / Mobile Number) from saved data.
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetApplicationSummary")]
+        public async Task<IActionResult> GetApplicationSummary(int applicationId)
+        {
+            var application = await _service.GetApplicationAsync(applicationId);
+            if (application == null) return NotFound();
+
+            return Json(new
+            {
+                applicantName = application.ApplicantName,
+                tradeName = application.NameAndStyleOfFactory,
+                mobileNumber = application.MobileNumber
+            });
         }
 
         // ---------------- Cascading dropdown AJAX endpoints ----------------
@@ -191,6 +274,12 @@ namespace TradeLicence.Controllers
         }
 
         // ---------------- Helpers ----------------
+
+        private int? GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var id) ? id : (int?)null;
+        }
 
         private async Task PopulateDropdownsAsync(TradeLicenceApplication? model = null)
         {
@@ -304,6 +393,126 @@ namespace TradeLicence.Controllers
             }
 
             return Ok(new { success = true });
+        }
+
+        // ---------------- Photographs (Step 4) ----------------
+
+        private const long MaxUploadBytes = 5 * 1024 * 1024; // 5 MB per file
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SavePhotographs")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SavePhotographs(int applicationId, IFormFile? applicantPhoto, IFormFile? partnerPhoto)
+        {
+            if (applicationId <= 0)
+                return BadRequest(new { error = "Invalid application." });
+
+            if (applicantPhoto == null && partnerPhoto == null)
+                return BadRequest(new { error = "Please choose at least one photo to upload." });
+
+            if ((applicantPhoto?.Length ?? 0) > MaxUploadBytes || (partnerPhoto?.Length ?? 0) > MaxUploadBytes)
+                return BadRequest(new { error = "Each photo must be 5 MB or smaller." });
+
+            byte[]? applicantBytes = null;
+            string? applicantContentType = null;
+            if (applicantPhoto != null && applicantPhoto.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await applicantPhoto.CopyToAsync(ms);
+                applicantBytes = ms.ToArray();
+                applicantContentType = applicantPhoto.ContentType;
+            }
+
+            byte[]? partnerBytes = null;
+            string? partnerContentType = null;
+            if (partnerPhoto != null && partnerPhoto.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await partnerPhoto.CopyToAsync(ms);
+                partnerBytes = ms.ToArray();
+                partnerContentType = partnerPhoto.ContentType;
+            }
+
+            await _service.SavePhotographsAsync(applicationId, applicantBytes, applicantContentType, partnerBytes, partnerContentType);
+
+            return Ok(new { success = true });
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/ViewApplicantPhoto")]
+        public async Task<IActionResult> ViewApplicantPhoto(int applicationId)
+        {
+            var result = await _service.GetDecryptedApplicantPhotoAsync(applicationId);
+            if (result == null) return NotFound();
+            return File(result.Value.Bytes, result.Value.ContentType);
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/ViewPartnerPhoto")]
+        public async Task<IActionResult> ViewPartnerPhoto(int applicationId)
+        {
+            var result = await _service.GetDecryptedPartnerPhotoAsync(applicationId);
+            if (result == null) return NotFound();
+            return File(result.Value.Bytes, result.Value.ContentType);
+        }
+
+        // ---------------- Documents (Step 5) ----------------
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveDocument")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveDocument(int applicationId, string documentName, IFormFile file)
+        {
+            if (applicationId <= 0 || string.IsNullOrWhiteSpace(documentName))
+                return BadRequest(new { error = "Invalid request." });
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "Please choose a file to upload." });
+
+            if (file.Length > MaxUploadBytes)
+                return BadRequest(new { error = "File must be 5 MB or smaller." });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            var doc = await _service.SaveDocumentAsync(applicationId, documentName, file.FileName, bytes, file.ContentType);
+
+            return Ok(new { success = true, documentId = doc.DocumentId });
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/ViewDocument")]
+        public async Task<IActionResult> ViewDocument(int documentId)
+        {
+            var result = await _service.GetDecryptedDocumentAsync(documentId);
+            if (result == null) return NotFound();
+            return File(result.Value.Bytes, result.Value.ContentType, result.Value.FileName);
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/DeleteDocument")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteDocument(int documentId)
+        {
+            var deleted = await _service.DeleteDocumentAsync(documentId);
+            if (!deleted) return NotFound();
+            return Ok(new { success = true });
+        }
+
+        // ---------------- Shop Establishment Registration (Step 6) ----------------
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveShopEstablishment")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveShopEstablishment([FromBody] ShopEstablishmentRegistration model)
+        {
+            if (model == null || model.ApplicationId <= 0)
+                return BadRequest(new { error = "Invalid application." });
+
+            var saved = await _service.SaveShopEstablishmentAsync(model.ApplicationId, model);
+
+            return Ok(new { success = true, shopRegistrationId = saved.ShopRegistrationId });
         }
     }
 }

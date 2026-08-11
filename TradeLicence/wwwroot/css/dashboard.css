@@ -244,6 +244,31 @@ body {
     margin: 24px 0;
 }
 
+.myapps-new-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 10px 0 24px;
+}
+
+.myapps-new-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #1a3a52;
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px 28px;
+    border-radius: 8px;
+    transition: background .15s ease;
+}
+
+    .myapps-new-btn:hover {
+        background: #0f2438;
+        color: #fff;
+    }
+
 /* =====================================
    Application Status Tracking page
    (Dashboard/Status.cshtml) — matches the

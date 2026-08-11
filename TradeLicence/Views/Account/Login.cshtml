@@ -136,9 +136,10 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('togglePassword').addEventListener('click', function () {
+        document.getElementById('togglePassword').addEventListener('click', function() {
             const input = document.getElementById('passwordInput');
             const isHidden = input.type === 'password';
             input.type = isHidden ? 'text' : 'password';
@@ -146,12 +147,24 @@
             this.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         });
 
-        document.getElementById('refreshCaptcha').addEventListener('click', function () {
+        document.getElementById('refreshCaptcha').addEventListener('click', function() {
             const img = document.getElementById('captchaImg');
             img.src = '@Url.Action("CaptchaImage", "Account")?t=' + Date.now();
         });
 
-        @if (ViewBag.ShowRegisterModal == true)
+        @if (TempData["RegisterSuccess"] != null)
+            {
+                <text>
+                        Swal.fire({
+                            icon: 'success',
+                        title: 'User Registered Successfully!',
+                        text: @Html.Raw(Json.Serialize(TempData["RegisterSuccess"])),
+                        confirmButtonColor: '#1a3a52'
+                            });
+                </text>
+        }
+
+            @if (ViewBag.ShowRegisterModal == true)
             {
                 <text>
                         document.addEventListener('DOMContentLoaded', function () {
@@ -161,6 +174,7 @@
                                 }
                             });
                 </text>
+
         }
     </script>
 }

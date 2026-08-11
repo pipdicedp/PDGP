@@ -1,0 +1,160 @@
+﻿@model TradeLicence.Models.TradeLicenceApplication
+@{
+    ViewData["Title"] = "Application Acknowledgement";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+
+<style>
+    .ack-container {
+        max-width: 800px;
+        margin: 30px auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        padding: 40px;
+    }
+
+    .ack-header {
+        text-align: center;
+        border-bottom: 3px solid #1a3a52;
+        padding-bottom: 20px;
+        margin-bottom: 25px;
+    }
+
+        .ack-header h2 {
+            color: #1a3a52;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .ack-header p {
+            color: #666;
+            margin: 0;
+        }
+
+    .ack-success-badge {
+        display: inline-block;
+        background: #DCF3E4;
+        color: #1D6E3E;
+        font-weight: 700;
+        padding: 8px 20px;
+        border-radius: 20px;
+        margin-bottom: 15px;
+    }
+
+    .ack-appno {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+        .ack-appno .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .ack-appno .value {
+            color: #1a3a52;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+    .ack-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 25px;
+    }
+
+        .ack-table th,
+        .ack-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .ack-table th {
+            background: #f5f9fa;
+            color: #1a3a52;
+            width: 40%;
+        }
+
+    .ack-note {
+        background: #FFF8E6;
+        border-left: 4px solid #D4A017;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 25px;
+    }
+
+    .ack-actions {
+        text-align: center;
+    }
+
+        .ack-actions .btn {
+            margin: 0 6px;
+            min-width: 150px;
+        }
+</style>
+
+<div class="ack-container">
+
+    <div class="ack-header">
+        <span class="ack-success-badge">
+            <i class="fas fa-check-circle"></i> Application Submitted Successfully
+        </span>
+        <h2>Trade Licence Application — Acknowledgement Slip</h2>
+        <p>Government of Puducherry &bull; Local Administration Department</p>
+    </div>
+
+    <div class="ack-appno">
+        <div class="label">Application Number</div>
+        <div class="value">@(Model.ApplicationNumber ?? "—")</div>
+    </div>
+
+    <table class="ack-table">
+        <tr>
+            <th>Applicant Name</th>
+            <td>@Model.ApplicantName</td>
+        </tr>
+        <tr>
+            <th>Trade / Establishment Name</th>
+            <td>@Model.NameAndStyleOfFactory</td>
+        </tr>
+        <tr>
+            <th>Mobile Number</th>
+            <td>@Model.MobileNumber</td>
+        </tr>
+        <tr>
+            <th>Purpose of Licence</th>
+            <td>@Model.PurposeOfLicence</td>
+        </tr>
+        <tr>
+            <th>Trade Place Address</th>
+            <td>@Model.TradePlaceCommunicationAddress</td>
+        </tr>
+        <tr>
+            <th>Date of Submission</th>
+            <td>@Model.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy, hh:mm tt")</td>
+        </tr>
+        <tr>
+            <th>Current Status</th>
+            <td><span class="myapps-status-badge myapps-status-submitted">@Model.Status</span></td>
+        </tr>
+    </table>
+
+    <div class="ack-note">
+        <i class="fas fa-info-circle"></i>
+        Please keep this acknowledgement for your records. You can track the status of your application anytime from your dashboard using the Application Number above.
+    </div>
+
+    <div class="ack-actions">
+        <a class="btn btn-primary" href="@Url.Action("DownloadAcknowledgement", "TradeLicence", new { id = Model.ApplicationId })">
+            <i class="fas fa-download"></i> Download PDF
+        </a>
+        <a class="btn btn-secondary" href="@Url.Action("Index", "Dashboard")">
+            Back to Dashboard
+        </a>
+    </div>
+
+</div>

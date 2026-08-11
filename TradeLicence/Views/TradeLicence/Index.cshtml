@@ -1,0 +1,79 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    var myApplications = (List<TradeLicence.Models.TradeLicenceApplication>)ViewBag.MyApplications;
+}
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/dashboard.css"
+          asp-append-version="true" />
+}
+<div class="dashboard-body">
+
+    @* ===== NEW: Your Applications — only shows if the user has any ===== *@
+    @if (myApplications != null && myApplications.Any())
+    {
+        <div class="page-title">
+            <h3>Your Applications</h3>
+            <p>Continue a draft, or check the status of a submitted application.</p>
+        </div>
+
+        <div class="myapps-list">
+            @foreach (var app in myApplications)
+            {
+                var statusClass = app.Status switch
+                {
+                    "Draft" => "myapps-status-draft",
+                    "Submitted" => "myapps-status-submitted",
+                    "UnderReview" => "myapps-status-review",
+                    "Approved" => "myapps-status-approved",
+                    "Rejected" => "myapps-status-rejected",
+                    _ => "myapps-status-draft"
+                };
+
+                <div class="myapps-row">
+                    <div class="myapps-info">
+                        <span class="myapps-name">@(string.IsNullOrEmpty(app.ApplicantName) ? "Untitled application" : app.ApplicantName)</span>
+                        <span class="myapps-meta">
+                            @(app.ApplicationNumber ?? "No application number yet")
+                            &bull; Started @app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")
+                        </span>
+                    </div>
+                    <span class="myapps-status-badge @statusClass">@app.Status</span>
+                    @if (app.Status == "Draft")
+                    {
+                        <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Continue</a>
+                    }
+                    else
+                    {                       
+                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>
+                    }
+                </div>
+            }
+        </div>
+
+        @* ===== New Application button — below the grid, for a fresh application ===== *@
+        <div class="myapps-new-wrap">
+            <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
+                <i class="fas fa-plus"></i> New Application
+            </a>
+        </div>
+
+        <hr class="myapps-divider" />
+    }
+    else
+    {
+        @* No applications yet — invite them to start their first one *@
+        <div class="page-title">
+            <h3>Your Applications</h3>
+            <p>You haven't started any applications yet.</p>
+        </div>
+
+        <div class="myapps-new-wrap">
+            <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
+                <i class="fas fa-plus"></i> New Application
+            </a>
+        </div>
+    }
+    @* ===== END new section ===== *@
+</div>
