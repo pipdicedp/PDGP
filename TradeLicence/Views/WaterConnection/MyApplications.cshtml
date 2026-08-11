@@ -1,0 +1,91 @@
+@model IEnumerable<WaterConnection.Models.WaterConnectionApplication>
+
+@{
+    ViewData["Title"] = "Application Status Tracking";
+}
+
+<link rel="stylesheet" href="~/css/watercss/wc-list.css" />
+
+<div class="wl-page">
+    <div class="wl-shell">
+
+        <div class="wl-header">
+            <div>
+                <p class="wl-eyebrow">Puducherry Water Supply &amp; Sewerage</p>
+                <h2 class="wl-title">Application Status Tracking</h2>
+            </div>
+            <div class="wl-count"><strong>@Model.Count()</strong> applications</div>
+        </div>
+
+        <div class="wl-card">
+            <div class="wl-table-wrap">
+                <table class="wl-table">
+                    <thead>
+                        <tr>
+                            <th>Application ID</th>
+                            <th>Name</th>
+                            <th>Purpose</th>
+                            <th>Applied On</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            var isSubmitted = string.Equals(item.Status, "Submitted", StringComparison.OrdinalIgnoreCase);
+                            <tr>
+                                <td class="wl-appid">@item.ApplicationId</td>
+                                <td class="wl-name">@item.Name</td>
+                                <td><span class="wl-purpose">@(item.Purpose?.PurposeName ?? "—")</span></td>
+                                <td class="wl-muted">@item.ApplicationDate.ToString("dd-MM-yyyy")</td>
+                                <td>
+                                    @if (isSubmitted)
+                                    {
+                                        <span class="wl-status-badge wl-status-submitted">Submitted</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="wl-status-badge wl-status-draft">Draft</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="wl-actions">
+                                        @if (isSubmitted)
+                                        {
+                                            <a asp-action="Acknowledgement"
+                                               asp-route-id="@item.ApplicationId"
+                                               class="wl-btn wl-btn-view">
+                                                View
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="Index"
+                                               class="wl-btn wl-btn-continue">
+                                                Continue
+                                            </a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                @if (!Model.Any())
+                {
+                    <div class="wl-empty">
+                        You haven't started a water connection application yet.
+                        <div style="margin-top:14px;">
+                            <a asp-action="Index" class="wl-btn wl-btn-view">Apply for New Water Connection</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <a asp-action="Home" class="wl-back">← Back to Water Connection</a>
+
+    </div>
+</div>

@@ -9,6 +9,11 @@ namespace WaterConnection.Models
         [Key]
         public int ApplicationId { get; set; }
 
+        // Owning user (Users.UserId). Nullable because older/legacy rows may not
+        // have one, but every new application (draft or submitted) always sets it
+        // from the logged-in user's claim -- see WaterConnectionController.
+        public int? UserId { get; set; }
+
         // Applicant Details
         [Required]
         [StringLength(150)]
@@ -56,40 +61,38 @@ namespace WaterConnection.Models
         [StringLength(100)]
         public string? ConnCity { get; set; }
 
-        // Master-backed lookups (foreign keys in the new schema)
-        [Required]
-        public int PurposeCode { get; set; }
+        // Master-backed lookups (foreign keys in the new schema).
+        // All nullable at the entity/DB level -- required only for a real
+        // "Submitted" application; a Draft row can legitimately have any of
+        // these unset because the user hasn't reached that part of the form yet.
+        public int? PurposeCode { get; set; }
         public PurposeMaster? Purpose { get; set; }
 
-        [Required]
-        public int DeptCode { get; set; }
+        public int? DeptCode { get; set; }
         public DepartmentMaster? Department { get; set; }
 
-        [Required]
-        public int SectionCode { get; set; }
+        public int? SectionCode { get; set; }
         public SectionMaster? Section { get; set; }
 
-        // Nullable in the DB (Contractor_Code allows NULL on WaterConnectionApplication)
         public int? ContractorCode { get; set; }
         public ContractorMaster? Contractor { get; set; }
 
-        [Required]
-        public int AreaCode { get; set; }
+        public int? AreaCode { get; set; }
         public AreaMaster? Area { get; set; }
 
-        [Required]
-        public int NaVerifyCode { get; set; }
+        public int? NaVerifyCode { get; set; }
         public NameAddressVerificationMaster? NameAddressVerification { get; set; }
 
-        [Required]
-        public int OwnFileCode { get; set; }
+        public int? OwnFileCode { get; set; }
         public OwnershipVerificationMaster? OwnershipVerification { get; set; }
 
         public DateTime ApplicationDate { get; set; } = DateTime.Now;
 
+        // "Draft" while the user is still filling the form and clicks "Save Application",
+        // "Submitted" once they click "Submit Application" with everything complete.
         [Required]
         [StringLength(30)]
-        public string Status { get; set; } = "Submitted";
+        public string Status { get; set; } = "Draft";
 
         public ICollection<ApplicationDocument>? Documents { get; set; }
     }

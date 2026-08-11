@@ -2,10 +2,10 @@
 
 @{
     ViewData["Title"] = " Puducherry Government New Water Connection";
-    Layout = "~/Views/Shared/_UserLayout.cshtml";
 }
 
 <link rel="stylesheet" href="~/css/watercss/wc-form.css" />
+<link rel="stylesheet" href="~/css/watercss/wc-preview.css" />
 
 <div class="aq-page">
 
@@ -54,7 +54,8 @@
                 <div class="modal-content aq-success-modal">
                     <div class="modal-body aq-success-body">
                         <div class="aq-success-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+                            <span class="aq-thumb-blob"></span>
+                            <svg class="aq-thumb-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"></path><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"></path></svg>
                         </div>
                         <h4 class="aq-success-title">@TempData["Success"]</h4>
                         <p class="aq-success-appid">Your Application ID is <strong>#@TempData["SuccessApplicationId"]</strong></p>
@@ -66,9 +67,99 @@
         </div>
     }
 
-    <form asp-action="Index" method="post" enctype="multipart/form-data">
+    <!-- Shown whenever a submit attempt is blocked because a mandatory field was left empty
+         (triggered client-side by jQuery Validate, or on page load if the server itself
+         rejected an incomplete submission -- see wc-validation.js and the Scripts section below). -->
+    <div class="modal fade" id="aqValidationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content aq-validation-modal">
+                <div class="modal-body aq-validation-body">
+                    <div class="aq-validation-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                    </div>
+                    <h4 class="aq-validation-title">Missing Information</h4>
+                    <p class="aq-validation-note">Please fill all the fields, all are mandatory.</p>
+                    <button type="button" class="aq-btn aq-btn-accent aq-validation-close" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shown after "Save Application" successfully stores the form as a draft. -->
+    <div class="modal fade" id="aqDraftSavedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content aq-success-modal">
+                <div class="modal-body aq-success-body">
+                    <div class="aq-success-icon">
+                        <span class="aq-thumb-blob"></span>
+                        <svg class="aq-thumb-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg>
+                    </div>
+                    <h4 class="aq-success-title">Saved details as draft</h4>
+                    <p class="aq-success-note">You can come back anytime and resume from where you left off.</p>
+                    <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shown if "Save Application" is clicked but every mandatory field (including
+         all four document uploads) is already filled -- nothing left to draft. -->
+    <div class="modal fade" id="aqDraftCompleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content aq-validation-modal">
+                <div class="modal-body aq-validation-body">
+                    <div class="aq-validation-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                    </div>
+                    <h4 class="aq-validation-title">All fields are filled</h4>
+                    <p class="aq-validation-note">All fields are filled. Please submit the application.</p>
+                    <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["ResumeMessage"] != null)
+    {
+        <div class="modal fade" id="aqResumeModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content aq-success-modal">
+                    <div class="modal-body aq-success-body">
+                        <div class="aq-success-icon">
+                            <span class="aq-thumb-blob"></span>
+                            <svg class="aq-thumb-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 4v5h5"></path></svg>
+                        </div>
+                        <h4 class="aq-success-title">Welcome back</h4>
+                        <p class="aq-success-note">@TempData["ResumeMessage"]</p>
+                        <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Shared preview for any selected document -- Preview buttons point an <iframe> at the
+         chosen file's local blob URL, so nothing is uploaded just to preview it, and nothing
+         opens in a new tab/window (see wc-attachments.js). Uses the same wc-preview-* classes
+         as the Application Details page so previewing looks identical in both places. -->
+    <div class="modal fade" id="aqPreviewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content wc-preview-modal">
+                <div class="modal-header wc-preview-header">
+                    <h5 class="wc-preview-title" id="aqPreviewTitle">Document Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body wc-preview-body">
+                    <iframe id="aqPreviewFrame" class="wc-preview-frame" title="Document preview"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form asp-action="Index" method="post" enctype="multipart/form-data" id="aqWaterForm">
 
         @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ApplicationId" id="aqApplicationId" />
 
         <div class="aq-flow">
 
@@ -92,31 +183,37 @@
                     <div class="aq-col-6 aq-field">
                         <label asp-for="Name" class="aq-label">Name</label>
                         <input asp-for="Name" class="aq-input" />
+                        <span asp-validation-for="Name" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
                         <label asp-for="PowerOfAttorney" class="aq-label">Power of Attorney</label>
                         <input asp-for="PowerOfAttorney" class="aq-input" />
+                        <span asp-validation-for="PowerOfAttorney" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
                         <label asp-for="FatherName" class="aq-label">Father Name</label>
                         <input asp-for="FatherName" class="aq-input" />
+                        <span asp-validation-for="FatherName" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
                         <label asp-for="SpouseName" class="aq-label">Spouse Name</label>
                         <input asp-for="SpouseName" class="aq-input" />
+                        <span asp-validation-for="SpouseName" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
                         <label asp-for="PhoneNumber" class="aq-label">Phone Number</label>
-                        <input asp-for="PhoneNumber" class="aq-input" maxlength="10" />
+                        <input asp-for="PhoneNumber" class="aq-input" maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+                        <span asp-validation-for="PhoneNumber" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
                         <label asp-for="Email" class="aq-label">Email</label>
                         <input asp-for="Email" class="aq-input" />
+                        <span asp-validation-for="Email" class="aq-error"></span>
                     </div>
 
                 </div>
@@ -142,21 +239,25 @@
                     <div class="aq-col-3 aq-field">
                         <label asp-for="CommDoorNo" class="aq-label">Door No.</label>
                         <input asp-for="CommDoorNo" class="aq-input" />
+                        <span asp-validation-for="CommDoorNo" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-9 aq-field">
                         <label asp-for="CommAddress1" class="aq-label">Address Line 1</label>
                         <input asp-for="CommAddress1" class="aq-input" />
+                        <span asp-validation-for="CommAddress1" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-12 aq-field">
                         <label asp-for="CommAddress2" class="aq-label">Address Line 2</label>
                         <input asp-for="CommAddress2" class="aq-input" />
+                        <span asp-validation-for="CommAddress2" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
                         <label asp-for="CommCity" class="aq-label">City</label>
                         <input asp-for="CommCity" class="aq-input" />
+                        <span asp-validation-for="CommCity" class="aq-error"></span>
                     </div>
 
                 </div>
@@ -182,21 +283,25 @@
                     <div class="aq-col-3 aq-field">
                         <label asp-for="ConnDoorNo" class="aq-label">Door No.</label>
                         <input asp-for="ConnDoorNo" class="aq-input" />
+                        <span asp-validation-for="ConnDoorNo" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-9 aq-field">
                         <label asp-for="ConnAddress1" class="aq-label">Address Line 1</label>
                         <input asp-for="ConnAddress1" class="aq-input" />
+                        <span asp-validation-for="ConnAddress1" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-12 aq-field">
                         <label asp-for="ConnAddress2" class="aq-label">Address Line 2</label>
                         <input asp-for="ConnAddress2" class="aq-input" />
+                        <span asp-validation-for="ConnAddress2" class="aq-error"></span>
                     </div>
 
                     <div class="aq-col-6 aq-field">
                         <label asp-for="ConnCity" class="aq-label">City</label>
                         <input asp-for="ConnCity" class="aq-input" />
+                        <span asp-validation-for="ConnCity" class="aq-error"></span>
                     </div>
 
                 </div>
@@ -344,7 +449,14 @@
                             <span asp-validation-for="NaVerifyCode" class="aq-error"></span>
                         </div>
                         <div class="aq-doc-upload">
-                            <input asp-for="NameAddressFile" type="file" class="aq-input" />
+                            <input asp-for="NameAddressFile" type="file" accept="application/pdf,.pdf" class="aq-input" data-doc-input />
+                            <div class="aq-attachment" data-doc-attachment hidden>
+                                <svg class="aq-attachment-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                <span class="aq-attachment-name" data-doc-name></span>
+                                <button type="button" class="aq-attachment-btn" data-doc-preview>Preview</button>
+                                <button type="button" class="aq-attachment-btn aq-attachment-btn-remove" data-doc-remove>Remove</button>
+                            </div>
+                            <span asp-validation-for="NameAddressFile" class="aq-error" data-doc-error></span>
                         </div>
                     </div>
 
@@ -374,7 +486,14 @@
                             <span asp-validation-for="OwnFileCode" class="aq-error"></span>
                         </div>
                         <div class="aq-doc-upload">
-                            <input asp-for="OwnershipFile" type="file" class="aq-input" />
+                            <input asp-for="OwnershipFile" type="file" accept="application/pdf,.pdf" class="aq-input" data-doc-input />
+                            <div class="aq-attachment" data-doc-attachment hidden>
+                                <svg class="aq-attachment-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                <span class="aq-attachment-name" data-doc-name></span>
+                                <button type="button" class="aq-attachment-btn" data-doc-preview>Preview</button>
+                                <button type="button" class="aq-attachment-btn aq-attachment-btn-remove" data-doc-remove>Remove</button>
+                            </div>
+                            <span asp-validation-for="OwnershipFile" class="aq-error" data-doc-error></span>
                         </div>
                     </div>
 
@@ -387,9 +506,17 @@
                                 <option>Others</option>
                                 <option>Affidavit and Indemnity</option>
                             </select>
+                            <span asp-validation-for="OthersDocument" class="aq-error"></span>
                         </div>
                         <div class="aq-doc-upload">
-                            <input asp-for="OthersFile" type="file" class="aq-input" />
+                            <input asp-for="OthersFile" type="file" accept="application/pdf,.pdf" class="aq-input" data-doc-input />
+                            <div class="aq-attachment" data-doc-attachment hidden>
+                                <svg class="aq-attachment-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                <span class="aq-attachment-name" data-doc-name></span>
+                                <button type="button" class="aq-attachment-btn" data-doc-preview>Preview</button>
+                                <button type="button" class="aq-attachment-btn aq-attachment-btn-remove" data-doc-remove>Remove</button>
+                            </div>
+                            <span asp-validation-for="OthersFile" class="aq-error" data-doc-error></span>
                         </div>
                     </div>
 
@@ -400,9 +527,17 @@
                             <select asp-for="ContractorConsentDocument" class="aq-input">
                                 <option>Licensed Plumber Consent Letter</option>
                             </select>
+                            <span asp-validation-for="ContractorConsentDocument" class="aq-error"></span>
                         </div>
                         <div class="aq-doc-upload">
-                            <input asp-for="ContractorConsentFile" type="file" class="aq-input" />
+                            <input asp-for="ContractorConsentFile" type="file" accept="application/pdf,.pdf" class="aq-input" data-doc-input />
+                            <div class="aq-attachment" data-doc-attachment hidden>
+                                <svg class="aq-attachment-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                <span class="aq-attachment-name" data-doc-name></span>
+                                <button type="button" class="aq-attachment-btn" data-doc-preview>Preview</button>
+                                <button type="button" class="aq-attachment-btn aq-attachment-btn-remove" data-doc-remove>Remove</button>
+                            </div>
+                            <span asp-validation-for="ContractorConsentFile" class="aq-error" data-doc-error></span>
                         </div>
                     </div>
 
@@ -436,6 +571,10 @@
         <div class="aq-actions">
 
             <button type="submit" class="aq-btn aq-btn-primary">
+                Submit Application
+            </button>
+
+            <button type="button" class="aq-btn aq-btn-accent" id="aqSaveDraftBtn">
                 Save Application
             </button>
 
@@ -466,6 +605,9 @@
 
     <script src="~/js/waterjs/wc-form.js"></script>
     <script src="~/js/waterjs/wc-cascade.js"></script>
+    <script src="~/js/waterjs/wc-validation.js"></script>
+    <script src="~/js/waterjs/wc-attachments.js"></script>
+    <script src="~/js/waterjs/wc-draft.js"></script>
 
     @if (TempData["Success"] != null)
     {
@@ -474,6 +616,30 @@
                 var aqSuccessModalEl = document.getElementById("aqSuccessModal");
                 if (aqSuccessModalEl) {
                     new bootstrap.Modal(aqSuccessModalEl).show();
+                }
+            });
+        </script>
+    }
+
+    @if (TempData["ResumeMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var aqResumeModalEl = document.getElementById("aqResumeModal");
+                if (aqResumeModalEl) {
+                    new bootstrap.Modal(aqResumeModalEl).show();
+                }
+            });
+        </script>
+    }
+
+    @if (ViewBag.ValidationFailed == true)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var aqValidationModalEl = document.getElementById("aqValidationModal");
+                if (aqValidationModalEl) {
+                    new bootstrap.Modal(aqValidationModalEl).show();
                 }
             });
         </script>
