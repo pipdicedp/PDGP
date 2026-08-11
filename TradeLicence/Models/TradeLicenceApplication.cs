@@ -108,8 +108,7 @@ namespace TradeLicence.Models
         public virtual ICollection<TradeLicencePartner>? Partners { get; set; }
         public virtual ICollection<TradeLicenceMachinery>? Machineries { get; set; }
         public virtual ICollection<TradeLicencePhotograph>? Photographs { get; set; }
-        // Change the Model name
-        public virtual ICollection<TradeLicencePhotograph>? Documents { get; set; }
+        public virtual ICollection<TradeLicenceDocument>? Documents { get; set; }
         public ShopEstablishmentRegistration? ShopRegistration { get; set; }
     }
 

@@ -26,5 +26,17 @@ namespace TradeLicence.Interfaces
 
         Task<bool> UpdateCurrentStepAsync(int applicationId, int step);
         Task SaveChangesAsync();
+
+        Task<TradeLicencePhotograph?> GetPhotographByApplicationIdAsync(int applicationId);
+        Task AddPhotographAsync(TradeLicencePhotograph photograph);
+
+        Task<TradeLicenceDocument?> GetDocumentByApplicationAndNameAsync(int applicationId, string documentName);
+        Task<TradeLicenceDocument?> GetDocumentByIdAsync(int documentId);
+        Task<List<TradeLicenceDocument>> GetDocumentsByApplicationIdAsync(int applicationId);
+        Task AddDocumentAsync(TradeLicenceDocument document);
+        void RemoveDocument(TradeLicenceDocument document);
+        Task<ShopEstablishmentRegistration?> GetShopRegistrationByApplicationIdAsync(int applicationId);
+        Task AddShopRegistrationAsync(ShopEstablishmentRegistration registration);
+        Task<List<TradeLicenceMachinery>> GetMachineryByApplicationIdAsync(int applicationId);
     }
 }

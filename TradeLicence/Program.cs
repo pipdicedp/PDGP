@@ -26,6 +26,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 // Application services and repositories
 builder.Services.AddScoped<ITradeLicenceRepository, TradeLicenceRepository>();
 builder.Services.AddScoped<ITradeLicenceService, TradeLicenceService>();
+builder.Services.AddScoped<IFileEncryptionService, FileEncryptionService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -61,6 +62,8 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 app.UseHttpsRedirection();
 // Serve static files from wwwroot (js, css, images)

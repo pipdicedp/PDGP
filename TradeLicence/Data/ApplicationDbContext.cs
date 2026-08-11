@@ -16,10 +16,11 @@ namespace TradeLicence.Data
         public DbSet<Street> Streets { get; set; } = null!;
         public DbSet<DoorNumberLookup> DoorNumbers { get; set; } = null!;
         public DbSet<DocumentChecklistItem> DocumentChecklistItems { get; set; } = null!;
-        public DbSet<ApplicationDocument> ApplicationDocuments { get; set; } = null!; 
+        public DbSet<ApplicationDocument> ApplicationDocuments { get; set; } = null!;
         public DbSet<TradeLicencePartner> TradeLicencePartners { get; set; } = null!;
         public DbSet<TradeLicenceMachinery> TradeLicenceMachineries { get; set; } = null!;
         public DbSet<TradeLicencePhotograph> TradeLicencePhotographs { get; set; }
+        public DbSet<TradeLicenceDocument> TradeLicenceDocuments { get; set; } = null!;
         public DbSet<ShopEstablishmentRegistration> ShopEstablishmentRegistrations { get; set; }
         public DbSet<ApplicationUser> Users { get; set; } = null!;
 
@@ -85,6 +86,16 @@ namespace TradeLicence.Data
 
                 entity.HasOne(x => x.Application)
                       .WithMany(x => x.Photographs)
+                      .HasForeignKey(x => x.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<TradeLicenceDocument>(entity =>
+            {
+                entity.ToTable("TradeLicenceDocuments");
+
+                entity.HasOne(x => x.Application)
+                      .WithMany(x => x.Documents)
                       .HasForeignKey(x => x.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
             });

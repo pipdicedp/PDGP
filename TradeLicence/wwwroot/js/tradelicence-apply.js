@@ -240,26 +240,43 @@
             });
         }
 
+        function loadDoorNumbers(streetId, selectedDoorNumber) {
+            if (!streetId) return;
+            console.debug('fetch doors for street', streetId);
+            const url = (window.TradeLicenceApi?.getDoorNumbersUrl || '/TradeLicence/GetDoorNumbers') + '?streetId=' + encodeURIComponent(streetId);
+            fetch(url, { headers: { 'Accept': 'application/json' } })
+                .then(r => {
+                    if (!r.ok) throw new Error('Network response was not ok: ' + r.status);
+                    return r.json();
+                })
+                .then(data => {
+                    console.debug('doors response', data);
+                    fillSelect(doorEl, data, 'doorNumberId', 'doorNumberValue', '---Please Select---');
+                    if (selectedDoorNumber) {
+                        doorEl.value = selectedDoorNumber;
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load doors', err);
+                    showWizardMessage('Failed to load door numbers. See console for details.', 'danger');
+                });
+        }
+
         if (streetEl) {
             streetEl.addEventListener('change', function () {
                 fillSelect(doorEl, [], null, null, '---Please Select---');
-                if (!this.value) return;
-                console.debug('fetch doors for street', this.value);
-                const url = (window.TradeLicenceApi?.getDoorNumbersUrl || '/TradeLicence/GetDoorNumbers') + '?streetId=' + encodeURIComponent(this.value);
-                fetch(url, { headers: { 'Accept': 'application/json' } })
-                    .then(r => {
-                        if (!r.ok) throw new Error('Network response was not ok: ' + r.status);
-                        return r.json();
-                    })
-                    .then(data => {
-                        console.debug('doors response', data);
-                        fillSelect(doorEl, data, 'doorNumberId', 'doorNumberValue', '---Please Select---');
-                    })
-                    .catch(err => {
-                        console.error('Failed to load doors', err);
-                        showWizardMessage('Failed to load door numbers. See console for details.', 'danger');
-                    });
+                loadDoorNumbers(this.value, null);
             });
+        }
+
+        // On initial load of an EXISTING draft, Municipality/Ward/Area/Street are
+        // already pre-selected server-side (via ViewBag SelectList), but that never
+        // fires a 'change' event — and Door Number is populated 100% client-side.
+        // Without this, DoorNumber silently stayed empty for any reopened draft,
+        // even though a value was already saved in the database.
+        if (streetEl && streetEl.value) {
+            var savedDoorNumber = doorEl ? doorEl.getAttribute('data-selected') : null;
+            loadDoorNumbers(streetEl.value, savedDoorNumber);
         }
 
         // NOTE: the original file had a second, duplicate 'change' handler
@@ -625,6 +642,13 @@
 
     $('#btnPartnerNext').on('click', function () {
 
+        // Partners are only mandatory when the ownership type is "Partnership".
+        var ownershipType = $('#OwnershipType').val();
+        if (ownershipType === 'Partnership' && $('#tblPartners tbody tr').length === 0) {
+            alert('Please add and save at least one partner before continuing.');
+            return;
+        }
+
         advanceStep(3);
         showWizardSection('machinery');
 
@@ -671,6 +695,17 @@
 
     $('#btnPhotoNext').on('click', function () {
 
+        var applicantPhotoInput = document.getElementById('ApplicantPhoto');
+        var previewImg = document.getElementById('ApplicantPhotoPreview');
+        var hasExistingPreview = previewImg && previewImg.src && previewImg.style.display !== 'none' &&
+            !previewImg.src.endsWith('#') && previewImg.getAttribute('src');
+        var hasNewFile = applicantPhotoInput && applicantPhotoInput.files && applicantPhotoInput.files.length > 0;
+
+        if (!hasNewFile && !hasExistingPreview) {
+            alert('Please upload the applicant photograph before continuing.');
+            return;
+        }
+
         advanceStep(5);
         showWizardSection('documents');
 
@@ -710,6 +745,21 @@
 
     $('#btnDocumentNext').on('click', function () {
 
+        var requiredDocs = [
+            { btnId: 'btnPreviewAadhaar', label: 'Aadhaar Copy' },
+            { btnId: 'btnPreviewPropertyTax', label: 'Property Tax Receipt' },
+            { btnId: 'btnPreviewBuildingPlan', label: 'Building Plan' }
+        ];
+        var missing = requiredDocs.filter(function (d) {
+            var $btn = $('#' + d.btnId);
+            return $btn.length === 0 || $btn.prop('disabled') || !$btn.data('documentId');
+        });
+
+        if (missing.length > 0) {
+            alert('Please upload the following required document(s): ' + missing.map(function (d) { return d.label; }).join(', '));
+            return;
+        }
+
         advanceStep(6);
         showWizardSection('shops');
 
@@ -730,17 +780,19 @@
 
         window.scrollTo(0, 0);
     });
-    $('#btnShopsNext').on('click', function () {
-
-        advanceStep(7);
-        showWizardSection('confirm');
-
-        $('.tl-step-badge').text('Step: 7 of 7');
-
-        window.scrollTo(0, 0);
-    });
+    // NOTE: btnShopsNext is intentionally NOT handled here. shop-establishment.js
+    // owns that button — it validates required fields and saves via AJAX first,
+    // then calls window.TradeLicenceApply.goToConfirmTab() below on success.
+    // (A second, unconditional handler used to live here and would advance the
+    // tab regardless of whether the save succeeded or validation failed — removed.)
 
     window.TradeLicenceApply = {
-        init: init
+        init: init,
+        goToConfirmTab: function () {
+            advanceStep(7);
+            showWizardSection('confirm');
+            $('.tl-step-badge').text('Step: 7 of 7');
+            window.scrollTo(0, 0);
+        }
     };
 })();

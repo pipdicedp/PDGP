@@ -165,18 +165,9 @@ namespace TradeLicence.Controllers
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            // Sign the new user in immediately, same claims as the normal login flow.
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.Name, newUser.Username),
-                new(ClaimTypes.NameIdentifier, newUser.UserId.ToString())
-            };
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(identity),
-                new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30) });
+            TempData["RegisterSuccess"] = $"Welcome, {newUser.Username}! Your account has been created successfully. Please login to continue.";
 
-            return RedirectToAction("Login", "Account");
+            return RedirectToAction("Login");
         }
 
         private Task<IActionResult> RedisplayLoginWithRegisterErrors(RegisterViewModel model)

@@ -15,7 +15,39 @@ namespace TradeLicence.Repositories
 
         public async Task AddApplicationAsync(TradeLicenceApplication application)
         {
-            await _context.TradeLicenceApplications.AddAsync(application);
+            if (application.ApplicationId == 0)
+            {
+                // Brand new application — let the DB generate the identity value.
+                await _context.TradeLicenceApplications.AddAsync(application);
+                return;
+            }
+
+            // Existing draft being re-saved (e.g. re-visiting Application Details,
+            // or final Submit on an application created earlier). Calling AddAsync()
+            // here would try to INSERT the already-assigned ApplicationId explicitly,
+            // which SQL Server rejects for an identity column. Load the tracked
+            // entity instead and copy the incoming values onto it — this produces
+            // a proper UPDATE using the existing row.
+            var existing = await _context.TradeLicenceApplications.FindAsync(application.ApplicationId);
+            if (existing == null)
+            {
+                // Shouldn't normally happen, but don't silently drop the save.
+                await _context.TradeLicenceApplications.AddAsync(application);
+                return;
+            }
+
+            var originalCreatedDate = existing.CreatedDate;
+            var originalUserId = existing.UserId;
+
+            _context.Entry(existing).CurrentValues.SetValues(application);
+
+            // The wizard form doesn't round-trip every field on every step —
+            // never let a re-save clobber these with a blank/default value.
+            existing.CreatedDate = originalCreatedDate;
+            if (application.UserId == null)
+            {
+                existing.UserId = originalUserId;
+            }
         }
 
         public async Task AddApplicationDocumentAsync(ApplicationDocument doc)
@@ -85,6 +117,69 @@ namespace TradeLicence.Repositories
         public async Task AddMachineryAsync(TradeLicenceMachinery machinery)
         {
             await _context.TradeLicenceMachineries.AddAsync(machinery);
+        }
+
+        public async Task<List<TradeLicenceMachinery>> GetMachineryByApplicationIdAsync(int applicationId)
+        {
+            return await _context.TradeLicenceMachineries
+                .Where(x => x.ApplicationId == applicationId)
+                .ToListAsync();
+        }
+
+        // ---------------- Photographs (Step 4) ----------------
+
+        public async Task<TradeLicencePhotograph?> GetPhotographByApplicationIdAsync(int applicationId)
+        {
+            return await _context.TradeLicencePhotographs
+                .FirstOrDefaultAsync(x => x.ApplicationId == applicationId);
+        }
+
+        public async Task AddPhotographAsync(TradeLicencePhotograph photograph)
+        {
+            await _context.TradeLicencePhotographs.AddAsync(photograph);
+        }
+
+        // ---------------- Documents (Step 5) ----------------
+
+        public async Task<TradeLicenceDocument?> GetDocumentByApplicationAndNameAsync(int applicationId, string documentName)
+        {
+            return await _context.TradeLicenceDocuments
+                .FirstOrDefaultAsync(x => x.ApplicationId == applicationId && x.DocumentName == documentName);
+        }
+
+        public async Task<TradeLicenceDocument?> GetDocumentByIdAsync(int documentId)
+        {
+            return await _context.TradeLicenceDocuments.FindAsync(documentId);
+        }
+
+        public async Task<List<TradeLicenceDocument>> GetDocumentsByApplicationIdAsync(int applicationId)
+        {
+            return await _context.TradeLicenceDocuments
+                .Where(x => x.ApplicationId == applicationId)
+                .ToListAsync();
+        }
+
+        public async Task AddDocumentAsync(TradeLicenceDocument document)
+        {
+            await _context.TradeLicenceDocuments.AddAsync(document);
+        }
+
+        public void RemoveDocument(TradeLicenceDocument document)
+        {
+            _context.TradeLicenceDocuments.Remove(document);
+        }
+
+        // ---------------- Shop Establishment Registration (Step 6) ----------------
+
+        public async Task<ShopEstablishmentRegistration?> GetShopRegistrationByApplicationIdAsync(int applicationId)
+        {
+            return await _context.ShopEstablishmentRegistrations
+                .FirstOrDefaultAsync(x => x.ApplicationId == applicationId);
+        }
+
+        public async Task AddShopRegistrationAsync(ShopEstablishmentRegistration registration)
+        {
+            await _context.ShopEstablishmentRegistrations.AddAsync(registration);
         }
 
         public async Task<bool> UpdateCurrentStepAsync(int applicationId, int step)
