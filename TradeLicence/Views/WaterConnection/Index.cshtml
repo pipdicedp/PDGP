@@ -85,6 +85,59 @@
         </div>
     </div>
 
+    <!-- Shown after "Save Application" successfully stores the form as a draft. -->
+    <div class="modal fade" id="aqDraftSavedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content aq-success-modal">
+                <div class="modal-body aq-success-body">
+                    <div class="aq-success-icon">
+                        <span class="aq-thumb-blob"></span>
+                        <svg class="aq-thumb-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg>
+                    </div>
+                    <h4 class="aq-success-title">Saved details as draft</h4>
+                    <p class="aq-success-note">You can come back anytime and resume from where you left off.</p>
+                    <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shown if "Save Application" is clicked but every mandatory field (including
+         all four document uploads) is already filled -- nothing left to draft. -->
+    <div class="modal fade" id="aqDraftCompleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content aq-validation-modal">
+                <div class="modal-body aq-validation-body">
+                    <div class="aq-validation-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                    </div>
+                    <h4 class="aq-validation-title">All fields are filled</h4>
+                    <p class="aq-validation-note">All fields are filled. Please submit the application.</p>
+                    <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["ResumeMessage"] != null)
+    {
+        <div class="modal fade" id="aqResumeModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content aq-success-modal">
+                    <div class="modal-body aq-success-body">
+                        <div class="aq-success-icon">
+                            <span class="aq-thumb-blob"></span>
+                            <svg class="aq-thumb-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"></path><path d="M3 4v5h5"></path></svg>
+                        </div>
+                        <h4 class="aq-success-title">Welcome back</h4>
+                        <p class="aq-success-note">@TempData["ResumeMessage"]</p>
+                        <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <!-- Shared preview for any selected document -- Preview buttons point an <iframe> at the
          chosen file's local blob URL, so nothing is uploaded just to preview it, and nothing
          opens in a new tab/window (see wc-attachments.js). Uses the same wc-preview-* classes
@@ -106,6 +159,7 @@
     <form asp-action="Index" method="post" enctype="multipart/form-data" id="aqWaterForm">
 
         @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ApplicationId" id="aqApplicationId" />
 
         <div class="aq-flow">
 
@@ -517,6 +571,10 @@
         <div class="aq-actions">
 
             <button type="submit" class="aq-btn aq-btn-primary">
+                Submit Application
+            </button>
+
+            <button type="button" class="aq-btn aq-btn-accent" id="aqSaveDraftBtn">
                 Save Application
             </button>
 
@@ -549,6 +607,7 @@
     <script src="~/js/waterjs/wc-cascade.js"></script>
     <script src="~/js/waterjs/wc-validation.js"></script>
     <script src="~/js/waterjs/wc-attachments.js"></script>
+    <script src="~/js/waterjs/wc-draft.js"></script>
 
     @if (TempData["Success"] != null)
     {
@@ -557,6 +616,18 @@
                 var aqSuccessModalEl = document.getElementById("aqSuccessModal");
                 if (aqSuccessModalEl) {
                     new bootstrap.Modal(aqSuccessModalEl).show();
+                }
+            });
+        </script>
+    }
+
+    @if (TempData["ResumeMessage"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var aqResumeModalEl = document.getElementById("aqResumeModal");
+                if (aqResumeModalEl) {
+                    new bootstrap.Modal(aqResumeModalEl).show();
                 }
             });
         </script>

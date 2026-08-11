@@ -109,6 +109,7 @@ namespace WaterConnection.Data
             {
                 entity.ToTable("WaterConnectionApplication");
                 entity.Property(e => e.ApplicationId).HasColumnName("Application_Id");
+                entity.Property(e => e.UserId).HasColumnName("UserId");
                 entity.Property(e => e.Name).HasColumnName("Name");
                 entity.Property(e => e.PowerOfAttorney).HasColumnName("Power_Of_Attorney");
                 entity.Property(e => e.FatherName).HasColumnName("Father_Name");

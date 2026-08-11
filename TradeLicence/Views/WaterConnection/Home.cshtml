@@ -3,6 +3,27 @@
 }
 
 <link rel="stylesheet" href="~/css/watercss/wc-landing.css" />
+<link rel="stylesheet" href="~/css/watercss/wc-form.css" />
+
+@if (TempData["AlreadySubmittedApplicationId"] != null)
+{
+    <div class="modal fade" id="whAlreadySubmittedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content aq-validation-modal">
+                <div class="modal-body aq-validation-body">
+                    <div class="aq-validation-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
+                    </div>
+                    <h4 class="aq-validation-title">Application Already Submitted</h4>
+                    <p class="aq-validation-note">
+                        You have already submitted the form. Please check the status with your Application ID: <strong>@TempData["AlreadySubmittedApplicationId"]</strong>
+                    </p>
+                    <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 <div class="wh-page">
     <div class="wh-shell">
@@ -48,7 +69,37 @@
                 </span>
             </a>
 
+            <a asp-action="MyApplications" class="wh-card">
+                <div class="wh-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                </div>
+                <h2 class="wh-card-title">Application Status Tracking</h2>
+                <p class="wh-card-desc">
+                    Logged in? View all your own applications in one place — resume a
+                    draft or download the acknowledgement for a submitted one.
+                </p>
+                <span class="wh-card-cta">
+                    Track my applications
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+                </span>
+            </a>
+
         </div>
 
     </div>
 </div>
+
+@section Scripts
+{
+    @if (TempData["AlreadySubmittedApplicationId"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var whAlreadySubmittedModalEl = document.getElementById("whAlreadySubmittedModal");
+                if (whAlreadySubmittedModalEl) {
+                    new bootstrap.Modal(whAlreadySubmittedModalEl).show();
+                }
+            });
+        </script>
+    }
+}

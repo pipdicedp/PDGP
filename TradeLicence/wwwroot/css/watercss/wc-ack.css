@@ -1,0 +1,275 @@
+:root {
+    --ink: #1A2B3D;
+    --ink-soft: #4A5A6B;
+    --label: #8B93A1;
+    --line: #EAEDF1;
+    --surface: #FFFFFF;
+    --page: #FAFBFC;
+    --accent: #1B4B66;
+    --accent-gold: #B9891F;
+    --success: #1E7A4C;
+    --success-bg: #EAF7EF;
+}
+
+.wa-page {
+    background: var(--page);
+    min-height: 100vh;
+    padding: 28px 24px 48px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+}
+
+.wa-shell {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.wa-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.wa-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    text-decoration: none;
+}
+
+    .wa-back:hover {
+        color: var(--accent);
+    }
+
+.wa-download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .wa-download-btn:hover {
+        background: #143A50;
+    }
+
+.wa-slip {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 36px 40px;
+}
+
+.wa-slip-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--ink);
+}
+
+.wa-gov {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin: 0 0 6px;
+}
+
+.wa-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    color: var(--ink);
+}
+
+.wa-subtitle {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+}
+
+.wa-status-block {
+    text-align: right;
+}
+
+.wa-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 650;
+    background: var(--success-bg);
+    color: var(--success);
+    white-space: nowrap;
+}
+
+.wa-appid-row {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.wa-appid-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wa-appid-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--label);
+}
+
+.wa-appid-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.wa-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+}
+
+.wa-section {
+    break-inside: avoid;
+}
+
+.wa-span-2 {
+    grid-column: 1 / -1;
+}
+
+.wa-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+}
+
+.wa-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+}
+
+.wa-field label {
+    display: block;
+    font-size: 11px;
+    color: var(--label);
+    margin-bottom: 2px;
+}
+
+.wa-field .wa-value {
+    font-size: 13.5px;
+    color: var(--ink);
+    font-weight: 550;
+}
+
+.wa-docs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.wa-doc-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--success-bg);
+    color: var(--success);
+    border-radius: 999px;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+    .wa-doc-chip svg {
+        width: 14px;
+        height: 14px;
+        stroke: var(--success);
+    }
+
+.wa-footer-note {
+    margin-top: 30px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+    font-size: 12px;
+    color: var(--label);
+    line-height: 1.6;
+}
+
+@media (max-width: 700px) {
+    .wa-slip {
+        padding: 26px 20px;
+    }
+
+    .wa-sections,
+    .wa-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .wa-slip-header {
+        flex-direction: column;
+    }
+
+    .wa-status-block {
+        text-align: left;
+    }
+}
+
+/* ---- Print / "Download as PDF" ----
+   The page itself stays inside the site's normal header/nav/footer chrome so it can
+   still be browsed like any other page; printing (via the Download as PDF button,
+   which calls window.print()) strips all of that away and leaves just the slip. */
+@media print {
+    .tl-topbar,
+    .tl-navbar,
+    .tl-info-section,
+    .tl-footer,
+    .wa-toolbar {
+        display: none !important;
+    }
+
+    body,
+    .wa-page {
+        background: #fff;
+        padding: 0;
+    }
+
+    .wa-shell {
+        max-width: 100%;
+    }
+
+    .wa-slip {
+        border: none;
+        border-radius: 0;
+        padding: 0;
+    }
+}

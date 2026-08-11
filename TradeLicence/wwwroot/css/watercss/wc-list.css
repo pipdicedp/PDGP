@@ -9,6 +9,8 @@
     --accent-gold: #B9891F;
     --danger: #B3432B;
     --danger-bg: #FBEEEA;
+    --success: #1E7A4C;
+    --success-bg: #EAF7EF;
 }
 
 .wl-page {
@@ -172,12 +174,55 @@ table.wl-table {
         background: #F6DCD3;
     }
 
+.wl-btn-continue {
+    background: var(--accent-gold);
+    color: #fff !important;
+}
+
+    .wl-btn-continue:hover {
+        background: #9A7119;
+    }
+
+.wl-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.wl-status-submitted {
+    background: var(--success-bg);
+    color: var(--success);
+}
+
+.wl-status-draft {
+    background: #FBF3E5;
+    color: var(--accent-gold);
+}
+
 .wl-empty {
     padding: 60px 20px;
     text-align: center;
     color: var(--label);
     font-size: 14px;
 }
+
+.wl-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    text-decoration: none;
+}
+
+    .wl-back:hover {
+        color: var(--accent);
+    }
 
 @media (max-width: 640px) {
     .wl-title {

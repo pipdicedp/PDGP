@@ -12,6 +12,10 @@ namespace WaterConnection.Models
     // in wc-attachments.js at the moment a file is chosen).
     public class WaterConnectionFormViewModel
     {
+        // Set when this form is displaying/updating an existing row (draft or
+        // submitted) that belongs to the logged-in user -- null means "brand new".
+        public int? ApplicationId { get; set; }
+
         // Applicant Details
         [Required(ErrorMessage = "Name is required")]
         [StringLength(150)]
