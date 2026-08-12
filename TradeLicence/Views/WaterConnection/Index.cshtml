@@ -410,4 +410,27 @@
             });
         </script>
     }
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const textOnlyFields = [
+                "#Name",
+                "#FatherName",
+                "#SpouseName",
+                "#CommCity",
+                "#ConnCity"
+            ];
+
+            textOnlyFields.forEach(function(selector) {
+                const input = document.querySelector(selector);
+
+                if (input) {
+                    input.addEventListener("input", function() {
+                        this.value = this.value.replace(/[0-9]/g, "");
+                    });
+                }
+            });
+
+        });
+    </script>
 }
