@@ -659,3 +659,15 @@ body {
         max-width: 100%;
     }
 }
+
+/* Append to wwwroot/css/site.css — officer designation badge in the navbar */
+.tl-officer-badge {
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin-left: 4px;
+    white-space: nowrap;
+}

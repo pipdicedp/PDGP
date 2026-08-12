@@ -535,6 +535,7 @@
                             renderWizardLinks('partners');
                             advanceStep(2);
                             window.scrollTo(0, 0);
+                            alert('Application details saved successfully.');
                         } else {
                             showWizardMessage('Failed to save application details.', 'danger');
                         }
@@ -671,6 +672,11 @@
     });
 
     $('#btnMachineryNext').on('click', function () {
+
+        if ($('#tblMachinery tbody tr').length === 0) {
+            alert('Please add and save at least one machinery item before continuing.');
+            return;
+        }
 
         advanceStep(4);
         showWizardSection('photo');

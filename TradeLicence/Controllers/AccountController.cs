@@ -16,6 +16,7 @@ namespace TradeLicence.Controllers
         private readonly ApplicationDbContext _context;
         private readonly CaptchaService _captchaService;
         private readonly PasswordHasher<ApplicationUser> _passwordHasher = new();
+        private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
         private const int MaxFailedAttempts = 5;
 
@@ -186,6 +187,7 @@ namespace TradeLicence.Controllers
         /// Generates a fresh CAPTCHA code each time it's requested, stores the
         /// code server-side in Session, and returns an SVG image of it. The
         /// login page's "refresh" icon just reloads this <img> with a cache-buster.
+        /// Shared by both the citizen Login page and the Officer Login page.
         /// </summary>
         [HttpGet]
         public IActionResult CaptchaImage()
@@ -196,6 +198,93 @@ namespace TradeLicence.Controllers
 
             Response.Headers.CacheControl = "no-store, no-cache, must-revalidate";
             return Content(svg, "image/svg+xml");
+        }
+
+        // ---------------- Officer (Official) Login ----------------
+
+        [HttpGet]
+        public IActionResult OfficerLogin(string? returnUrl = null)
+        {
+            return View(new OfficerLoginViewModel { ReturnUrl = returnUrl });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> OfficerLogin(OfficerLoginViewModel model)
+        {
+            // ---- 1. CAPTCHA check FIRST, before touching the database at all ----
+            var expectedCode = HttpContext.Session.GetString("CaptchaCode");
+            HttpContext.Session.Remove("CaptchaCode");
+
+            bool captchaValid = !string.IsNullOrEmpty(expectedCode) &&
+                string.Equals(model.CaptchaInput?.Trim(), expectedCode, StringComparison.OrdinalIgnoreCase);
+
+            var typedPassword = model.Password;
+            model.CaptchaInput = string.Empty;
+            model.Password = string.Empty;
+            ModelState.Remove(nameof(model.CaptchaInput));
+            ModelState.Remove(nameof(model.Password));
+
+            if (!captchaValid)
+            {
+                ModelState.AddModelError(nameof(model.CaptchaInput), "The code entered does not match the image. Please try again.");
+                return View(model);
+            }
+
+            if (!ModelState.IsValid) return View(model);
+
+            // ---- 2. Look up the officer ----
+            var officer = await _context.Officers.FirstOrDefaultAsync(o => o.Username == model.Username);
+
+            const string genericError = "Invalid username or password.";
+
+            if (officer == null)
+            {
+                ModelState.AddModelError(string.Empty, genericError);
+                return View(model);
+            }
+
+            if (officer.IsLocked)
+            {
+                ModelState.AddModelError(string.Empty, "This account is locked due to repeated failed login attempts. Please contact the system administrator.");
+                return View(model);
+            }
+
+            var verifyResult = _officerPasswordHasher.VerifyHashedPassword(officer, officer.PasswordHash, typedPassword);
+            if (verifyResult == PasswordVerificationResult.Failed)
+            {
+                officer.FailedLoginAttempts++;
+                if (officer.FailedLoginAttempts >= MaxFailedAttempts)
+                {
+                    officer.IsLocked = true;
+                }
+                await _context.SaveChangesAsync();
+
+                ModelState.AddModelError(string.Empty, genericError);
+                return View(model);
+            }
+
+            // ---- 3. Success: reset failed-attempt counter, sign in ----
+            officer.FailedLoginAttempts = 0;
+            officer.LastLoginDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, officer.Username),
+                new(ClaimTypes.NameIdentifier, officer.OfficerId.ToString()),
+                new(ClaimTypes.Role, "Officer"),
+                new("Designation", officer.Designation ?? string.Empty)
+            };
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(identity),
+                new AuthenticationProperties { IsPersistent = false, ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30) });
+
+            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+                return Redirect(model.ReturnUrl);
+
+            return RedirectToAction("Index", "Officer");
         }
 
         [Authorize]

@@ -1,0 +1,104 @@
+﻿@using TradeLicence.Helpers
+@{
+    var designation = User.FindFirst("Designation")?.Value;
+    var officerMenu = OfficerMenuProvider.GetMenuForDesignation(designation);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Online Trade Licence System (Officer)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header class="tl-topbar">
+        <div class="tl-topbar-container">
+
+            <div class="tl-brand">
+
+                <img src="@(Url.Content("~/Images/puducherry Logo.jpg"))"
+                     alt="Puducherry Logo"
+                     class="tl-logo" />
+
+                <div>
+                    <strong>GOVERNMENT OF PUDUCHERRY</strong><br />
+                    DEPARTMENT OF INDUSTRIES AND COMMERCE<br />
+                    <span class="tl-title">OFFICER PORTAL</span>
+                </div>
+
+            </div>
+
+            <div>
+                <img src="@(Url.Content("~/Images/Government_of_Puducherry.png"))"
+                     alt="Logo"
+                     class="tr-logo" />
+            </div>
+
+        </div>
+    </header>
+    <!-- Navigation Menu — items come from OfficerMenuProvider, based on the
+         logged-in officer's Designation claim. Add a new designation's menu
+         there, not here. -->
+    <nav class="tl-navbar">
+        <div class="container">
+            <ul class="tl-nav-menu">
+                @foreach (var item in officerMenu)
+                {
+                    @if (item.Children != null && item.Children.Any())
+                    {
+                        <li class="dropdown">
+                            <a href="#">@item.Text<span class="dropdown-arrow">▼</span></a>
+                            <ul class="dropdown-menu">
+                                @foreach (var child in item.Children)
+                                {
+                                    <li><a href="@Url.Action(child.Action, child.Controller)">@child.Text</a></li>
+                                }
+                            </ul>
+                        </li>
+                    }
+                    else
+                    {
+                        <li><a href="@Url.Action(item.Action, item.Controller)">@item.Text</a></li>
+                    }
+                }
+                <li class="user-menu">
+
+                    <i class="fa fa-user-circle"></i>
+
+                    <span>@User.Identity?.Name</span>
+
+                    <form method="post"
+                          asp-controller="Account"
+                          asp-action="Logout"
+                          class="logout-form">
+
+                        <button type="submit" class="logout-icon-btn">
+                            <i class="fa fa-sign-out-alt"></i>
+                        </button>
+
+                    </form>
+
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container tl-container">
+        @RenderBody()
+    </main>
+
+    <footer class="tl-footer">
+        <p>Designed &amp; Developed by National Informatics Centre, Puducherry UT Unit</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

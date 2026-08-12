@@ -56,12 +56,20 @@ builder.Services.AddScoped<CaptchaService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    // Detailed error page while developing/debugging locally.
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Error/Index");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+// Catches non-exception failures too — 404 Not Found, 403 Forbidden, etc.
+app.UseStatusCodePagesWithReExecute("/Error/StatusCode/{0}");
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 

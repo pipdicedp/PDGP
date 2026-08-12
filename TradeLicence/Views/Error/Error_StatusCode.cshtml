@@ -1,0 +1,48 @@
+﻿@model TradeLicence.Controllers.ErrorViewModel
+@{
+    var title = Model.StatusCode switch
+    {
+        404 => "Page Not Found",
+        403 => "Access Denied",
+        401 => "Please Log In",
+        _ => "Request Failed"
+    };
+    var message = Model.StatusCode switch
+    {
+        404 => "The page you're looking for doesn't exist or may have moved.",
+        403 => "You don't have permission to view this page.",
+        401 => "Please log in to continue.",
+        _ => "We couldn't complete that request."
+    };
+
+    ViewData["Title"] = title;
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/error.css" asp-append-version="true" />
+}
+
+<div class="error-page-wrap">
+    <div class="error-card">
+        <div class="error-code">@Model.StatusCode</div>
+        <h2>@title</h2>
+        <p>@message</p>
+
+        @if (Model.ShowRequestId)
+        {
+            <p class="error-request-id">Reference ID: <code>@Model.RequestId</code></p>
+        }
+
+        <div class="error-actions">
+            @if (Model.StatusCode == 401)
+            {
+                <a class="btn btn-primary" href="@Url.Action("Login", "Account")">Login</a>
+            }
+            else
+            {
+                <a class="btn btn-primary" href="@Url.Action("Index", "Dashboard")">Back to Dashboard</a>
+            }
+            <a class="btn btn-secondary" href="javascript:history.back()">Go Back</a>
+        </div>
+    </div>
+</div>

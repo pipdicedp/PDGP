@@ -23,6 +23,7 @@ namespace TradeLicence.Data
         public DbSet<TradeLicenceDocument> TradeLicenceDocuments { get; set; } = null!;
         public DbSet<ShopEstablishmentRegistration> ShopEstablishmentRegistrations { get; set; }
         public DbSet<ApplicationUser> Users { get; set; } = null!;
+        public DbSet<Officer> Officers { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -115,6 +116,12 @@ namespace TradeLicence.Data
             {
                 entity.ToTable("Users");
                 entity.HasKey(e => e.UserId);
+                entity.HasIndex(e => e.Username).IsUnique();
+            });
+            modelBuilder.Entity<Officer>(entity =>
+            {
+                entity.ToTable("Officers");
+                entity.HasKey(e => e.OfficerId);
                 entity.HasIndex(e => e.Username).IsUnique();
             });
             modelBuilder.Entity<TradeLicenceApplication>(entity =>
