@@ -27,7 +27,9 @@ namespace TradeLicence.Services
         {
             model.Status = "Draft";
 
-            if (model.ApplicationId == 0)
+            bool isNewApplication = model.ApplicationId == 0;
+
+            if (isNewApplication)
             {
                 model.CreatedDate = DateTime.UtcNow;
             }
@@ -43,11 +45,24 @@ namespace TradeLicence.Services
             {
                 foreach (var docId in selectedDocuments)
                 {
-                    await _repo.AddApplicationDocumentAsync(new ApplicationDocument
+                    var doc = new ApplicationDocument { DocumentItemId = docId };
+
+                    // New application: ID isn't known yet until SaveChanges runs the
+                    // INSERT, so set the navigation and let EF fix up the FK afterward.
+                    // Existing application: ID is already known — assign it directly
+                    // instead of referencing `model`, which avoids attaching a second
+                    // tracked instance for the same key (AddApplicationAsync already
+                    // tracks the existing row separately when updating a draft).
+                    if (isNewApplication)
                     {
-                        Application = model,
-                        DocumentItemId = docId
-                    });
+                        doc.Application = model;
+                    }
+                    else
+                    {
+                        doc.ApplicationId = model.ApplicationId;
+                    }
+
+                    await _repo.AddApplicationDocumentAsync(doc);
                 }
             }
 
@@ -59,7 +74,9 @@ namespace TradeLicence.Services
         {
             model.Status = "Submitted";
 
-            if (model.ApplicationId == 0)
+            bool isNewApplication = model.ApplicationId == 0;
+
+            if (isNewApplication)
             {
                 model.CreatedDate = DateTime.UtcNow;
             }
@@ -75,11 +92,18 @@ namespace TradeLicence.Services
             {
                 foreach (var docId in selectedDocuments)
                 {
-                    await _repo.AddApplicationDocumentAsync(new ApplicationDocument
+                    var doc = new ApplicationDocument { DocumentItemId = docId };
+
+                    if (isNewApplication)
                     {
-                        Application = model,
-                        DocumentItemId = docId
-                    });
+                        doc.Application = model;
+                    }
+                    else
+                    {
+                        doc.ApplicationId = model.ApplicationId;
+                    }
+
+                    await _repo.AddApplicationDocumentAsync(doc);
                 }
             }
 

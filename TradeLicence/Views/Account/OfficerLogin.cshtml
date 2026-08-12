@@ -1,0 +1,102 @@
+﻿@model TradeLicence.Models.OfficerLoginViewModel
+@{
+    ViewData["Title"] = "Official Login";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+    <link rel="stylesheet" href="~/css/login.css" />
+}
+
+<div class="tl-login-page-grid tl-officer-login-page">
+
+    <div class="tl-login-wrap tl-officer-login-wrap">
+
+        <!-- Left panel: Puducherry branding -->
+        <div class="tl-login-brandpanel">
+            <div class="tl-login-brand-top">
+                <div class="tl-emblem">🏛</div>
+                <div>
+                    <div class="tl-login-brand-title">Official Login</div>
+                    <div class="tl-login-brand-sub">Government of Puducherry</div>
+                </div>
+            </div>
+
+            <div class="tl-login-tagline">Restricted access for department officials — process and manage trade licence applications.</div>
+        </div>
+
+        <!-- Right panel: officer login form -->
+        <div class="tl-login-formpanel">
+            <div class="tl-login-form-inner">
+
+                <h1 class="tl-login-heading">Official Login</h1>
+                <p class="tl-login-subheading">For authorized department staff only.</p>
+
+                @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
+                {
+                    <div class="tl-login-alert">
+                        @foreach (var err in ViewData.ModelState[string.Empty].Errors)
+                        {
+                            <div>@err.ErrorMessage</div>
+                        }
+                    </div>
+                }
+
+                <form asp-controller="Account" asp-action="OfficerLogin" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="ReturnUrl" />
+
+                    <div class="tl-login-field">
+                        <label asp-for="Username">User Name</label>
+                        <input asp-for="Username" class="tl-login-input" autocomplete="username" maxlength="15" autofocus />
+                        <span asp-validation-for="Username" class="tl-login-fielderror"></span>
+                    </div>
+
+                    <div class="tl-login-field">
+                        <label asp-for="Password">Password</label>
+                        <div class="tl-login-password-wrap">
+                            <input asp-for="Password" type="password" id="officerPasswordInput" class="tl-login-input" autocomplete="current-password" maxlength="15" />
+                            <button type="button" id="officerTogglePassword" class="tl-login-eye" aria-label="Show password">👁</button>
+                        </div>
+                        <span asp-validation-for="Password" class="tl-login-fielderror"></span>
+                    </div>
+
+                    <div class="tl-login-field">
+                        <label>Captcha Verification</label>
+                        <div class="tl-login-captcha-row">
+                            <img id="officerCaptchaImg" src="@Url.Action("CaptchaImage", "Account")" alt="Captcha code" class="tl-login-captcha-img" />
+                            <button type="button" id="officerRefreshCaptcha" class="tl-login-captcha-refresh" title="Get a new code" aria-label="Refresh captcha">⟳</button>
+                        </div>
+                        <input asp-for="CaptchaInput" class="tl-login-input" placeholder="Enter the code shown above" autocomplete="off" maxlength="6" />
+                        <span asp-validation-for="CaptchaInput" class="tl-login-fielderror"></span>
+                    </div>
+
+                    <button type="submit" class="tl-login-submit">Login</button>
+
+                    <div class="tl-login-forgot">
+                        <a href="@Url.Action("Login", "Account")">Citizen Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('officerTogglePassword').addEventListener('click', function () {
+            const input = document.getElementById('officerPasswordInput');
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            this.textContent = isHidden ? '🙈' : '👁';
+            this.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+        });
+
+        document.getElementById('officerRefreshCaptcha').addEventListener('click', function () {
+            const img = document.getElementById('officerCaptchaImg');
+            img.src = '@Url.Action("CaptchaImage", "Account")?t=' + Date.now();
+        });
+    </script>
+}

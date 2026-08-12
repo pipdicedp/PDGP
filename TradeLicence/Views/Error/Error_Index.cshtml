@@ -1,0 +1,31 @@
+﻿@model TradeLicence.Controllers.ErrorViewModel
+@{
+    ViewData["Title"] = "Something Went Wrong";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/error.css" asp-append-version="true" />
+}
+
+<div class="error-page-wrap">
+    <div class="error-card">
+        <div class="error-icon">
+            <i class="fas fa-triangle-exclamation"></i>
+        </div>
+        <h2>Something Went Wrong</h2>
+        <p>
+            We hit an unexpected error while processing your request. Nothing was lost —
+            please try again, or head back to your dashboard.
+        </p>
+
+        @if (Model?.ShowRequestId == true)
+        {
+            <p class="error-request-id">Reference ID: <code>@Model.RequestId</code></p>
+        }
+
+        <div class="error-actions">
+            <a class="btn btn-primary" href="@Url.Action("Index", "Dashboard")">Back to Dashboard</a>
+            <a class="btn btn-secondary" href="javascript:history.back()">Go Back</a>
+        </div>
+    </div>
+</div>

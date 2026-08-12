@@ -1,0 +1,58 @@
+.error-page-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 30px 15px;
+}
+
+.error-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 5px 20px rgba(0,0,0,.08);
+    padding: 45px 40px;
+    max-width: 480px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 46px;
+    color: #C0392B;
+    margin-bottom: 15px;
+}
+
+.error-code {
+    font-size: 52px;
+    font-weight: 800;
+    color: #1a3a52;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.error-card h2 {
+    color: #1a3a52;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.error-card p {
+    color: #555;
+    font-size: 0.95rem;
+}
+
+.error-request-id {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.error-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+    .error-actions .btn {
+        min-width: 140px;
+    }
