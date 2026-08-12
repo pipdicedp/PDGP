@@ -16,175 +16,141 @@
         .ToList();
 }
 
-<link rel="stylesheet" href="~/css/watercss/wc-ack.css" />
+<link rel="stylesheet" href="~/css/watercss/wc-preview.css" />
 
-<div class="wa-page">
-    <div class="wa-shell">
-
-        <div class="wa-toolbar">
-            <a asp-action="MyApplications" class="wa-back">← Back to Application Status Tracking</a>
-            <button type="button" class="wa-download-btn" id="waDownloadBtn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Download as PDF
-            </button>
+<!-- Document preview modal: same markup/classes as Details.cshtml so a document
+     preview looks and behaves identically wherever it's opened from. -->
+<div class="modal fade" id="documentModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content wc-preview-modal">
+            <div class="modal-header wc-preview-header">
+                <h5 class="wc-preview-title" id="documentTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body wc-preview-body"><iframe id="documentFrame" class="wc-preview-frame" title="Document preview"></iframe></div>
         </div>
-
-        <div class="wa-slip" id="waSlip">
-
-            <div class="wa-slip-header">
-                <div>
-                    <p class="wa-gov">Government of Puducherry &middot; Public Works Department</p>
-                    <h1 class="wa-title">Water Connection Application</h1>
-                    <p class="wa-subtitle">Submission Acknowledgement</p>
-                </div>
-                <div class="wa-status-block">
-                    <span class="wa-status-badge">Submitted</span>
-                </div>
-            </div>
-
-            <div class="wa-appid-row">
-                <div class="wa-appid-block">
-                    <span class="wa-appid-label">Application ID</span>
-                    <span class="wa-appid-value">#@Model.ApplicationId</span>
-                </div>
-                <div class="wa-appid-block">
-                    <span class="wa-appid-label">Submitted On</span>
-                    <span class="wa-appid-value">@Model.ApplicationDate.ToString("dd MMM yyyy, hh:mm tt")</span>
-                </div>
-            </div>
-
-            <div class="wa-sections">
-
-                <div class="wa-section wa-span-2">
-                    <p class="wa-section-title">Applicant Details</p>
-                    <div class="wa-grid">
-                        <div class="wa-field">
-                            <label>Name</label>
-                            <div class="wa-value">@Model.Name</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Father Name</label>
-                            <div class="wa-value">@(Model.FatherName ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Spouse Name</label>
-                            <div class="wa-value">@(Model.SpouseName ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Power of Attorney</label>
-                            <div class="wa-value">@(Model.PowerOfAttorney ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Phone Number</label>
-                            <div class="wa-value">@Model.PhoneNumber</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Email</label>
-                            <div class="wa-value">@(Model.Email ?? "—")</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="wa-section">
-                    <p class="wa-section-title">Communication Address</p>
-                    <div class="wa-grid">
-                        <div class="wa-field">
-                            <label>Door No</label>
-                            <div class="wa-value">@(Model.CommDoorNo ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>City</label>
-                            <div class="wa-value">@(Model.CommCity ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Address Line 1</label>
-                            <div class="wa-value">@(Model.CommAddress1 ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Address Line 2</label>
-                            <div class="wa-value">@(Model.CommAddress2 ?? "—")</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="wa-section">
-                    <p class="wa-section-title">Connection Address</p>
-                    <div class="wa-grid">
-                        <div class="wa-field">
-                            <label>Door No</label>
-                            <div class="wa-value">@(Model.ConnDoorNo ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>City</label>
-                            <div class="wa-value">@(Model.ConnCity ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Address Line 1</label>
-                            <div class="wa-value">@(Model.ConnAddress1 ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Address Line 2</label>
-                            <div class="wa-value">@(Model.ConnAddress2 ?? "—")</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="wa-section wa-span-2">
-                    <p class="wa-section-title">Work &amp; Contractor Details</p>
-                    <div class="wa-grid">
-                        <div class="wa-field">
-                            <label>Department</label>
-                            <div class="wa-value">@(Model.Department?.DepartmentName ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Section</label>
-                            <div class="wa-value">@(Model.Section?.SectionName ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Area</label>
-                            <div class="wa-value">@(Model.Area?.AreaName ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Purpose</label>
-                            <div class="wa-value">@(Model.Purpose?.PurposeName ?? "—")</div>
-                        </div>
-                        <div class="wa-field">
-                            <label>Contractor</label>
-                            <div class="wa-value">@(Model.Contractor?.ContractorName ?? "—")</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="wa-section wa-span-2">
-                    <p class="wa-section-title">Documents Submitted</p>
-                    <div class="wa-docs">
-                        @foreach (var doc in docs)
-                        {
-                            var label = purposeLabels.TryGetValue(doc.DocumentPurpose, out var friendly) ? friendly : doc.DocumentPurpose;
-                            <span class="wa-doc-chip">
-                                <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                @label
-                            </span>
-                        }
-                        @if (!docs.Any())
-                        {
-                            <span class="wa-value">No documents on file</span>
-                        }
-                    </div>
-                </div>
-
-            </div>
-
-            <p class="wa-footer-note">
-                This is a system-generated acknowledgement confirming receipt of your water connection
-                application. Please retain your Application ID <strong>#@Model.ApplicationId</strong> for
-                all future correspondence and status checks. This acknowledgement does not itself constitute
-                approval of the connection.
-            </p>
-
-        </div>
-
     </div>
+</div>
+
+<div class="ack-container" id="waSlip">
+
+    <div class="ack-header">
+        <span class="ack-success-badge">
+            <i class="fas fa-check-circle"></i> Application Submitted Successfully
+        </span>
+        <h2>New Water Connection Application &mdash; Acknowledgement Slip</h2>
+        <p>Government of Puducherry &bull; Public Works Department</p>
+    </div>
+
+    <div class="ack-appno">
+        <div class="label">Application Number</div>
+        <div class="value">#@Model.ApplicationId</div>
+    </div>
+
+    <table class="ack-table">
+        <tr>
+            <th>Name</th>
+            <td>@Model.Name</td>
+        </tr>
+        <tr>
+            <th>Father Name</th>
+            <td>@(Model.FatherName ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Spouse Name</th>
+            <td>@(Model.SpouseName ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Power of Attorney</th>
+            <td>@(Model.PowerOfAttorney ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Phone Number</th>
+            <td>@Model.PhoneNumber</td>
+        </tr>
+        <tr>
+            <th>Email</th>
+            <td>@(Model.Email ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Communication Address</th>
+            <td>@Model.CommDoorNo, @Model.CommAddress1, @Model.CommAddress2, @Model.CommCity</td>
+        </tr>
+        <tr>
+            <th>Connection Address</th>
+            <td>@Model.ConnDoorNo, @Model.ConnAddress1, @Model.ConnAddress2, @Model.ConnCity</td>
+        </tr>
+        <tr>
+            <th>Department</th>
+            <td>@(Model.Department?.DepartmentName ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Section</th>
+            <td>@(Model.Section?.SectionName ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Area</th>
+            <td>@(Model.Area?.AreaName ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Purpose</th>
+            <td>@(Model.Purpose?.PurposeName ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Contractor</th>
+            <td>@(Model.Contractor?.ContractorName ?? "—")</td>
+        </tr>
+        <tr>
+            <th>Date of Submission</th>
+            <td>@Model.ApplicationDate.ToString("dd-MM-yyyy, hh:mm tt")</td>
+        </tr>
+        <tr>
+            <th>Current Status</th>
+            <td><span class="myapps-status-badge myapps-status-submitted">Submitted</span></td>
+        </tr>
+        <tr>
+            <th>Documents Submitted</th>
+            <td>
+                @if (docs.Any())
+                {
+                    foreach (var doc in docs)
+                    {
+                        var label = purposeLabels.TryGetValue(doc.DocumentPurpose, out var friendly) ? friendly : doc.DocumentPurpose;
+                        <a href="javascript:void(0);"
+                           class="myapps-status-badge myapps-status-approved preview-document"
+                           style="display:inline-block; margin:2px 6px 2px 0; cursor:pointer; text-decoration:none;"
+                           data-file="@Url.Action("Document", "WaterConnection", new { id = doc.DocumentId })"
+                           data-title="@label"
+                           title="Click to preview @label">
+                            <i class="fas fa-eye"></i> @label
+                        </a>
+                    }
+                }
+                else
+                {
+                    <span>No documents on file</span>
+                }
+            </td>
+        </tr>
+    </table>
+
+    <div class="ack-note">
+        <i class="fas fa-info-circle"></i>
+        This is a system-generated acknowledgement confirming receipt of your water connection
+        application. Please retain your Application ID <strong>#@Model.ApplicationId</strong> for
+        all future correspondence and status checks. This acknowledgement does not itself constitute
+        approval of the connection.
+    </div>
+
+    <div class="ack-actions">
+        <button type="button" class="btn btn-primary" id="waDownloadBtn">
+            <i class="fas fa-download"></i> Download as PDF
+        </button>
+        <a class="btn btn-secondary" asp-action="MyApplications">
+            Back to Application Status Tracking
+        </a>
+    </div>
+
 </div>
 
 @section Scripts
@@ -195,6 +161,22 @@
             if (btn) {
                 btn.addEventListener("click", function () {
                     window.print();
+                });
+            }
+
+            // Document preview modal (same pattern as the Application Details page).
+            var modalEl = document.getElementById("documentModal");
+            if (modalEl) {
+                var modal = new bootstrap.Modal(modalEl);
+                document.querySelectorAll(".preview-document").forEach(function (e) {
+                    e.addEventListener("click", function () {
+                        document.getElementById("documentTitle").innerText = this.dataset.title;
+                        document.getElementById("documentFrame").src = this.dataset.file;
+                        modal.show();
+                    });
+                });
+                modalEl.addEventListener("hidden.bs.modal", function () {
+                    document.getElementById("documentFrame").src = "";
                 });
             }
         });

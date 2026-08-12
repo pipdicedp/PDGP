@@ -1,9 +1,14 @@
 // Wires up every mandatory document upload on the water connection form:
+//  - if the draft/application being resumed already has a document saved for a slot
+//    (wrapper has data-existing-doc-url, set by Razor from Model.Existing*DocumentId),
+//    shows it as already attached instead of an empty upload box
 //  - rejects anything that isn't a PDF the moment it's chosen
 //  - shows a small "attachment" chip (filename + Preview + Remove) once a valid PDF is picked
-//  - Preview opens the file in the shared in-page modal (via a local blob URL -- nothing is
-//    uploaded just to preview it, and nothing opens in a new tab/window)
-//  - Remove clears the selection so the user can pick a different file
+//  - Preview opens the document in the shared in-page modal -- a local blob URL for a
+//    freshly-picked file (nothing is uploaded just to preview it), or the saved file's
+//    own URL for an existing document. Nothing opens in a new tab/window.
+//  - Remove clears the selection (and, for an existing document, the hidden
+//    Existing*DocumentId field so the server knows a real re-upload is required)
 (function () {
     document.addEventListener("DOMContentLoaded", function () {
 
@@ -47,18 +52,31 @@
             var nameEl = wrapper.querySelector("[data-doc-name]");
             var previewBtn = wrapper.querySelector("[data-doc-preview]");
             var removeBtn = wrapper.querySelector("[data-doc-remove]");
+            var existingIdInput = wrapper.querySelector("[data-doc-existing-id]");
 
-            function showAttachment(file) {
-                revoke(input);
-                blobUrls.set(input, URL.createObjectURL(file));
+            // URL of the document already saved for this slot (null once removed or
+            // replaced by a fresh pick). currentPreviewUrl tracks whichever URL --
+            // existing or freshly-picked -- Preview should currently open.
+            var existingUrl = wrapper.dataset.existingDocUrl || null;
+            var currentPreviewUrl = existingUrl;
 
+            function showAttachment(label, previewUrl) {
                 if (nameEl) {
-                    nameEl.textContent = file.name;
+                    nameEl.textContent = label;
                 }
                 if (attachment) {
                     attachment.hidden = false;
                 }
                 input.style.display = "none";
+                currentPreviewUrl = previewUrl;
+            }
+
+            function clearExisting() {
+                existingUrl = null;
+                wrapper.dataset.existingDocUrl = "";
+                if (existingIdInput) {
+                    existingIdInput.value = "";
+                }
             }
 
             function clearSelection() {
@@ -68,6 +86,14 @@
                 if (attachment) {
                     attachment.hidden = true;
                 }
+                currentPreviewUrl = null;
+                clearExisting();
+            }
+
+            // A document already saved for this application -- show it as attached
+            // right away instead of an empty upload box the user has to fill again.
+            if (existingUrl) {
+                showAttachment(wrapper.dataset.existingDocLabel || "Document already on file", existingUrl);
             }
 
             input.addEventListener("change", function () {
@@ -84,16 +110,20 @@
                     return;
                 }
 
-                showAttachment(file);
+                revoke(input);
+                var blobUrl = URL.createObjectURL(file);
+                blobUrls.set(input, blobUrl);
+                // A freshly-picked file replaces whatever was previously on file.
+                clearExisting();
+                showAttachment(file.name, blobUrl);
             });
 
             if (previewBtn) {
                 previewBtn.addEventListener("click", function () {
-                    var url = blobUrls.get(input);
-                    if (!url || !previewModal || !previewFrame) {
+                    if (!currentPreviewUrl || !previewModal || !previewFrame) {
                         return;
                     }
-                    previewFrame.src = url;
+                    previewFrame.src = currentPreviewUrl;
                     if (previewTitle) {
                         previewTitle.textContent = (nameEl && nameEl.textContent) || "Document Preview";
                     }

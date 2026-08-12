@@ -4,25 +4,34 @@
     ViewData["Title"] = "Application Status Tracking";
     Layout = "~/Views/Shared/_UserLayout.cshtml";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
 
-<link rel="stylesheet" href="~/css/watercss/wc-list.css" />
+<div class="dashboard-wrapper">
 
-<div class="wl-page">
-    <div class="wl-shell">
+    <div class="status-page-header">
+        Water Connection &mdash; Application Status Tracking
+    </div>
 
-        <div class="wl-header">
-            <div>
-                <p class="wl-eyebrow">Puducherry Water Supply &amp; Sewerage</p>
-                <h2 class="wl-title">Application Status Tracking</h2>
-            </div>
-            <div class="wl-count"><strong>@Model.Count()</strong> applications</div>
+    <div class="dashboard-body">
+
+        <div class="page-title">
+            <h3>Your Applications</h3>
+            <p>Track every water connection application you have started or submitted.</p>
         </div>
 
-        <div class="wl-card">
-            <div class="wl-table-wrap">
-                <table class="wl-table">
+        @if (!Model.Any())
+        {
+            <p class="tl-note text-center">You haven't started a water connection application yet.</p>
+        }
+        else
+        {
+            <div style="overflow-x:auto;">
+                <table class="tl-partner-table">
                     <thead>
                         <tr>
+                            <th>Sl No.</th>
                             <th>Application ID</th>
                             <th>Name</th>
                             <th>Purpose</th>
@@ -32,61 +41,49 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @{
+                            int slNo = 1;
+                        }
                         @foreach (var item in Model)
                         {
                             var isSubmitted = string.Equals(item.Status, "Submitted", StringComparison.OrdinalIgnoreCase);
+                            var statusClass = isSubmitted ? "myapps-status-submitted" : "myapps-status-draft";
+
                             <tr>
-                                <td class="wl-appid">@item.ApplicationId</td>
-                                <td class="wl-name">@item.Name</td>
-                                <td><span class="wl-purpose">@(item.Purpose?.PurposeName ?? "—")</span></td>
-                                <td class="wl-muted">@item.ApplicationDate.ToString("dd-MM-yyyy")</td>
+                                <td>@slNo</td>
+                                <td>@item.ApplicationId</td>
+                                <td>@item.Name</td>
+                                <td>@(item.Purpose?.PurposeName ?? "—")</td>
+                                <td>@item.ApplicationDate.ToString("dd-MM-yyyy")</td>
+                                <td><span class="myapps-status-badge @statusClass">@item.Status</span></td>
                                 <td>
                                     @if (isSubmitted)
                                     {
-                                        <span class="wl-status-badge wl-status-submitted">Submitted</span>
+                                        <a class="myapps-btn myapps-btn-view" asp-action="Acknowledgement" asp-route-id="@item.ApplicationId">View</a>
                                     }
                                     else
                                     {
-                                        <span class="wl-status-badge wl-status-draft">Draft</span>
+                                        <a class="myapps-btn" asp-action="Index">Continue</a>
                                     }
                                 </td>
-                                <td>
-                                    <div class="wl-actions">
-                                        @if (isSubmitted)
-                                        {
-                                            <a asp-action="Acknowledgement"
-                                               asp-route-id="@item.ApplicationId"
-                                               class="wl-btn wl-btn-view">
-                                                View
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <a asp-action="Index"
-                                               class="wl-btn wl-btn-continue">
-                                                Continue
-                                            </a>
-                                        }
-                                    </div>
-                                </td>
                             </tr>
+                            slNo++;
                         }
                     </tbody>
                 </table>
-
-                @if (!Model.Any())
-                {
-                    <div class="wl-empty">
-                        You haven't started a water connection application yet.
-                        <div style="margin-top:14px;">
-                            <a asp-action="Index" class="wl-btn wl-btn-view">Apply for New Water Connection</a>
-                        </div>
-                    </div>
-                }
             </div>
+
+            <hr class="myapps-divider" />
+        }
+
+        <div class="myapps-new-wrap">
+            <a asp-action="Index" class="myapps-new-btn">+ Apply for New Water Connection</a>
         </div>
 
-        <a asp-action="Home" class="wl-back">← Back to Water Connection</a>
+        <div class="text-center" style="margin-top: 10px;">
+            <a asp-action="Home" class="btn btn-secondary">&laquo; Back to Water Connection</a>
+        </div>
 
     </div>
+
 </div>

@@ -113,18 +113,25 @@ namespace WaterConnection.Models
         [Required(ErrorMessage = "Please select an option")]
         public string? ContractorConsentDocument { get; set; }
 
-        // File uploads
-        [Required(ErrorMessage = "Please upload this document")]
+        // File uploads. Not [Required] here -- a browser can never pre-fill a file
+        // input, so a resumed draft that already has a document on file would fail
+        // this attribute every time even though nothing is actually missing. Instead
+        // the controller requires either a freshly posted file OR a matching
+        // Existing*DocumentId below (see ValidateRequiredDocument/IsFormComplete).
         public IFormFile? NameAddressFile { get; set; }
-
-        [Required(ErrorMessage = "Please upload this document")]
         public IFormFile? OwnershipFile { get; set; }
-
-        [Required(ErrorMessage = "Please upload this document")]
         public IFormFile? OthersFile { get; set; }
-
-        [Required(ErrorMessage = "Please upload this document")]
         public IFormFile? ContractorConsentFile { get; set; }
+
+        // Set by the controller when resuming a draft/application that already has a
+        // document saved for this slot (see WaterConnectionController.PopulateExistingDocuments).
+        // Posted back as hidden fields so the server still knows a document is on file
+        // even when the visible <input type="file"> is empty. Cleared client-side
+        // (wc-attachments.js) if the user removes the existing document or picks a new one.
+        public int? ExistingNameAddressDocumentId { get; set; }
+        public int? ExistingOwnershipDocumentId { get; set; }
+        public int? ExistingOthersDocumentId { get; set; }
+        public int? ExistingContractorConsentDocumentId { get; set; }
 
         // Dropdown sources, populated by the controller before the view renders
         public List<SelectListItem> Departments { get; set; } = new();

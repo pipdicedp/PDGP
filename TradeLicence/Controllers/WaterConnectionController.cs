@@ -35,13 +35,6 @@ namespace WaterConnection.Controllers
             var model = new WaterConnectionFormViewModel();
             var userId = GetCurrentUserId();
 
-            // The POST submit action redirects here to show the "submitted successfully"
-            // popup (TempData["Success"]). Peeking (not reading) lets us tell that case
-            // apart from an ordinary later visit, without consuming the value the view
-            // still needs -- the just-submitted request should render the form with the
-            // success popup as before, not get bounced to the "already submitted" block.
-            var justSubmitted = TempData.Peek("Success") != null;
-
             if (userId.HasValue)
             {
                 var existing = await _context.WaterConnectionApplications
@@ -51,13 +44,14 @@ namespace WaterConnection.Controllers
 
                 if (existing != null)
                 {
-                    if (!justSubmitted && string.Equals(existing.Status, "Submitted", StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(existing.Status, "Submitted", StringComparison.OrdinalIgnoreCase))
                     {
                         TempData["AlreadySubmittedApplicationId"] = existing.ApplicationId;
                         return RedirectToAction("Home");
                     }
 
                     MapEntityToModel(existing, model);
+                    await PopulateExistingDocuments(existing.ApplicationId, model);
 
                     if (existing.Status == "Draft")
                     {
@@ -85,6 +79,14 @@ namespace WaterConnection.Controllers
             ValidatePdfUpload(model.OwnershipFile, nameof(model.OwnershipFile));
             ValidatePdfUpload(model.OthersFile, nameof(model.OthersFile));
             ValidatePdfUpload(model.ContractorConsentFile, nameof(model.ContractorConsentFile));
+
+            // Since the file inputs are no longer [Required] (see the view model), a
+            // real submission still needs each document -- either a freshly posted
+            // file, or one already on file from a resumed draft.
+            ValidateRequiredDocument(model.NameAddressFile, model.ExistingNameAddressDocumentId, nameof(model.NameAddressFile));
+            ValidateRequiredDocument(model.OwnershipFile, model.ExistingOwnershipDocumentId, nameof(model.OwnershipFile));
+            ValidateRequiredDocument(model.OthersFile, model.ExistingOthersDocumentId, nameof(model.OthersFile));
+            ValidateRequiredDocument(model.ContractorConsentFile, model.ExistingContractorConsentDocumentId, nameof(model.ContractorConsentFile));
 
             if (ModelState.IsValid)
             {
@@ -132,7 +134,7 @@ namespace WaterConnection.Controllers
 
                 TempData["Success"] = "Application submitted successfully.";
                 TempData["SuccessApplicationId"] = application.ApplicationId;
-                return RedirectToAction("Index");
+                return RedirectToAction("Home");
             }
 
             ViewBag.ValidationFailed = true;
@@ -199,6 +201,13 @@ namespace WaterConnection.Controllers
             await AddDocument(application.ApplicationId, "ContractorConsent", model.ContractorConsentDocument, model.ContractorConsentFile);
             await _context.SaveChangesAsync();
 
+            // Saved via AJAX (see wc-draft.js), so this response alone can't navigate the
+            // browser -- the JS does that with a plain redirect after reading the JSON
+            // below. TempData is cookie-backed, so setting it here still survives that
+            // follow-up redirect and lets the Home page show the "draft saved" popup.
+            TempData["DraftSaved"] = "Saved details as draft.";
+            TempData["DraftSavedApplicationId"] = application.ApplicationId;
+
             return Json(new
             {
                 status = "draft",
@@ -247,9 +256,11 @@ namespace WaterConnection.Controllers
         }
 
         // Fills the form back in from a saved entity so a resumed draft/application
-        // looks exactly like it did when the user left off. File inputs can't be
-        // pre-filled (browsers block that for security), so uploaded documents are
-        // not restored here -- the user only needs to re-attach if they submit again.
+        // looks exactly like it did when the user left off. File inputs themselves
+        // can't be pre-filled (browsers block that for security), so previously
+        // uploaded documents are restored separately -- see PopulateExistingDocuments,
+        // which sets the Existing*DocumentId fields the view uses to show each
+        // document as already attached.
         private static void MapEntityToModel(WaterConnectionApplication application, WaterConnectionFormViewModel model)
         {
             model.ApplicationId = application.ApplicationId;
@@ -277,6 +288,35 @@ namespace WaterConnection.Controllers
             model.PurposeCode = application.PurposeCode;
             model.NaVerifyCode = application.NaVerifyCode;
             model.OwnFileCode = application.OwnFileCode;
+        }
+
+        // Looks up whatever has already been saved for this application (one row per
+        // document purpose -- NameAddress/Ownership/Others/ContractorConsent) and
+        // records each one's DocumentId on the model so the view can show it as
+        // already attached instead of leaving the upload boxes looking empty.
+        private async Task PopulateExistingDocuments(int applicationId, WaterConnectionFormViewModel model)
+        {
+            var latestByPurpose = await _context.ApplicationDocuments
+                .Where(d => d.ApplicationId == applicationId)
+                .GroupBy(d => d.DocumentPurpose)
+                .Select(g => g.OrderByDescending(d => d.UploadedOn).ThenByDescending(d => d.DocumentId).First())
+                .ToListAsync();
+
+            model.ExistingNameAddressDocumentId = latestByPurpose.FirstOrDefault(d => d.DocumentPurpose == "NameAddress")?.DocumentId;
+            model.ExistingOwnershipDocumentId = latestByPurpose.FirstOrDefault(d => d.DocumentPurpose == "Ownership")?.DocumentId;
+            model.ExistingOthersDocumentId = latestByPurpose.FirstOrDefault(d => d.DocumentPurpose == "Others")?.DocumentId;
+            model.ExistingContractorConsentDocumentId = latestByPurpose.FirstOrDefault(d => d.DocumentPurpose == "ContractorConsent")?.DocumentId;
+        }
+
+        // Adds a ModelState error if a mandatory document is missing both a freshly
+        // posted file AND an existing document carried forward from a resumed draft.
+        // Mirrors ValidatePdfUpload's naming/placement but for "is something here at all".
+        private void ValidateRequiredDocument(IFormFile? file, int? existingDocumentId, string fieldName)
+        {
+            if ((file == null || file.Length == 0) && !existingDocumentId.HasValue)
+            {
+                ModelState.AddModelError(fieldName, "Please upload this document");
+            }
         }
 
         // Mirrors every [Required] field on WaterConnectionFormViewModel (minus the
@@ -308,19 +348,30 @@ namespace WaterConnection.Controllers
                 && model.OwnFileCode.HasValue
                 && !string.IsNullOrWhiteSpace(model.OthersDocument)
                 && !string.IsNullOrWhiteSpace(model.ContractorConsentDocument)
-                && model.NameAddressFile is { Length: > 0 }
-                && model.OwnershipFile is { Length: > 0 }
-                && model.OthersFile is { Length: > 0 }
-                && model.ContractorConsentFile is { Length: > 0 };
+                && (model.NameAddressFile is { Length: > 0 } || model.ExistingNameAddressDocumentId.HasValue)
+                && (model.OwnershipFile is { Length: > 0 } || model.ExistingOwnershipDocumentId.HasValue)
+                && (model.OthersFile is { Length: > 0 } || model.ExistingOthersDocumentId.HasValue)
+                && (model.ContractorConsentFile is { Length: > 0 } || model.ExistingContractorConsentDocumentId.HasValue);
         }
 
-        // Queue a document row for a newly created application; skipped if no file was chosen.
+        // Queue a document row for this application; skipped if no file was chosen (the
+        // existing document, if any, is simply left in place -- see PopulateExistingDocuments).
+        // If a file *was* chosen, it replaces whatever was previously saved for this
+        // purpose so re-saving a draft with a new file doesn't pile up old copies.
         // The file's bytes are read straight into the entity -- Application_Documents.File_Path
         // is varbinary(max), so this goes to the DB, not the local disk.
         private async Task AddDocument(int applicationId, string purpose, string? option, IFormFile? file)
         {
             if (file == null || file.Length == 0)
                 return;
+
+            var previous = await _context.ApplicationDocuments
+                .Where(d => d.ApplicationId == applicationId && d.DocumentPurpose == purpose)
+                .ToListAsync();
+            if (previous.Count > 0)
+            {
+                _context.ApplicationDocuments.RemoveRange(previous);
+            }
 
             byte[] content;
             using (var memoryStream = new MemoryStream())
