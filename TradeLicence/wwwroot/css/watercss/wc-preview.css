@@ -15,13 +15,13 @@
 
 .wc-preview-modal {
     border: none;
-    border-radius: 14px;
+    border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
 }
 
 .wc-preview-header {
-    background: #1f2933;
+    background: #1a3a52;
     border-bottom: none;
     padding: 14px 20px;
 }
@@ -60,4 +60,17 @@
     .wc-preview-frame {
         height: 60vh;
     }
+}
+
+/*
+    Document upload rows (Index.cshtml) pair Bootstrap's .d-flex utility with the
+    native `hidden` attribute so the Preview/Remove chip only appears once a file is
+    actually selected (see wc-attachments.js). Bootstrap's own stylesheet defines both
+    ".d-flex { display: flex !important; }" and "[hidden] { display: none !important; }"
+    with equal specificity, and .d-flex is declared later in bootstrap.min.css, so it
+    silently wins and the chip (and its Preview/Remove buttons) stays visible even with
+    no file chosen. This raises the specificity so `hidden` always wins.
+*/
+[data-doc-attachment][hidden] {
+    display: none !important;
 }

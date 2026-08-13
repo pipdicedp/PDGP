@@ -648,9 +648,16 @@ body {
     }
 
 /* Print-only view: hide site chrome, keep just the slip */
-@@media print {
-    .tl-topbar, .tl-navbar, .ack-actions, footer {
+@media print {
+    .tl-topbar, .tl-navbar, .ack-actions, .tl-footer {
         display: none !important;
+    }
+
+    .tl-container {
+        padding: 0;
+        margin: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .ack-container {

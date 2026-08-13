@@ -1,25 +1,25 @@
 .aq-page {
-    --aq-bg: #f3f8fa;
-    --aq-ink: #0e2a33;
-    --aq-ink-soft: #3e5058;
+    --aq-bg: #eef2f7;
+    --aq-ink: #1A2B3D;
+    --aq-ink-soft: #4A5A6B;
     --aq-muted: #7c8b90;
-    --aq-line: rgba(14, 42, 51, 0.10);
-    --aq-line-strong: rgba(14, 42, 51, 0.16);
-    --aq-surface: rgba(255, 255, 255, 0.74);
+    --aq-line: rgba(26, 58, 82, 0.10);
+    --aq-line-strong: rgba(26, 58, 82, 0.18);
+    --aq-surface: rgba(255, 255, 255, 0.9);
     --aq-surface-solid: #ffffff;
-    --aq-accent: #1d8fd1;
-    --aq-accent-deep: #0d6fae;
-    --aq-accent-tint: #e4f3fa;
-    --aq-success: #1f8a5f;
-    --aq-success-tint: #e6f5ee;
-    --aq-radius-lg: 26px;
-    --aq-radius-md: 16px;
-    --aq-shadow: 0 1px 2px rgba(14, 42, 51, 0.04), 0 16px 36px rgba(14, 42, 51, 0.07);
-    --aq-shadow-hover: 0 22px 48px rgba(14, 42, 51, 0.11);
+    --aq-accent: #1a3a52;
+    --aq-accent-deep: #0f2438;
+    --aq-accent-tint: #E4EAEF;
+    --aq-success: #1D6E3E;
+    --aq-success-tint: #DCF3E4;
+    --aq-radius-lg: 14px;
+    --aq-radius-md: 10px;
+    --aq-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --aq-shadow-hover: 0 10px 30px rgba(26, 58, 82, 0.15);
     position: relative;
     background: var(--aq-bg);
     color: var(--aq-ink);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding-bottom: 64px;
 }
 

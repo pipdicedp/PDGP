@@ -3,95 +3,119 @@
     Layout = "~/Views/Shared/_UserLayout.cshtml";
 }
 
-<link rel="stylesheet" href="~/css/watercss/wc-landing.css" />
-<link rel="stylesheet" href="~/css/watercss/wc-form.css" />
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+}
 
-@if (TempData["AlreadySubmittedApplicationId"] != null)
+@if (TempData["Success"] != null)
 {
-    <div class="modal fade" id="whAlreadySubmittedModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="aqSuccessModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content aq-validation-modal">
-                <div class="modal-body aq-validation-body">
-                    <div class="aq-validation-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>
-                    </div>
-                    <h4 class="aq-validation-title">Application Already Submitted</h4>
-                    <p class="aq-validation-note">
-                        You have already submitted the form. Please check the status with your Application ID: <strong>@TempData["AlreadySubmittedApplicationId"]</strong>
-                    </p>
-                    <button type="button" class="aq-btn aq-btn-accent" data-bs-dismiss="modal">Close</button>
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <h4 class="mb-2" style="color:#1a3a52;">@TempData["Success"]</h4>
+                    <p class="mb-1">Your Application ID is <strong>#@TempData["SuccessApplicationId"]</strong></p>
+                    <p class="text-muted small mb-4">Please note your Application ID for future reference.</p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
 }
 
-<div class="wh-page">
-    <div class="wh-shell">
+@if (TempData["DraftSaved"] != null)
+{
+    <div class="modal fade" id="aqDraftSavedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <h4 class="mb-2" style="color:#1a3a52;">@TempData["DraftSaved"]</h4>
+                    @if (TempData["DraftSavedApplicationId"] != null)
+                    {
+                        <p class="mb-1">Your Application ID is <strong>#@TempData["DraftSavedApplicationId"]</strong></p>
+                    }
+                    <p class="text-muted small mb-4">You can come back anytime and resume from where you left off.</p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
-        <div class="wh-header">
-            <p class="wh-eyebrow">Government of Puducherry</p>
-            <h1 class="wh-title">Water Connection</h1>
-            <p class="wh-subtitle">
-                Apply for a new domestic or commercial water connection, or check the
-                status of an application you've already submitted.
-            </p>
+@if (TempData["AlreadySubmittedApplicationId"] != null)
+{
+    <div class="modal fade" id="whAlreadySubmittedModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <h4 class="mb-2" style="color:#C0392B;">Application Already Submitted</h4>
+                    <p class="text-muted small mb-4">
+                        You have already submitted the form. Please check the status with your Application ID: <strong>@TempData["AlreadySubmittedApplicationId"]</strong>
+                    </p>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-body">
+
+        <div class="page-title">
+            <h3>Water Connection</h3>
+            <p>Apply for a new domestic or commercial water connection, or check the status of an application you've already submitted.</p>
         </div>
 
-        <div class="wh-grid">
+        <div class="dashboard-cards">
 
-            <a asp-action="Index" class="wh-card">
-                <div class="wh-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2s7 7.58 7 12a7 7 0 1 1-14 0c0-4.42 7-12 7-12z"></path></svg>
-                </div>
-                <h2 class="wh-card-title">Apply for New Water Connection</h2>
-                <p class="wh-card-desc">
-                    Fill out the application form with your details, department/area
-                    information, and required documents.
-                </p>
-                <span class="wh-card-cta">
-                    Start application
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
-                </span>
-            </a>
+            <div class="dashboard-card">
+                <div class="card-icon">💧</div>
+                <h4>Apply for New Water Connection</h4>
+                <p>Fill out the application form with your details, department/area information, and required documents.</p>
+                <a asp-action="Index" class="dashboard-btn">Start Application</a>
+            </div>
 
-            @* <a asp-action="CheckStatus" class="wh-card">
-                <div class="wh-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
-                </div>
-                <h2 class="wh-card-title">Check Application Status</h2>
-                <p class="wh-card-desc">
-                    Already applied? Enter your Application ID to see its current
-                    status.
-                </p>
-                <span class="wh-card-cta">
-                    Check status
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
-                </span>
-            </a> *@
-
-            <a asp-action="MyApplications" class="wh-card">
-                <div class="wh-card-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                </div>
-                <h2 class="wh-card-title">Application Status Tracking</h2>
-                <p class="wh-card-desc">
-                    Logged in? View all your own applications in one place — resume a
-                    draft or download the acknowledgement for a submitted one.
-                </p>
-                <span class="wh-card-cta">
-                    Track my applications
-                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
-                </span>
-            </a>
+            <div class="dashboard-card">
+                <div class="card-icon">📋</div>
+                <h4>Application Status Tracking</h4>
+                <p>Logged in? View all your own applications in one place — resume a draft or download the acknowledgement for a submitted one.</p>
+                <a asp-action="MyApplications" class="dashboard-btn">Track My Applications</a>
+            </div>
 
         </div>
 
     </div>
+
 </div>
 
 @section Scripts
 {
+    @if (TempData["Success"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var aqSuccessModalEl = document.getElementById("aqSuccessModal");
+                if (aqSuccessModalEl) {
+                    new bootstrap.Modal(aqSuccessModalEl).show();
+                }
+            });
+        </script>
+    }
+
+    @if (TempData["DraftSaved"] != null)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var aqDraftSavedModalEl = document.getElementById("aqDraftSavedModal");
+                if (aqDraftSavedModalEl) {
+                    new bootstrap.Modal(aqDraftSavedModalEl).show();
+                }
+            });
+        </script>
+    }
+
     @if (TempData["AlreadySubmittedApplicationId"] != null)
     {
         <script>
