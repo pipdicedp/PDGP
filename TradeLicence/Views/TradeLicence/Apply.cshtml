@@ -328,7 +328,7 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         // Server-rendered URLs - generated at render time from ASP.NET Core
-        // These URLs are used by the client-side JavaScript (tradelicence-apply.js)
+        // These URLs are used by the client-side JavaScript (tl_tradelicence_apply.js)
         window.TradeLicenceApi = {
             getWardsUrl: '@Url.Action("GetWards", "TradeLicence")',
             getAreasUrl: '@Url.Action("GetAreas", "TradeLicence")',
@@ -338,12 +338,12 @@
         };
         window.TradeLicenceStartTab = '@(ViewBag.StartTab ?? "application")';
     </script>
-    <script src="~/js/tradelicence-apply.js" asp-append-version="true"></script>
-    <script src="~/js/partner.js" asp-append-version="true"></script>
-    <script src="~/js/machinery_details.js" asp-append-version="true"></script>
-    <script src="~/js/photo-document-upload.js"></script>
-    <script src="~/js/shop-establishment.js"></script>
-    <script src="~/js/confirm-submit.js"></script>
+    <script src="~/js/tl_js/tl_tradelicence_apply.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_partner.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_machinery_details.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_photo_document_upload.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_shop_establishment.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_confirm_submit.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

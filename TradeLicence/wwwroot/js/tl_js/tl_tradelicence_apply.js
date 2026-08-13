@@ -182,7 +182,7 @@
 
             case 'shops':
                 // Full field-level validation + save already happens in
-                // shop-establishment.js on btnShopsNext — this is just a
+                // tl_shop_establishment.js on btnShopsNext — this is just a
                 // lightweight "has it been filled at all" signal for jumping
                 // away via a tab link instead of the Next button.
                 return !!$('#ApplicantNameShop').val();
@@ -907,7 +907,7 @@
         window.scrollTo(0, 0);
     });
 
-    // NOTE: btnShopsNext is intentionally NOT handled here. shop-establishment.js
+    // NOTE: btnShopsNext is intentionally NOT handled here. tl_shop_establishment.js
     // owns that button — it validates required fields and saves via AJAX first,
     // then calls window.TradeLicenceApply.goToPreviewTab() below on success.
     // (A second, unconditional handler used to live here and would advance the
