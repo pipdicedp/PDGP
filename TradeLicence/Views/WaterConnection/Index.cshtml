@@ -345,6 +345,7 @@
                         <td>Contractor Consent</td>
                         <td>
                             <select asp-for="ContractorConsentDocument" class="form-control">
+                                <option value="">--Select--</option>
                                 <option>Licensed Plumber Consent Letter</option>
                             </select>
                             <span asp-validation-for="ContractorConsentDocument" class="text-danger d-block"></span>
@@ -433,4 +434,50 @@
 
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const documentMappings = [
+                {
+                    select: "#NaVerifyCode",
+                    file: "#NameAddressFile"
+                },
+                {
+                    select: "#OwnFileCode",
+                    file: "#OwnershipFile"
+                },
+                {
+                    select: "#OthersDocument",
+                    file: "#OthersFile"
+                },
+                {
+                    select: "#ContractorConsentDocument",
+                    file: "#ContractorConsentFile"
+                }
+            ];
+
+            documentMappings.forEach(function(item) {
+                const select = document.querySelector(item.select);
+                const fileInput = document.querySelector(item.file);
+
+                if (!select || !fileInput) return;
+
+                function updateFileInput() {
+                    fileInput.disabled = !select.value;
+
+                    // Optional: clear selected file when document type is removed
+                    if (!select.value) {
+                        fileInput.value = "";
+                    }
+                }
+
+                select.addEventListener("change", updateFileInput);
+
+                // Set correct state when page initially loads/resumes
+                updateFileInput();
+            });
+
+        });
+    </script>
+
 }
