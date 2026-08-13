@@ -91,7 +91,8 @@ namespace TradeLicence.Controllers
             4 => "photo",
             5 => "documents",
             6 => "shops",
-            7 => "confirm",
+            7 => "preview",
+            8 => "confirm",
             _ => "application"
         };
 
@@ -106,7 +107,7 @@ namespace TradeLicence.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AdvanceStep(int applicationId, int step)
         {
-            if (applicationId <= 0 || step < 1 || step > 7)
+            if (applicationId <= 0 || step < 1 || step > 8)
                 return BadRequest(new { success = false, error = "Invalid applicationId or step." });
 
             var updated = await _service.UpdateCurrentStepAsync(applicationId, step);
@@ -233,6 +234,29 @@ namespace TradeLicence.Controllers
                 tradeName = application.NameAndStyleOfFactory,
                 mobileNumber = application.MobileNumber
             });
+        }
+
+        // Renders a read-only summary of everything saved so far — all 6
+        // earlier tabs, including photos and documents — for the Preview tab.
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/PreviewApplication")]
+        public async Task<IActionResult> PreviewApplication(int applicationId)
+        {
+            var application = await _service.GetApplicationAsync(applicationId);
+            if (application == null) return NotFound();
+
+            var model = new ApplicationPreviewViewModel
+            {
+                Application = application,
+                Partners = await _service.GetPartnersAsync(applicationId),
+                Machinery = await _service.GetMachineryAsync(applicationId),
+                Documents = await _service.GetDocumentsAsync(applicationId),
+                ShopRegistration = application.IsRegistrationForShopsEstablishment
+                    ? await _service.GetShopEstablishmentAsync(applicationId)
+                    : null
+            };
+
+            return PartialView("_PreviewApplication", model);
         }
 
         // ---------------- Cascading dropdown AJAX endpoints ----------------

@@ -15,7 +15,7 @@ $(document).ready(function () {
     // =========================================================
 
     // Upload happens right when "Next" is clicked — before the existing
-    // btnPhotoNext handler (in tradelicence-apply.js) switches tabs, so the
+    // btnPhotoNext handler (in tl_tradelicence_apply.js) switches tabs, so the
     // files are safely stored before the user moves on.
     $('#btnPhotoNext').on('click', function () {
 

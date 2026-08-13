@@ -34,7 +34,7 @@
             <input type="checkbox" asp-for="IsRegistrationForShopsEstablishment" />
             Registration for Shops And Establishment (Applicable only if there are more than 50 employees) *
         </label>
-        <span class="tl-step-badge">Step: 1 of 7</span>
+        <span class="tl-step-badge">Step: 1 of 8</span>
     </div>
 
     <div class="tl-wizard-links">
@@ -278,6 +278,8 @@
             </div>
         </fieldset>
 
+        <div id="tl-wizard-message-bottom" aria-live="polite" style="margin-bottom:.75rem"></div>
+
         <div class="tl-actions">
             <button type="reset" class="btn btn-secondary">Reset</button>
             <button type="submit" id="btnSaveDraft" formaction="@Url.Action("SaveDraft")" class="btn btn-primary">Save Draft</button>
@@ -302,6 +304,21 @@
     <div id="shops-section" style="display:none;">
         <partial name="_ShopEstablishment" model="Model.ApplicationId" />
     </div>
+    <div id="preview-section" style="display:none;">
+        <fieldset class="tl-section">
+            <legend>Preview Application</legend>
+            <div id="previewContent">
+                <p class="tl-note">Loading preview...</p>
+            </div>
+        </fieldset>
+
+        <div id="preview-message-bottom" aria-live="polite" style="margin-bottom:.75rem"></div>
+
+        <div class="tl-actions">
+            <button type="button" id="btnPreviewPrevious" class="btn btn-secondary">&laquo; Previous</button>
+            <button type="button" id="btnPreviewNext" class="btn btn-success">Next &raquo;</button>
+        </div>
+    </div>
     <div id="confirm-section" style="display:none;">
         <partial name="_Confirm" />
     </div>
@@ -311,7 +328,7 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         // Server-rendered URLs - generated at render time from ASP.NET Core
-        // These URLs are used by the client-side JavaScript (tradelicence-apply.js)
+        // These URLs are used by the client-side JavaScript (tl_tradelicence_apply.js)
         window.TradeLicenceApi = {
             getWardsUrl: '@Url.Action("GetWards", "TradeLicence")',
             getAreasUrl: '@Url.Action("GetAreas", "TradeLicence")',
@@ -321,13 +338,12 @@
         };
         window.TradeLicenceStartTab = '@(ViewBag.StartTab ?? "application")';
     </script>
-    <script src="~/js/tradelicence-apply.js" asp-append-version="true"></script>
-    <script src="~/js/partner.js" asp-append-version="true"></script>
-    <script src="~/js/machinery_details.js" asp-append-version="true"></script>
-    <script src="~/js/tradelicence-apply.js"></script>
-    <script src="~/js/photo-document-upload.js"></script>
-    <script src="~/js/shop-establishment.js"></script>
-    <script src="~/js/confirm-submit.js"></script>
+    <script src="~/js/tl_js/tl_tradelicence_apply.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_partner.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_machinery_details.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_photo_document_upload.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_shop_establishment.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_confirm_submit.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -92,8 +92,8 @@ $(document).ready(function () {
             success: function () {
                 alert('Shop / Establishment details saved successfully.');
                 if (window.populateConfirmSummary) window.populateConfirmSummary();
-                if (window.TradeLicenceApply && window.TradeLicenceApply.goToConfirmTab) {
-                    window.TradeLicenceApply.goToConfirmTab();
+                if (window.TradeLicenceApply && window.TradeLicenceApply.goToPreviewTab) {
+                    window.TradeLicenceApply.goToPreviewTab();
                 }
             },
             error: function (xhr) {

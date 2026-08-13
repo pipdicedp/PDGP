@@ -4,7 +4,7 @@ $(document).ready(function () {
         return $('#ApplicationId').val() || $('#hdnApplicationId').val();
     }
 
-    // Exposed on window so other tab scripts (e.g. shop-establishment.js) can
+    // Exposed on window so other tab scripts (e.g. tl_shop_establishment.js) can
     // call it right after they save, keeping the Confirm tab always fresh.
     window.populateConfirmSummary = function () {
         var applicationId = getApplicationId();

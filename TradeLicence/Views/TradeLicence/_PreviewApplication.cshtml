@@ -1,0 +1,123 @@
+﻿@model TradeLicence.Models.ApplicationPreviewViewModel
+@{
+    var app = Model.Application;
+}
+
+<fieldset class="tl-section">
+    <legend>Application Details</legend>
+    <table class="table table-bordered">
+        <tr><th>Applicant Name</th><td>@app.ApplicantName</td></tr>
+        <tr><th>Father/Husband Name</th><td>@app.ApplicantFatherHusbandName</td></tr>
+        <tr><th>Age</th><td>@app.AgeOfApplicant</td></tr>
+        <tr><th>Mobile Number</th><td>@app.MobileNumber</td></tr>
+        <tr><th>Residential Address</th><td>@app.ApplicantResidentialAddress</td></tr>
+        <tr><th>Ownership Type</th><td>@app.OwnershipType</td></tr>
+        <tr><th>Name &amp; Style of Factory/Trade</th><td>@app.NameAndStyleOfFactory</td></tr>
+        <tr><th>Purpose of Licence</th><td>@app.PurposeOfLicence</td></tr>
+        <tr><th>Trade Place Address</th><td>@app.TradePlaceCommunicationAddress</td></tr>
+        <tr><th>Total Area (Sq.Ft.)</th><td>@app.TotalAreaCoveredSqFt</td></tr>
+        <tr><th>Date of Commencement</th><td>@app.DateOfCommencement.ToString("dd-MM-yyyy")</td></tr>
+        <tr><th>Licence Period</th><td>@app.LicencePeriod</td></tr>
+    </table>
+</fieldset>
+
+@if (Model.Partners.Any())
+{
+    <fieldset class="tl-section">
+        <legend>Partners</legend>
+        <table class="table table-bordered">
+            <thead>
+                <tr><th>Partner Name</th><th>Designation</th><th>Address</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Partners)
+                {
+                    <tr><td>@p.PartnerName</td><td>@p.Designation</td><td>@p.Address</td></tr>
+                }
+            </tbody>
+        </table>
+    </fieldset>
+}
+
+@if (Model.Machinery.Any())
+{
+    <fieldset class="tl-section">
+        <legend>Machinery Details</legend>
+        <table class="table table-bordered">
+            <thead>
+                <tr><th>Machinery Name</th><th>Quantity</th><th>Horse Power</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model.Machinery)
+                {
+                    <tr><td>@m.MachineryName</td><td>@m.Quantity</td><td>@m.HorsePower</td></tr>
+                }
+            </tbody>
+        </table>
+    </fieldset>
+}
+
+<fieldset class="tl-section">
+    <legend>Photographs</legend>
+    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+        <div>
+            <p><strong>Applicant Photo</strong></p>
+            <img src="@Url.Action("ViewApplicantPhoto", "TradeLicence", new { applicationId = app.ApplicationId })"
+                 alt="Applicant Photo" style="max-width:150px; border:1px solid #ddd; border-radius:6px;"
+                 onerror="this.closest('div').querySelector('.tl-no-photo')?.removeAttribute('hidden'); this.remove();" />
+            <p class="tl-no-photo text-muted" hidden>Not uploaded</p>
+        </div>
+        <div>
+            <p><strong>Partner Photo</strong></p>
+            <img src="@Url.Action("ViewPartnerPhoto", "TradeLicence", new { applicationId = app.ApplicationId })"
+                 alt="Partner Photo" style="max-width:150px; border:1px solid #ddd; border-radius:6px;"
+                 onerror="this.closest('div').querySelector('.tl-no-photo')?.removeAttribute('hidden'); this.remove();" />
+            <p class="tl-no-photo text-muted" hidden>Not uploaded</p>
+        </div>
+    </div>
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend>Documents</legend>
+    @if (Model.Documents.Any())
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr><th>Document Name</th><th>File Name</th><th>Uploaded Date</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.Documents)
+                {
+                    <tr>
+                        <td>@d.DocumentName</td>
+                        <td>@d.FileName</td>
+                        <td>@(d.UploadedDate?.ToLocalTime().ToString("dd-MM-yyyy") ?? "-")</td>
+                        <td>
+                            <a href="@Url.Action("ViewDocument", "TradeLicence", new { documentId = d.DocumentId })" target="_blank" class="btn btn-sm btn-secondary">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted">No documents uploaded.</p>
+    }
+</fieldset>
+
+@if (app.IsRegistrationForShopsEstablishment && Model.ShopRegistration != null)
+{
+    var shop = Model.ShopRegistration;
+    <fieldset class="tl-section">
+        <legend>Registration for Shops and Establishments</legend>
+        <table class="table table-bordered">
+            <tr><th>Shop/Establishment Name</th><td>@shop.ShopOrEstablishmentName</td></tr>
+            <tr><th>Registration Period</th><td>@shop.RegistrationPeriod</td></tr>
+            <tr><th>Type of Establishment</th><td>@shop.TypeOfEstablishment</td></tr>
+            <tr><th>Mobile Number</th><td>@shop.MobileNumber</td></tr>
+            <tr><th>Total Employees</th><td>@shop.TotalEmployees</td></tr>
+            <tr><th>Manager Name</th><td>@shop.ManagerFullName</td></tr>
+        </table>
+    </fieldset>
+}
