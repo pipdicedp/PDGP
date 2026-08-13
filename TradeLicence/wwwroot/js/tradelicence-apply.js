@@ -42,22 +42,44 @@
 
     // Helper: show inline message below wizard links
     function showWizardMessage(msg, type) {
-        var container = document.getElementById('tl-wizard-message');
-        if (!container) return;
         var cls = 'alert alert-warning';
         if (type === 'info') cls = 'alert alert-info';
         if (type === 'danger') cls = 'alert alert-danger';
-        container.innerHTML = `<div class="${cls}" role="alert">${msg}</div>`;
-        // auto-clear after 4s
-        clearTimeout(container._hideTimer);
-        container._hideTimer = setTimeout(function () { container.innerHTML = ''; }, 4000);
+        var html = `<div class="${cls}" role="alert">${msg}</div>`;
+
+        var topContainer = document.getElementById('tl-wizard-message');
+        if (topContainer) {
+            topContainer.innerHTML = html;
+            clearTimeout(topContainer._hideTimer);
+            topContainer._hideTimer = setTimeout(function () { topContainer.innerHTML = ''; }, 4000);
+        }
+
+        // Mirrors the message right next to the action buttons at the bottom
+        // of the currently visible section — that's where the user's
+        // attention already is (they just clicked Next), so they don't have
+        // to scroll all the way back up to see why nothing happened.
+        var visibleSection = document.querySelector('[id$="-section"]:not([style*="display: none"])');
+        var bottomContainer = visibleSection ? visibleSection.querySelector('[id$="-message-bottom"]') : null;
+        if (bottomContainer) {
+            bottomContainer.innerHTML = html;
+            clearTimeout(bottomContainer._hideTimer);
+            bottomContainer._hideTimer = setTimeout(function () { bottomContainer.innerHTML = ''; }, 4000);
+            bottomContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (topContainer) {
+            topContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     function clearWizardMessage() {
-        var container = document.getElementById('tl-wizard-message');
-        if (!container) return;
-        container.innerHTML = '';
-        clearTimeout(container._hideTimer);
+        var topContainer = document.getElementById('tl-wizard-message');
+        if (topContainer) {
+            topContainer.innerHTML = '';
+            clearTimeout(topContainer._hideTimer);
+        }
+        document.querySelectorAll('[id$="-message-bottom"]').forEach(function (el) {
+            el.innerHTML = '';
+            clearTimeout(el._hideTimer);
+        });
     }
 
     // Check a small set of required application fields to determine if application details are entered
@@ -80,6 +102,7 @@
             { id: 'photo', text: 'Upload Photograph' },
             { id: 'documents', text: 'Upload Documents' },
             { id: 'shops', text: 'Registration for Shops and Establishments' },
+            { id: 'preview', text: 'Preview Application' },
             { id: 'confirm', text: 'Confirm' }
         ];
         const container = document.querySelector('.tl-wizard-links');
@@ -102,44 +125,98 @@
         }
     }
 
+    // Order defines what "forward" vs "backward" navigation means.
+    var wizardTabOrder = ['application', 'partners', 'machinery', 'photo', 'documents', 'shops', 'preview', 'confirm'];
+
+    var wizardTabLabels = {
+        application: 'Application Details',
+        partners: 'Partners Details',
+        machinery: 'Machinery Details',
+        photo: 'Upload Photograph',
+        documents: 'Upload Documents',
+        shops: 'Registration for Shops and Establishments',
+        preview: 'Preview Application',
+        confirm: 'Confirm'
+    };
+
+    function getCurrentTabId() {
+        for (var i = 0; i < wizardTabOrder.length; i++) {
+            var el = document.getElementById(wizardTabOrder[i] + '-section');
+            if (el && el.style.display !== 'none') {
+                return wizardTabOrder[i];
+            }
+        }
+        return 'application';
+    }
+
+    // Mirrors each tab's own "Next" button validation (see the various
+    // btn*Next handlers further below) so the generic tab-link click handler
+    // can check "is the tab the user is currently ON complete?" no matter
+    // which tab that is — not just Application Details.
+    function isTabComplete(tabId) {
+        switch (tabId) {
+            case 'application':
+                return isApplicationComplete();
+
+            case 'partners':
+                var ownershipType = $('#OwnershipType').val();
+                if (ownershipType === 'Partnership' && $('#tblPartners tbody tr').length === 0) return false;
+                return true;
+
+            case 'machinery':
+                return $('#tblMachinery tbody tr').length > 0;
+
+            case 'photo':
+                var applicantPhotoInput = document.getElementById('ApplicantPhoto');
+                var previewImg = document.getElementById('ApplicantPhotoPreview');
+                var hasExistingPreview = !!(previewImg && previewImg.getAttribute('src') && previewImg.style.display !== 'none' && !previewImg.src.endsWith('#'));
+                var hasNewFile = !!(applicantPhotoInput && applicantPhotoInput.files && applicantPhotoInput.files.length > 0);
+                return hasNewFile || hasExistingPreview;
+
+            case 'documents':
+                var requiredDocButtons = ['btnPreviewAadhaar', 'btnPreviewPropertyTax', 'btnPreviewBuildingPlan'];
+                return requiredDocButtons.every(function (id) {
+                    var $btn = $('#' + id);
+                    return $btn.length > 0 && !$btn.prop('disabled') && !!$btn.data('documentId');
+                });
+
+            case 'shops':
+                // Full field-level validation + save already happens in
+                // shop-establishment.js on btnShopsNext — this is just a
+                // lightweight "has it been filled at all" signal for jumping
+                // away via a tab link instead of the Next button.
+                return !!$('#ApplicantNameShop').val();
+
+            default:
+                return true;
+        }
+    }
+
     function attachWizardHandlers() {
-        // Delegate click events for wizard tabs using event delegation and closest
+        // Single click handler for every wizard tab link. Moving backward (or
+        // clicking the tab you're already on) is always allowed; moving
+        // forward requires the CURRENT tab — whichever one that is — to be
+        // complete first.
         document.addEventListener('click', function (e) {
             var el = (e.target instanceof Element) ? e.target.closest('a.tl-wizard-tab') : null;
             if (!el) return;
             e.preventDefault();
-            const tab = el.getAttribute('data-tab');
-            if (tab !== 'application') {
-                // If application details are incomplete, show inline message and keep user on application
-                if (!isApplicationComplete()) {
-                    showWizardMessage('Application details should be entered first.', 'warning');
-                    // ensure application tab stays active and visible
-                    renderWizardLinks('application');
-                    const app = document.getElementById('application-section');
-                    if (app) app.style.display = '';
-                    const partners = document.getElementById('partners-section');
-                    if (partners) partners.style.display = 'none';
-                    document.querySelectorAll('.tl-step-badge').forEach(b => b.textContent = 'Step: 1 of 7');
-                    // focus first missing required field
-                    focusFirstInvalid();
-                }
-                // else
-                // {
-                //     showWizardMessage('This tab is not implemented yet.', 'info');
-                // }
+
+            const targetTab = el.getAttribute('data-tab');
+            const currentTab = getCurrentTabId();
+            const currentIdx = wizardTabOrder.indexOf(currentTab);
+            const targetIdx = wizardTabOrder.indexOf(targetTab);
+
+            if (targetIdx > currentIdx && !isTabComplete(currentTab)) {
+                var label = wizardTabLabels[currentTab] || 'This section';
+                showWizardMessage(label + ' should be entered first.', 'warning');
+                showWizardSection(currentTab);
+                window.scrollTo(0, 0);
                 return;
             }
-            // Show application section when clicked
-            if (tab === 'application') {
-                const app = document.getElementById('application-section');
-                if (app) app.style.display = '';
-                // hide other known sections if present
-                const partners = document.getElementById('partners-section');
-                if (partners) partners.style.display = 'none';
-                document.querySelectorAll('.tl-step-badge').forEach(b => b.textContent = 'Step: 1 of 7');
-                renderWizardLinks('application');
-                window.scrollTo(0, 0);
-            }
+
+            showWizardSection(targetTab);
+            window.scrollTo(0, 0);
         });
     }
 
@@ -531,7 +608,7 @@
                             }
                             $('#application-section').hide();
                             $('#partners-section').show();
-                            $('.tl-step-badge').text('Step: 2 of 7');
+                            $('.tl-step-badge').text('Step: 2 of 8');
                             renderWizardLinks('partners');
                             advanceStep(2);
                             window.scrollTo(0, 0);
@@ -549,7 +626,7 @@
             $('#btnBackToApplication').on('click', function () {
                 $('#partners-section').hide();
                 $('#application-section').show();
-                $('.tl-step-badge').text('Step: 1 of 7');
+                $('.tl-step-badge').text('Step: 1 of 8');
                 renderWizardLinks('application');
                 window.scrollTo(0, 0);
             });
@@ -583,8 +660,8 @@
         // is rendered server-side from the application's CurrentStep.
         if (startTab && startTab !== 'application' && typeof showWizardSection === 'function') {
             showWizardSection(startTab);
-            var stepNumbers = { application: 1, partners: 2, machinery: 3, photo: 4, documents: 5, shops: 6, confirm: 7 };
-            $('.tl-step-badge').text('Step: ' + (stepNumbers[startTab] || 1) + ' of 7');
+            var stepNumbers = { application: 1, partners: 2, machinery: 3, photo: 4, documents: 5, shops: 6, preview: 7, confirm: 8 };
+            $('.tl-step-badge').text('Step: ' + (stepNumbers[startTab] || 1) + ' of 8');
         }
     }
 
@@ -596,6 +673,7 @@
         $('#photo-section').hide();
         $('#documents-section').hide();
         $('#shops-section').hide();
+        $('#preview-section').hide();
         $('#confirm-section').hide();
 
         switch (tabName) {
@@ -624,6 +702,11 @@
                 $('#shops-section').show();
                 break;
 
+            case 'preview':
+                $('#preview-section').show();
+                loadPreviewContent();
+                break;
+
             case 'confirm':
                 $('#confirm-section').show();
                 break;
@@ -632,14 +715,37 @@
         renderWizardLinks(tabName);
     }
 
-    $(document).on('click', '.tl-wizard-tab', function (e) {
+    // Fetches a fresh read-only summary (Application Details, Partners,
+    // Machinery, Photos, Documents, Shop registration) every time the
+    // Preview tab is shown, so it always reflects the latest saved data —
+    // even if the user went back and changed something on an earlier tab.
+    function loadPreviewContent() {
+        var applicationId = getApplicationId();
+        var container = document.getElementById('previewContent');
+        if (!container || !applicationId) return;
 
-        e.preventDefault();
+        container.innerHTML = '<p class="tl-note">Loading preview...</p>';
 
-        var tab = $(this).data('tab');
+        fetch('/TradeLicence/NewLicence/Apply/PreviewApplication?applicationId=' + encodeURIComponent(applicationId))
+            .then(function (r) {
+                if (!r.ok) throw new Error('Failed to load preview (' + r.status + ')');
+                return r.text();
+            })
+            .then(function (html) {
+                container.innerHTML = html;
+            })
+            .catch(function (err) {
+                console.error('Failed to load preview:', err);
+                container.innerHTML = '<p class="text-danger">Could not load the preview. Please try again.</p>';
+            });
+    }
 
-        showWizardSection(tab);
-    });
+    // NOTE: wizard tab link clicks are handled entirely by attachWizardHandlers()
+    // (registered from init()). A second, unconditional handler used to live
+    // here calling showWizardSection() directly with no validation — it fired
+    // on every click alongside the validated handler and silently overrode it,
+    // switching tabs (and duplicating visible sections) even when the current
+    // tab wasn't complete. Removed.
 
     $('#btnPartnerNext').on('click', function () {
 
@@ -653,7 +759,7 @@
         advanceStep(3);
         showWizardSection('machinery');
 
-        $('.tl-step-badge').text('Step: 3 of 7');
+        $('.tl-step-badge').text('Step: 3 of 8');
 
         window.scrollTo(0, 0);
     });
@@ -664,7 +770,7 @@
 
         $('#partners-section').show();
 
-        $('.tl-step-badge').text('Step: 2 of 7');
+        $('.tl-step-badge').text('Step: 2 of 8');
 
         renderWizardLinks('partners');
 
@@ -681,7 +787,7 @@
         advanceStep(4);
         showWizardSection('photo');
 
-        $('.tl-step-badge').text('Step: 4 of 7');
+        $('.tl-step-badge').text('Step: 4 of 8');
 
         window.scrollTo(0, 0);
     });
@@ -692,7 +798,7 @@
 
         $('#machinery-section').show();
 
-        $('.tl-step-badge').text('Step: 3 of 7');
+        $('.tl-step-badge').text('Step: 3 of 8');
 
         renderWizardLinks('machinery');
 
@@ -715,7 +821,7 @@
         advanceStep(5);
         showWizardSection('documents');
 
-        $('.tl-step-badge').text('Step: 5 of 7');
+        $('.tl-step-badge').text('Step: 5 of 8');
 
         window.scrollTo(0, 0);
     });
@@ -728,7 +834,7 @@
 
         $('#photo-section').show();
 
-        $('.tl-step-badge').text('Step: 4 of 7');
+        $('.tl-step-badge').text('Step: 4 of 8');
 
         renderWizardLinks('photo');
 
@@ -741,7 +847,7 @@
 
         $('#documents-section').show();
 
-        $('.tl-step-badge').text('Step: 5 of 7');
+        $('.tl-step-badge').text('Step: 5 of 8');
 
         renderWizardLinks('documents');
 
@@ -769,7 +875,7 @@
         advanceStep(6);
         showWizardSection('shops');
 
-        $('.tl-step-badge').text('Step: 6 of 7');
+        $('.tl-step-badge').text('Step: 6 of 8');
 
         window.scrollTo(0, 0);
     });
@@ -778,26 +884,41 @@
 
         $('#confirm-section').hide();
 
-        $('#shops-section').show();
+        $('#preview-section').show();
+        loadPreviewContent();
 
-        $('.tl-step-badge').text('Step: 6 of 7');
+        $('.tl-step-badge').text('Step: 7 of 8');
 
-        renderWizardLinks('shops');
+        renderWizardLinks('preview');
 
         window.scrollTo(0, 0);
     });
+
+    $('#btnPreviewPrevious').on('click', function () {
+        showWizardSection('shops');
+        $('.tl-step-badge').text('Step: 6 of 8');
+        window.scrollTo(0, 0);
+    });
+
+    $('#btnPreviewNext').on('click', function () {
+        advanceStep(8);
+        showWizardSection('confirm');
+        $('.tl-step-badge').text('Step: 8 of 8');
+        window.scrollTo(0, 0);
+    });
+
     // NOTE: btnShopsNext is intentionally NOT handled here. shop-establishment.js
     // owns that button — it validates required fields and saves via AJAX first,
-    // then calls window.TradeLicenceApply.goToConfirmTab() below on success.
+    // then calls window.TradeLicenceApply.goToPreviewTab() below on success.
     // (A second, unconditional handler used to live here and would advance the
     // tab regardless of whether the save succeeded or validation failed — removed.)
 
     window.TradeLicenceApply = {
         init: init,
-        goToConfirmTab: function () {
+        goToPreviewTab: function () {
             advanceStep(7);
-            showWizardSection('confirm');
-            $('.tl-step-badge').text('Step: 7 of 7');
+            showWizardSection('preview');
+            $('.tl-step-badge').text('Step: 7 of 8');
             window.scrollTo(0, 0);
         }
     };
