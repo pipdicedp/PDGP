@@ -182,7 +182,7 @@
 
             case 'shops':
                 // Full field-level validation + save already happens in
-                // tl_shop_establishment.js on btnShopsNext — this is just a
+                // shop-establishment.js on btnShopsNext — this is just a
                 // lightweight "has it been filled at all" signal for jumping
                 // away via a tab link instead of the Next button.
                 return !!$('#ApplicantNameShop').val();
@@ -907,11 +907,28 @@
         window.scrollTo(0, 0);
     });
 
-    // NOTE: btnShopsNext is intentionally NOT handled here. tl_shop_establishment.js
+    // NOTE: btnShopsNext is intentionally NOT handled here. shop-establishment.js
     // owns that button — it validates required fields and saves via AJAX first,
     // then calls window.TradeLicenceApply.goToPreviewTab() below on success.
     // (A second, unconditional handler used to live here and would advance the
     // tab regardless of whether the save succeeded or validation failed — removed.)
+
+    // Opens a document inline in a modal from the Preview tab, instead of
+    // downloading it. Delegated on document so it works even though the
+    // Preview content is injected via AJAX after this script has loaded.
+    $(document).on('click', '.btn-preview-view-doc', function (e) {
+        e.preventDefault();
+        var docId = $(this).data('documentId');
+        if (!docId) return;
+
+        var viewer = document.getElementById('previewDocumentViewer');
+        if (viewer) viewer.src = '/TradeLicence/NewLicence/Apply/ViewDocument?documentId=' + docId;
+
+        var modalEl = document.getElementById('previewDocumentModal');
+        if (modalEl && window.bootstrap) {
+            new bootstrap.Modal(modalEl).show();
+        }
+    });
 
     window.TradeLicenceApply = {
         init: init,

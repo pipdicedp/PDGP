@@ -1,104 +1,209 @@
 ﻿@model TradeLicence.Models.ApplicationPreviewViewModel
 @{
     var app = Model.Application;
+
+    string Field(string label, string? value) =>
+        $"<div class=\"preview-field\"><span class=\"preview-label\">{System.Net.WebUtility.HtmlEncode(label)}</span><span class=\"preview-value\">{System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(value) ? "-" : value)}</span></div>";
 }
 
+<style>
+    .preview-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .preview-edit-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #0d6efd;
+        text-decoration: none;
+    }
+
+        .preview-edit-link:hover {
+            text-decoration: underline;
+        }
+
+    .preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+        gap: 16px 28px;
+    }
+
+    .preview-field {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .preview-label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #8a92a3;
+        margin-bottom: 3px;
+    }
+
+    .preview-value {
+        display: block;
+        font-size: 0.92rem;
+        color: #1a3a52;
+        font-weight: 600;
+        word-break: break-word;
+    }
+
+    .preview-photo-card {
+        text-align: center;
+    }
+
+        .preview-photo-card img {
+            max-width: 150px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+
+    .preview-doc-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .preview-doc-meta .preview-label {
+        margin-bottom: 0;
+    }
+</style>
+
 <fieldset class="tl-section">
-    <legend>Application Details</legend>
-    <table class="table table-bordered">
-        <tr><th>Applicant Name</th><td>@app.ApplicantName</td></tr>
-        <tr><th>Father/Husband Name</th><td>@app.ApplicantFatherHusbandName</td></tr>
-        <tr><th>Age</th><td>@app.AgeOfApplicant</td></tr>
-        <tr><th>Mobile Number</th><td>@app.MobileNumber</td></tr>
-        <tr><th>Residential Address</th><td>@app.ApplicantResidentialAddress</td></tr>
-        <tr><th>Ownership Type</th><td>@app.OwnershipType</td></tr>
-        <tr><th>Name &amp; Style of Factory/Trade</th><td>@app.NameAndStyleOfFactory</td></tr>
-        <tr><th>Purpose of Licence</th><td>@app.PurposeOfLicence</td></tr>
-        <tr><th>Trade Place Address</th><td>@app.TradePlaceCommunicationAddress</td></tr>
-        <tr><th>Total Area (Sq.Ft.)</th><td>@app.TotalAreaCoveredSqFt</td></tr>
-        <tr><th>Date of Commencement</th><td>@app.DateOfCommencement.ToString("dd-MM-yyyy")</td></tr>
-        <tr><th>Licence Period</th><td>@app.LicencePeriod</td></tr>
-    </table>
+    <legend class="preview-section-header">
+        <span>Application Details</span>
+        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="application">Edit</a>
+    </legend>
+    <div class="preview-grid">
+        @Html.Raw(Field("Application Number", app.ApplicationNumber))
+        @Html.Raw(Field("Applicant Name", app.ApplicantName))
+        @Html.Raw(Field("Residential Address", app.ApplicantResidentialAddress))
+        @Html.Raw(Field("Father/Husband Name", app.ApplicantFatherHusbandName))
+        @Html.Raw(Field("Age of Applicant", app.AgeOfApplicant.ToString()))
+        @Html.Raw(Field("Mobile Number", app.MobileNumber))
+        @Html.Raw(Field("Ownership Type", app.OwnershipType))
+        @Html.Raw(Field("Municipality", Model.MunicipalityName))
+        @Html.Raw(Field("Ward", Model.WardName))
+        @Html.Raw(Field("Area", Model.AreaName))
+        @Html.Raw(Field("Street", Model.StreetName))
+        @Html.Raw(Field("Door Number", app.DoorNumber))
+        @Html.Raw(Field("Floor Number", app.FloorNumber))
+        @Html.Raw(Field("Shop Number", app.ShopNumber))
+        @Html.Raw(Field("Property Tax Assessment Number", app.PropertyTaxAssessmentNumber))
+        @Html.Raw(Field("Trade Place Communication Address", app.TradePlaceCommunicationAddress))
+        @Html.Raw(Field("Total Area Covered (Sq.Ft.)", app.TotalAreaCoveredSqFt.ToString()))
+        @Html.Raw(Field("Number of Floors", app.NumberOfFloors.ToString()))
+        @Html.Raw(Field("Name and Style of Factory", app.NameAndStyleOfFactory))
+        @Html.Raw(Field("Other Particulars", app.OtherParticulars))
+        @Html.Raw(Field("Purpose of Licence", app.PurposeOfLicence))
+        @Html.Raw(Field("Additional Purpose", app.AdditionalPurpose))
+        @Html.Raw(Field("Purpose of Licence (Details)", app.PurposeOfLicenceRequiredText))
+        @Html.Raw(Field("Number of Manager/Supervisor", app.NumberOfManagerSupervisor.ToString()))
+        @Html.Raw(Field("Number of Staff/Worker", app.NumberOfStaffWorker.ToString()))
+        @Html.Raw(Field("Date of Commencement", app.DateOfCommencement.ToString("dd-MM-yyyy")))
+        @Html.Raw(Field("Licence Period", app.LicencePeriod))
+        @Html.Raw(Field("Current Demand Year", app.CurrentDemandYear))
+        @Html.Raw(Field("Building Owner Name", app.BuildingOwnerName))
+        @Html.Raw(Field("Building Owner Address", app.BuildingOwnerAddress))
+        @Html.Raw(Field("Rent / Estimated Rent per Month", app.RentEstimatedRentPerMonth?.ToString()))
+    </div>
 </fieldset>
 
-@if (Model.Partners.Any())
-{
-    <fieldset class="tl-section">
-        <legend>Partners</legend>
-        <table class="table table-bordered">
-            <thead>
-                <tr><th>Partner Name</th><th>Designation</th><th>Address</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var p in Model.Partners)
-                {
-                    <tr><td>@p.PartnerName</td><td>@p.Designation</td><td>@p.Address</td></tr>
-                }
-            </tbody>
-        </table>
-    </fieldset>
-}
-
-@if (Model.Machinery.Any())
-{
-    <fieldset class="tl-section">
-        <legend>Machinery Details</legend>
-        <table class="table table-bordered">
-            <thead>
-                <tr><th>Machinery Name</th><th>Quantity</th><th>Horse Power</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var m in Model.Machinery)
-                {
-                    <tr><td>@m.MachineryName</td><td>@m.Quantity</td><td>@m.HorsePower</td></tr>
-                }
-            </tbody>
-        </table>
-    </fieldset>
-}
+<fieldset class="tl-section">
+    <legend class="preview-section-header">
+        <span>Partners</span>
+        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="partners">Edit</a>
+    </legend>
+    @if (Model.Partners.Any())
+    {
+        @foreach (var p in Model.Partners)
+        {
+            <div class="preview-grid" style="margin-bottom:14px;">
+                @Html.Raw(Field("Partner Name", p.PartnerName))
+                @Html.Raw(Field("Designation", p.Designation))
+                @Html.Raw(Field("Address", p.Address))
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">No partners added.</p>
+    }
+</fieldset>
 
 <fieldset class="tl-section">
-    <legend>Photographs</legend>
-    <div style="display:flex; gap:20px; flex-wrap:wrap;">
-        <div>
-            <p><strong>Applicant Photo</strong></p>
+    <legend class="preview-section-header">
+        <span>Machinery Details</span>
+        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="machinery">Edit</a>
+    </legend>
+    @if (Model.Machinery.Any())
+    {
+        @foreach (var m in Model.Machinery)
+        {
+            <div class="preview-grid" style="margin-bottom:14px;">
+                @Html.Raw(Field("Machinery Name", m.MachineryName))
+                @Html.Raw(Field("Quantity", m.Quantity.ToString()))
+                @Html.Raw(Field("Horse Power", m.HorsePower.ToString()))
+            </div>
+        }
+    }
+    else
+    {
+        <p class="text-muted">No machinery added.</p>
+    }
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend class="preview-section-header">
+        <span>Photographs</span>
+        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="photo">Edit</a>
+    </legend>
+    <div style="display:flex; gap:24px; flex-wrap:wrap;">
+        <div class="preview-photo-card">
+            <span class="preview-label">Applicant Photo</span>
             <img src="@Url.Action("ViewApplicantPhoto", "TradeLicence", new { applicationId = app.ApplicationId })"
-                 alt="Applicant Photo" style="max-width:150px; border:1px solid #ddd; border-radius:6px;"
-                 onerror="this.closest('div').querySelector('.tl-no-photo')?.removeAttribute('hidden'); this.remove();" />
+                 alt="Applicant Photo"
+                 onerror="this.closest('.preview-photo-card').querySelector('.tl-no-photo')?.removeAttribute('hidden'); this.remove();" />
             <p class="tl-no-photo text-muted" hidden>Not uploaded</p>
         </div>
-        <div>
-            <p><strong>Partner Photo</strong></p>
+        <div class="preview-photo-card">
+            <span class="preview-label">Partner Photo</span>
             <img src="@Url.Action("ViewPartnerPhoto", "TradeLicence", new { applicationId = app.ApplicationId })"
-                 alt="Partner Photo" style="max-width:150px; border:1px solid #ddd; border-radius:6px;"
-                 onerror="this.closest('div').querySelector('.tl-no-photo')?.removeAttribute('hidden'); this.remove();" />
+                 alt="Partner Photo"
+                 onerror="this.closest('.preview-photo-card').querySelector('.tl-no-photo')?.removeAttribute('hidden'); this.remove();" />
             <p class="tl-no-photo text-muted" hidden>Not uploaded</p>
         </div>
     </div>
 </fieldset>
 
 <fieldset class="tl-section">
-    <legend>Documents</legend>
+    <legend class="preview-section-header">
+        <span>Documents</span>
+        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="documents">Edit</a>
+    </legend>
     @if (Model.Documents.Any())
     {
-        <table class="table table-bordered">
-            <thead>
-                <tr><th>Document Name</th><th>File Name</th><th>Uploaded Date</th><th></th></tr>
-            </thead>
-            <tbody>
-                @foreach (var d in Model.Documents)
-                {
-                    <tr>
-                        <td>@d.DocumentName</td>
-                        <td>@d.FileName</td>
-                        <td>@(d.UploadedDate?.ToLocalTime().ToString("dd-MM-yyyy") ?? "-")</td>
-                        <td>
-                            <a href="@Url.Action("ViewDocument", "TradeLicence", new { documentId = d.DocumentId })" target="_blank" class="btn btn-sm btn-secondary">View</a>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        @foreach (var d in Model.Documents)
+        {
+            <div class="preview-doc-row">
+                <div class="preview-doc-meta">
+                    <span class="preview-label">@d.DocumentName</span>
+                    <span class="preview-value" style="font-weight:400;">@d.FileName</span>
+                </div>
+                <button type="button"
+                        class="btn btn-sm btn-secondary btn-preview-view-doc"
+                        data-document-id="@d.DocumentId">
+                    View
+                </button>
+            </div>
+        }
     }
     else
     {
@@ -106,18 +211,80 @@
     }
 </fieldset>
 
-@if (app.IsRegistrationForShopsEstablishment && Model.ShopRegistration != null)
+@if (app.IsRegistrationForShopsEstablishment)
 {
     var shop = Model.ShopRegistration;
     <fieldset class="tl-section">
-        <legend>Registration for Shops and Establishments</legend>
-        <table class="table table-bordered">
-            <tr><th>Shop/Establishment Name</th><td>@shop.ShopOrEstablishmentName</td></tr>
-            <tr><th>Registration Period</th><td>@shop.RegistrationPeriod</td></tr>
-            <tr><th>Type of Establishment</th><td>@shop.TypeOfEstablishment</td></tr>
-            <tr><th>Mobile Number</th><td>@shop.MobileNumber</td></tr>
-            <tr><th>Total Employees</th><td>@shop.TotalEmployees</td></tr>
-            <tr><th>Manager Name</th><td>@shop.ManagerFullName</td></tr>
-        </table>
+        <legend class="preview-section-header">
+            <span>Registration for Shops and Establishments</span>
+            <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="shops">Edit</a>
+        </legend>
+        @if (shop != null)
+        {
+            <div class="preview-grid">
+                @Html.Raw(Field("Applicant Name", shop.ApplicantName))
+                @Html.Raw(Field("Shop/Establishment Name", shop.ShopOrEstablishmentName))
+                @Html.Raw(Field("Registration Period", shop.RegistrationPeriod))
+                @Html.Raw(Field("Type of Establishment", shop.TypeOfEstablishment))
+                @Html.Raw(Field("Mobile Number", shop.MobileNumber))
+                @Html.Raw(Field("Email ID", shop.EmailId))
+
+                @Html.Raw(Field("Shop Address Line 1", shop.ShopAddressLine1))
+                @Html.Raw(Field("Shop Address Line 2", shop.ShopAddressLine2))
+                @Html.Raw(Field("Shop District/Region", shop.ShopDistrictRegion))
+                @Html.Raw(Field("Shop Commune", shop.ShopCommune))
+                @Html.Raw(Field("Shop Pin Code", shop.ShopPinCode))
+
+                @Html.Raw(Field("Communication Address Line 1", shop.CommAddressLine1))
+                @Html.Raw(Field("Communication Address Line 2", shop.CommAddressLine2))
+                @Html.Raw(Field("Communication District/Region", shop.CommDistrictRegion))
+                @Html.Raw(Field("Communication Commune", shop.CommCommune))
+                @Html.Raw(Field("Communication Pin Code", shop.CommPinCode))
+
+                @Html.Raw(Field("Max Employees Proposed", shop.MaxEmployeesProposed?.ToString()))
+                @Html.Raw(Field("Male Employees", shop.MaleEmployees?.ToString()))
+                @Html.Raw(Field("Female Employees", shop.FemaleEmployees?.ToString()))
+                @Html.Raw(Field("Transgender Employees", shop.TransgenderEmployees?.ToString()))
+                @Html.Raw(Field("Total Employees", shop.TotalEmployees.ToString()))
+
+                @Html.Raw(Field("Manager Full Name", shop.ManagerFullName))
+                @Html.Raw(Field("Manager Address Line 1", shop.ManagerAddressLine1))
+                @Html.Raw(Field("Manager Address Line 2", shop.ManagerAddressLine2))
+                @Html.Raw(Field("Manager Country", shop.ManagerCountry))
+                @Html.Raw(Field("Manager State", shop.ManagerState))
+                @Html.Raw(Field("Manager District", shop.ManagerDistrict))
+                @Html.Raw(Field("Manager Postal/Zip Code", shop.ManagerPostalZipCode))
+                @Html.Raw(Field("Manager Mobile Number", shop.ManagerMobileNumber))
+
+                @Html.Raw(Field("Migrant Workers (Direct)", shop.MigrantWorkersDirect?.ToString()))
+                @Html.Raw(Field("Migrant Workers (Through Contractor)", shop.MigrantWorkersThroughContractor?.ToString()))
+
+                @Html.Raw(Field("Date of Payment of Wages", shop.DateOfPaymentOfWages))
+                @Html.Raw(Field("Amount Paid", shop.AmountPaid?.ToString()))
+                @Html.Raw(Field("GRAS Reference Number", shop.GrasReferenceNumber))
+                @Html.Raw(Field("Date of Payment", shop.DateOfPayment?.ToString("dd-MM-yyyy")))
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">Not filled in yet.</p>
+        }
     </fieldset>
 }
+
+<!-- Self-contained modal so document preview works even though this content
+     is injected into the Preview tab (not the Documents tab, whose own
+     modal would be hidden along with that section). -->
+<div class="modal fade" id="previewDocumentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Document Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="height:75vh; padding:0;">
+                <iframe id="previewDocumentViewer" src="" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>

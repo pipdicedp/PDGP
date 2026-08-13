@@ -256,6 +256,27 @@ namespace TradeLicence.Controllers
                     : null
             };
 
+            if (application.MunicipalityId.HasValue)
+            {
+                var municipalities = await _service.GetMunicipalitiesAsync();
+                model.MunicipalityName = municipalities.FirstOrDefault(m => m.MunicipalityId == application.MunicipalityId)?.MunicipalityName;
+            }
+            if (application.WardId.HasValue && application.MunicipalityId.HasValue)
+            {
+                var wards = await _service.GetWardsAsync(application.MunicipalityId.Value);
+                model.WardName = wards.FirstOrDefault(w => w.WardId == application.WardId)?.WardName;
+            }
+            if (application.AreaId.HasValue && application.WardId.HasValue)
+            {
+                var areas = await _service.GetAreasAsync(application.WardId.Value);
+                model.AreaName = areas.FirstOrDefault(a => a.AreaId == application.AreaId)?.AreaName;
+            }
+            if (application.StreetId.HasValue && application.AreaId.HasValue)
+            {
+                var streets = await _service.GetStreetsAsync(application.AreaId.Value);
+                model.StreetName = streets.FirstOrDefault(s => s.StreetId == application.StreetId)?.StreetName;
+            }
+
             return PartialView("_PreviewApplication", model);
         }
 
@@ -511,7 +532,10 @@ namespace TradeLicence.Controllers
         {
             var result = await _service.GetDecryptedDocumentAsync(documentId);
             if (result == null) return NotFound();
-            return File(result.Value.Bytes, result.Value.ContentType, result.Value.FileName);
+            // No fileName here on purpose — passing one sets
+            // Content-Disposition: attachment, which forces a download instead
+            // of letting the browser render it inline (used in a preview iframe).
+            return File(result.Value.Bytes, result.Value.ContentType);
         }
 
         [HttpPost]
