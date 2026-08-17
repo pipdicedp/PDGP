@@ -16,5 +16,9 @@ namespace TradeLicence.Models
         public string? WardName { get; set; }
         public string? AreaName { get; set; }
         public string? StreetName { get; set; }
+
+        // True in the citizen wizard's Preview tab (lets them jump back to a
+        // tab and edit). False for the officer's read-only view.
+        public bool ShowEditLinks { get; set; } = true;
     }
 }

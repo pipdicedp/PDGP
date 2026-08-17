@@ -684,22 +684,27 @@
 
             case 'partners':
                 $('#partners-section').show();
+                $(document).trigger('wizard:tabShown', ['partners']);
                 break;
 
             case 'machinery':
                 $('#machinery-section').show();
+                $(document).trigger('wizard:tabShown', ['machinery']);
                 break;
 
             case 'photo':
                 $('#photo-section').show();
+                $(document).trigger('wizard:tabShown', ['photo']);
                 break;
 
             case 'documents':
                 $('#documents-section').show();
+                $(document).trigger('wizard:tabShown', ['documents']);
                 break;
 
             case 'shops':
                 $('#shops-section').show();
+                $(document).trigger('wizard:tabShown', ['shops']);
                 break;
 
             case 'preview':
@@ -913,22 +918,10 @@
     // (A second, unconditional handler used to live here and would advance the
     // tab regardless of whether the save succeeded or validation failed — removed.)
 
-    // Opens a document inline in a modal from the Preview tab, instead of
-    // downloading it. Delegated on document so it works even though the
-    // Preview content is injected via AJAX after this script has loaded.
-    $(document).on('click', '.btn-preview-view-doc', function (e) {
-        e.preventDefault();
-        var docId = $(this).data('documentId');
-        if (!docId) return;
-
-        var viewer = document.getElementById('previewDocumentViewer');
-        if (viewer) viewer.src = '/TradeLicence/NewLicence/Apply/ViewDocument?documentId=' + docId;
-
-        var modalEl = document.getElementById('previewDocumentModal');
-        if (modalEl && window.bootstrap) {
-            new bootstrap.Modal(modalEl).show();
-        }
-    });
+    // NOTE: the document-preview-modal click handler used to live here —
+    // moved to wwwroot/js/document-preview-modal.js so it can be shared
+    // with the officer's read-only application view too. Make sure
+    // Apply.cshtml includes that script.
 
     window.TradeLicenceApply = {
         init: init,

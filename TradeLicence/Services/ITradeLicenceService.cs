@@ -40,5 +40,8 @@ namespace TradeLicence.Services
 
         // ---------------- Acknowledgement PDF ----------------
         Task<byte[]> GenerateAcknowledgementPdfAsync(int applicationId);
+
+        // ---------------- Application Preview (shared by citizen wizard and officer view) ----------------
+        Task<ApplicationPreviewViewModel?> GetApplicationPreviewAsync(int applicationId);
     }
 }

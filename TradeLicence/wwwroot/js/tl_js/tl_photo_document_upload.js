@@ -10,12 +10,68 @@ $(document).ready(function () {
         return $('input[name="__RequestVerificationToken"]').val();
     }
 
+    // ---- Reload previously-uploaded photos (just point the preview <img> at
+    // the existing file — if nothing was uploaded yet, the image 404s and
+    // onerror hides it, same trick used on the Preview tab). ----
+    function loadExistingPhotos() {
+        var applicationId = getApplicationId();
+        if (!applicationId) return;
+
+        var applicantPreview = document.getElementById('ApplicantPhotoPreview');
+        if (applicantPreview) {
+            applicantPreview.onerror = function () { this.style.display = 'none'; };
+            applicantPreview.src = '/TradeLicence/NewLicence/Apply/ViewApplicantPhoto?applicationId=' + applicationId;
+            applicantPreview.style.display = '';
+        }
+
+        var partnerPreview = document.getElementById('PartnerPhotoPreview');
+        if (partnerPreview) {
+            partnerPreview.onerror = function () { this.style.display = 'none'; };
+            partnerPreview.src = '/TradeLicence/NewLicence/Apply/ViewPartnerPhoto?applicationId=' + applicationId;
+            partnerPreview.style.display = '';
+        }
+    }
+
+    $(document).on('wizard:tabShown', function (e, tabName) {
+        if (tabName === 'photo') loadExistingPhotos();
+    });
+    loadExistingPhotos();
+
+    // ---- Reload previously-uploaded documents — enables the matching
+    // Preview/Remove buttons and wires up their document id, so returning
+    // to this tab doesn't show everything as "not uploaded". ----
+    function loadExistingDocuments() {
+        var applicationId = getApplicationId();
+        if (!applicationId) return;
+
+        $.ajax({
+            url: '/TradeLicence/NewLicence/Apply/GetDocumentsList',
+            type: 'GET',
+            data: { applicationId: applicationId },
+            success: function (data) {
+                if (!data) return;
+                documentFields.forEach(function (field) {
+                    var match = data.find(function (d) { return d.documentName === field.documentName; });
+                    if (match) {
+                        $('#btnPreview' + field.shortName).prop('disabled', false).data('documentId', match.documentId);
+                        $('#btnRemove' + field.shortName).prop('disabled', false).data('documentId', match.documentId);
+                    }
+                });
+            }
+        });
+    }
+
+    $(document).on('wizard:tabShown', function (e, tabName) {
+        if (tabName === 'documents') loadExistingDocuments();
+    });
+    loadExistingDocuments();
+
     // =========================================================
     // Photographs (Step 4)
     // =========================================================
 
     // Upload happens right when "Next" is clicked — before the existing
-    // btnPhotoNext handler (in tl_tradelicence_apply.js) switches tabs, so the
+    // btnPhotoNext handler (in tradelicence-apply.js) switches tabs, so the
     // files are safely stored before the user moves on.
     $('#btnPhotoNext').on('click', function () {
 

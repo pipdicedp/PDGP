@@ -242,42 +242,49 @@ namespace TradeLicence.Controllers
         [Route("TradeLicence/NewLicence/Apply/PreviewApplication")]
         public async Task<IActionResult> PreviewApplication(int applicationId)
         {
-            var application = await _service.GetApplicationAsync(applicationId);
-            if (application == null) return NotFound();
-
-            var model = new ApplicationPreviewViewModel
-            {
-                Application = application,
-                Partners = await _service.GetPartnersAsync(applicationId),
-                Machinery = await _service.GetMachineryAsync(applicationId),
-                Documents = await _service.GetDocumentsAsync(applicationId),
-                ShopRegistration = application.IsRegistrationForShopsEstablishment
-                    ? await _service.GetShopEstablishmentAsync(applicationId)
-                    : null
-            };
-
-            if (application.MunicipalityId.HasValue)
-            {
-                var municipalities = await _service.GetMunicipalitiesAsync();
-                model.MunicipalityName = municipalities.FirstOrDefault(m => m.MunicipalityId == application.MunicipalityId)?.MunicipalityName;
-            }
-            if (application.WardId.HasValue && application.MunicipalityId.HasValue)
-            {
-                var wards = await _service.GetWardsAsync(application.MunicipalityId.Value);
-                model.WardName = wards.FirstOrDefault(w => w.WardId == application.WardId)?.WardName;
-            }
-            if (application.AreaId.HasValue && application.WardId.HasValue)
-            {
-                var areas = await _service.GetAreasAsync(application.WardId.Value);
-                model.AreaName = areas.FirstOrDefault(a => a.AreaId == application.AreaId)?.AreaName;
-            }
-            if (application.StreetId.HasValue && application.AreaId.HasValue)
-            {
-                var streets = await _service.GetStreetsAsync(application.AreaId.Value);
-                model.StreetName = streets.FirstOrDefault(s => s.StreetId == application.StreetId)?.StreetName;
-            }
+            var model = await _service.GetApplicationPreviewAsync(applicationId);
+            if (model == null) return NotFound();
 
             return PartialView("_PreviewApplication", model);
+        }
+
+        // ---------------- Reload-existing-data endpoints ----------------
+        // Called when the user (re)visits a tab, so already-saved data shows
+        // up instead of an empty form (Partners/Machinery/Shops/Documents
+        // grids only ever reflected what was added in the CURRENT browser
+        // session — nothing re-fetched what was already saved earlier).
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetPartnersList")]
+        public async Task<IActionResult> GetPartnersList(int applicationId)
+        {
+            var partners = await _service.GetPartnersAsync(applicationId);
+            return Json(partners.Select(p => new { p.PartnerId, p.PartnerName, p.Designation, p.Address }));
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetMachineryList")]
+        public async Task<IActionResult> GetMachineryList(int applicationId)
+        {
+            var machinery = await _service.GetMachineryAsync(applicationId);
+            return Json(machinery.Select(m => new { m.MachineryId, m.MachineryName, m.Quantity, m.HorsePower }));
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetDocumentsList")]
+        public async Task<IActionResult> GetDocumentsList(int applicationId)
+        {
+            var docs = await _service.GetDocumentsAsync(applicationId);
+            return Json(docs.Select(d => new { d.DocumentId, d.DocumentName, d.FileName }));
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetShopEstablishment")]
+        public async Task<IActionResult> GetShopEstablishment(int applicationId)
+        {
+            var shop = await _service.GetShopEstablishmentAsync(applicationId);
+            if (shop == null) return Json(null);
+            return Json(shop);
         }
 
         // ---------------- Cascading dropdown AJAX endpoints ----------------

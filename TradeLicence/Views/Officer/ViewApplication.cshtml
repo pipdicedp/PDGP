@@ -1,0 +1,30 @@
+﻿@model TradeLicence.Models.ApplicationPreviewViewModel
+@{
+    ViewData["Title"] = "Application Details";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="status-page-header">
+        Application Details — @(Model.Application.ApplicationNumber ?? "-")
+    </div>
+
+    <div class="dashboard-body">
+
+        <partial name="_PreviewApplication" model="Model" />
+
+        <div class="tl-actions">
+            <a class="btn btn-secondary" href="@Url.Action("Index", "Officer")">&laquo; Back to Dashboard</a>
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/document-preview-modal.js" asp-append-version="true"></script>
+}

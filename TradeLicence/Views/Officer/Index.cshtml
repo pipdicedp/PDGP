@@ -90,7 +90,7 @@
                                 <td>@app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
                                 <td><span class="myapps-status-badge @statusClass">@app.Status</span></td>
                                 <td>
-                                    <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>
+                                    <a class="myapps-btn myapps-btn-view" href="@Url.Action("ViewApplication", "Officer", new { id = app.ApplicationId })">View</a>
                                 </td>
                             </tr>
                             slNo++;

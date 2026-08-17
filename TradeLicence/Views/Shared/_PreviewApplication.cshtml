@@ -79,7 +79,13 @@
 <fieldset class="tl-section">
     <legend class="preview-section-header">
         <span>Application Details</span>
-        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="application">Edit</a>
+        @if (Model.ShowEditLinks)
+
+        {
+
+            <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="application">Edit</a>
+
+        }
     </legend>
     <div class="preview-grid">
         @Html.Raw(Field("Application Number", app.ApplicationNumber))
@@ -119,7 +125,13 @@
 <fieldset class="tl-section">
     <legend class="preview-section-header">
         <span>Partners</span>
-        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="partners">Edit</a>
+        @if (Model.ShowEditLinks)
+
+        {
+
+            <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="partners">Edit</a>
+
+        }
     </legend>
     @if (Model.Partners.Any())
     {
@@ -141,7 +153,13 @@
 <fieldset class="tl-section">
     <legend class="preview-section-header">
         <span>Machinery Details</span>
-        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="machinery">Edit</a>
+        @if (Model.ShowEditLinks)
+
+        {
+
+            <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="machinery">Edit</a>
+
+        }
     </legend>
     @if (Model.Machinery.Any())
     {
@@ -163,7 +181,13 @@
 <fieldset class="tl-section">
     <legend class="preview-section-header">
         <span>Photographs</span>
-        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="photo">Edit</a>
+        @if (Model.ShowEditLinks)
+
+        {
+
+            <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="photo">Edit</a>
+
+        }
     </legend>
     <div style="display:flex; gap:24px; flex-wrap:wrap;">
         <div class="preview-photo-card">
@@ -186,7 +210,13 @@
 <fieldset class="tl-section">
     <legend class="preview-section-header">
         <span>Documents</span>
-        <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="documents">Edit</a>
+        @if (Model.ShowEditLinks)
+
+        {
+
+            <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="documents">Edit</a>
+
+        }
     </legend>
     @if (Model.Documents.Any())
     {
@@ -217,7 +247,13 @@
     <fieldset class="tl-section">
         <legend class="preview-section-header">
             <span>Registration for Shops and Establishments</span>
-            <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="shops">Edit</a>
+            @if (Model.ShowEditLinks)
+
+            {
+
+                <a href="#" class="tl-wizard-tab preview-edit-link" data-tab="shops">Edit</a>
+
+            }
         </legend>
         @if (shop != null)
         {

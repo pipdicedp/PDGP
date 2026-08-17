@@ -8,6 +8,81 @@ $(document).ready(function () {
         return $('input[name="__RequestVerificationToken"]').val();
     }
 
+    // ---- Reload previously-saved shop/establishment details ----
+    // Maps the camelCase JSON keys ASP.NET Core serializes to the actual
+    // (differently-named, e.g. "ApplicantNameShop" not "ApplicantName")
+    // HTML field ids on this tab.
+    var shopFieldMap = {
+        applicantName: 'ApplicantNameShop',
+        shopOrEstablishmentName: 'ShopOrEstablishmentName',
+        registrationPeriod: 'RegistrationPeriod',
+        typeOfEstablishment: 'TypeOfEstablishment',
+        mobileNumber: 'MobileNumberShop',
+        emailId: 'EmailId',
+        shopAddressLine1: 'ShopAddressLine1',
+        shopAddressLine2: 'ShopAddressLine2',
+        shopDistrictRegion: 'ShopDistrictRegion',
+        shopCommune: 'ShopCommune',
+        shopPinCode: 'ShopPinCode',
+        commAddressLine1: 'CommAddressLine1',
+        commAddressLine2: 'CommAddressLine2',
+        commDistrictRegion: 'CommDistrictRegion',
+        commCommune: 'CommCommune',
+        commPinCode: 'CommPinCode',
+        maxEmployeesProposed: 'MaxEmployeesProposed',
+        maleEmployees: 'MaleEmployees',
+        femaleEmployees: 'FemaleEmployees',
+        transgenderEmployees: 'TransgenderEmployees',
+        totalEmployees: 'TotalEmployees',
+        managerFullName: 'ManagerFullName',
+        managerAddressLine1: 'ManagerAddressLine1',
+        managerAddressLine2: 'ManagerAddressLine2',
+        managerCountry: 'ManagerCountry',
+        managerState: 'ManagerState',
+        managerDistrict: 'ManagerDistrict',
+        managerPostalZipCode: 'ManagerPostalZipCode',
+        managerMobileNumber: 'ManagerMobileNumber',
+        migrantWorkersDirect: 'MigrantWorkersDirect',
+        migrantWorkersThroughContractor: 'MigrantWorkersThroughContractor',
+        dateOfPaymentOfWages: 'DateOfPaymentOfWages',
+        amountPaid: 'AmountPaid',
+        grasReferenceNumber: 'GrasReferenceNumber',
+        dateOfPayment: 'DateOfPayment'
+    };
+
+    function loadShopEstablishment() {
+        var appId = getApplicationId();
+        if (!appId) return;
+
+        $.ajax({
+            url: '/TradeLicence/NewLicence/Apply/GetShopEstablishment',
+            type: 'GET',
+            data: { applicationId: appId },
+            success: function (data) {
+                if (!data || !data.shopRegistrationId) return; // nothing saved yet
+
+                Object.keys(shopFieldMap).forEach(function (jsonKey) {
+                    var value = data[jsonKey];
+                    if (value === null || value === undefined) return;
+
+                    // Date fields come back as full ISO strings (e.g.
+                    // "2026-08-13T00:00:00") — <input type="date"> needs
+                    // just the "yyyy-MM-dd" part.
+                    if (jsonKey === 'dateOfPayment' && typeof value === 'string') {
+                        value = value.split('T')[0];
+                    }
+
+                    $('#' + shopFieldMap[jsonKey]).val(value);
+                });
+            }
+        });
+    }
+
+    $(document).on('wizard:tabShown', function (e, tabName) {
+        if (tabName === 'shops') loadShopEstablishment();
+    });
+    loadShopEstablishment();
+
     // ---- Keep Total Employees auto-summed from Male + Female + Transgender ----
     function recalcTotalEmployees() {
         var male = parseInt($('#MaleEmployees').val(), 10) || 0;
