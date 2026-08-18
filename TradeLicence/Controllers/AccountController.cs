@@ -148,6 +148,7 @@ namespace TradeLicence.Controllers
                 return await RedisplayLoginWithRegisterErrors(model);
             }
 
+
             var newUser = new ApplicationUser
             {
                 Username = model.Username,

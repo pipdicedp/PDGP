@@ -1,10 +1,49 @@
 $(document).ready(function () {
 
-    var applicationId = $('#hdnApplicationId').val();
+    function getApplicationId() {
+        return $('#hdnApplicationId').val() || $('#ApplicationId').val();
+    }
 
     function getAntiForgeryToken() {
         return $('input[name="__RequestVerificationToken"]').val();
     }
+
+    // ---- Reload previously-saved machinery from the database ----
+    function loadMachinery() {
+        var appId = getApplicationId();
+        if (!appId) return;
+
+        $.ajax({
+            url: '/TradeLicence/NewLicence/Apply/GetMachineryList',
+            type: 'GET',
+            data: { applicationId: appId },
+            success: function (data) {
+                $('#tblMachinery tbody').empty();
+                if (data && data.length > 0) {
+                    data.forEach(function (m) {
+                        $('#tblMachinery tbody').append(`
+                        <tr>
+                            <td>${m.machineryName}</td>
+                            <td>${m.quantity}</td>
+                            <td>${m.horsePower}</td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm btnRemoveMachinery">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+                    });
+                    $('#machineryTableContainer').show();
+                }
+            }
+        });
+    }
+
+    $(document).on('wizard:tabShown', function (e, tabName) {
+        if (tabName === 'machinery') loadMachinery();
+    });
+    loadMachinery();
 
     // ---- Add: local grid only, nothing hits the database yet ----
     $('#btnAddMachinery').on('click', function () {
@@ -51,6 +90,13 @@ $(document).ready(function () {
     // ---- Save: sends every row currently in the grid to the server at once ----
     $('#btnSaveMachinery').on('click', function () {
 
+        var currentApplicationId = getApplicationId();
+
+        if (!currentApplicationId) {
+            alert('Please save Application Details first before adding machinery.');
+            return;
+        }
+
         var machinery = [];
         $('#tblMachinery tbody tr').each(function () {
             var cells = $(this).find('td');
@@ -76,7 +122,7 @@ $(document).ready(function () {
             contentType: 'application/json',
             headers: { 'RequestVerificationToken': getAntiForgeryToken() },
             data: JSON.stringify({
-                applicationId: applicationId,
+                applicationId: currentApplicationId,
                 machinery: machinery
             }),
             success: function () {

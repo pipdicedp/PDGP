@@ -8,159 +8,151 @@
 
 <div class="dashboard-wrapper">
 
-        <div class="dashboard-body">
+    <div class="dashboard-body">
 
-            <div class="page-title">
-                <h3>Single Sign On Dashboard</h3>
-                <p>Manage Trade Licence Applications</p>
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">🗂️</span>
+                <div>
+                    <h3>Single Sign On Dashboard</h3>
+                    <p>Manage all your applications in one place</p>
+                </div>
             </div>
 
-            <div class="dashboard-cards">
-
-                <div class="dashboard-card">
-
-                    <div class="card-icon">
-                        🏢
-                    </div>
-
-                    <h4>Trade Licence</h4>
-
-                    <p>
-                        Apply for New Trade Licence and Track Application Status
-                    </p>
-
-                    <a asp-controller="TradeLicence"
-                       asp-action="Index"
-                        class="dashboard-btn">
-                        New Application
-                    </a>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <div class="card-icon">
-                        💧
-                    </div>
-
-                    <h4>Water Management</h4>
-
-                    <p>
-                        Apply for New Trade Licence and Track Application Status
-                    </p>
-
-                    <a asp-controller="WaterConnection"
-                       asp-action="Home"
-                       class="dashboard-btn">
-                        New Application
-                    </a>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <div class="card-icon">
-                        ⚡
-                    </div>
-
-                    <h4>Electricity Management</h4>
-
-                    <p>
-                        Apply for New Trade Licence and Track Application Status
-                    </p>
-
-                    <a asp-controller="TradeLicence"
-                       asp-action="Apply"
-                        class="dashboard-btn">
-                        New Application
-                    </a>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <div class="card-icon">
-                        🚐
-                    </div>
-
-                    <h4>Transport Management</h4>
-
-                    <p>
-                        Apply for New Trade Licence and Track Application Status
-                    </p>
-
-                    <a asp-controller="TradeLicence"
-                       asp-action="Apply"
-                       class="dashboard-btn">
-                        New Application
-                    </a>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <div class="card-icon">
-
-
-                        👷
-                    </div>
-
-                    <h4>Labor Department</h4>
-
-                    <p>
-                        Apply for New Trade Licence and Track Application Status
-                    </p>
-
-                    <a asp-controller="TradeLicence"
-                       asp-action="Apply"
-                       class="dashboard-btn">
-                        New Application
-                    </a>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <div class="card-icon">
-                        📝
-                    </div>
-
-                    <h4>Registration Department</h4>
-
-                    <p>
-                        Apply for New Trade Licence and Track Application Status
-                    </p>
-
-                    <a asp-controller="TradeLicence"
-                       asp-action="Apply"
-                        class="dashboard-btn">
-                        New Application
-                    </a>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <div class="card-icon">
-                        📐
-                    </div>
-
-                    <h4>Survey Department</h4>
-
-                    <p>
-                        Apply for New Trade Licence and Track Application Status
-                    </p>
-
-                    <a asp-controller="TradeLicence"
-                       asp-action="Apply"
-                        class="dashboard-btn">
-                        New Application
-                    </a>
-
-                </div>
-
+            <div class="dashboard-controls">
+                <input type="text" id="dashboardSearch" class="dashboard-search-input" placeholder="Search services..." />
             </div>
+        </div>
+
+        <p id="dashboardNoResults" class="tl-note" style="display:none; text-align:center;">
+            No services match your search.
+        </p>
+
+        <p id="dashboardCount" class="dashboard-count"></p>
+
+        <div class="dashboard-cards" id="dashboardCards">
+
+            <div class="dashboard-card dashboard-accent-1" data-name="trade licence" data-category="licences">
+                <div class="card-icon">🏢</div>
+                <h4>Trade Licence</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="TradeLicence" asp-action="Index" class="dashboard-btn">New Application</a>
+            </div>
+
+            <div class="dashboard-card dashboard-accent-2" data-name="water management" data-category="utilities">
+                <div class="card-icon">💧</div>
+                <h4>Water Management</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="WaterConnection" asp-action="Home" class="dashboard-btn">New Application</a>
+            </div>
+
+            <div class="dashboard-card dashboard-accent-3" data-name="electricity management" data-category="utilities">
+                <div class="card-icon">⚡</div>
+                <h4>Electricity Management</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
+            </div>
+
+            <div class="dashboard-card dashboard-accent-4" data-name="transport management" data-category="other">
+                <div class="card-icon">🚐</div>
+                <h4>Transport Management</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
+            </div>
+
+            <div class="dashboard-card dashboard-accent-5" data-name="labor department" data-category="registration">
+                <div class="card-icon">👷</div>
+                <h4>Labor Department</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
+            </div>
+
+            <div class="dashboard-card dashboard-accent-1" data-name="registration department" data-category="registration">
+                <div class="card-icon">📝</div>
+                <h4>Registration Department</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
+            </div>
+
+            <div class="dashboard-card dashboard-accent-2" data-name="survey department" data-category="other">
+                <div class="card-icon">📐</div>
+                <h4>Survey Department</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
+            </div>
+
+            <div class="dashboard-card dashboard-accent-3" data-name="survey department" data-category="other">
+                <div class="card-icon">🚒 </div>
+                <h4>Fire Service</h4>
+                <p>Apply for New Trade Licence and Track Application Status</p>
+                <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
+            </div>
+
+            <!--
+                To add a new service, copy one .dashboard-card block above and:
+                1. Set data-name to the service name in lowercase (used by search)
+                2. Add one of dashboard-accent-1 through dashboard-accent-5 (cycle through them)
+                3. Update the icon, title, description, and the asp-controller/asp-action link
+            -->
 
         </div>
 
+        <div class="dashboard-loadmore-wrap">
+            <button type="button" id="dashboardLoadMore" class="dashboard-loadmore-btn" style="display:none;">
+                Load more services
+            </button>
+        </div>
+
     </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        (function() {
+            var searchInput = document.getElementById('dashboardSearch');
+            var cards = Array.prototype.slice.call(document.querySelectorAll('#dashboardCards .dashboard-card'));
+            var noResults = document.getElementById('dashboardNoResults');
+            var countLabel = document.getElementById('dashboardCount');
+            var loadMoreBtn = document.getElementById('dashboardLoadMore');
+            var pageSize = 12;   // cards shown per "page" — keeps 50+ services light to render
+            var visibleLimit = pageSize;
+
+            function getMatches() {
+                var term = (searchInput.value || '').toLowerCase().trim();
+                return cards.filter(function(card) {
+                    var name = card.getAttribute('data-name') || '';
+                    return name.indexOf(term) !== -1;
+                });
+            }
+
+            function render() {
+                var matches = getMatches();
+
+                cards.forEach(function(card) { card.classList.add('dashboard-card-hidden'); });
+                matches.slice(0, visibleLimit).forEach(function(card) { card.classList.remove('dashboard-card-hidden'); });
+
+                noResults.style.display = matches.length === 0 ? '' : 'none';
+
+                var shown = Math.min(visibleLimit, matches.length);
+                countLabel.textContent = matches.length === 0
+                    ? ''
+                    : 'Showing ' + shown + ' of ' + matches.length + ' services';
+
+                loadMoreBtn.style.display = matches.length > visibleLimit ? '' : 'none';
+            }
+
+            searchInput.addEventListener('input', function() {
+                visibleLimit = pageSize;
+                render();
+            });
+
+            loadMoreBtn.addEventListener('click', function() {
+                visibleLimit += pageSize;
+                render();
+            });
+
+            render();
+        })();
+    </script>
+}

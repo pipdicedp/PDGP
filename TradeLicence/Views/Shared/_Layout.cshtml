@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="~/css/tl_css/site.css" />
+    <link rel="stylesheet" href="~/css/tl_css/site-tools.css" />
     @await RenderSectionAsync("Styles", required: false)
     <script>
             // Prevents the browser (and the ASP.NET Core dev-server hot-reload script)
@@ -15,7 +16,7 @@
             if ('scrollRestoration' in history) {
                 history.scrollRestoration = 'manual';
             }
-            window.addEventListener('load', function() {
+            window.addEventListener('load', function () {
                 window.scrollTo(0, 0);
             });
     </script>
@@ -25,13 +26,31 @@
         <div class="tl-topbar-container">
             <div class="tl-brand">
                 <img src="@(Url.Content("~/Images/puducherry Logo.jpg"))" alt="Puducherry Logo" class="tl-logo" />
-                <div>
-                    <strong>GOVERNMENT OF PUDUCHERRY</strong><br />
-                    DEPARTMENT OF INDUSTRIES AND COMMERCE<br />
-                    <span class="tl-title">INVESTOR PORTAL</span>
+                <span class="tl-brand-divider"></span>
+                <div class="tl-brand-text">
+                    <span class="tl-brand-govt" data-en="GOVERNMENT OF PUDUCHERRY" data-ta="புதுச்சேரி அரசு">GOVERNMENT OF PUDUCHERRY</span>
+                    <span class="tl-brand-dept" data-en="Department of Industries and Commerce" data-ta="தொழில் மற்றும் வணிகத் துறை">Department of Industries and Commerce</span>
+                    <span class="tl-title" data-en="Investor Portal" data-ta="முதலீட்டாளர் போர்ட்டல்">Investor Portal</span>
                 </div>
             </div>
-            <img src="@(Url.Content("~/Images/Government_of_Puducherry.png"))" alt="Government_of_Puducherry Logo" class="tr-logo" />
+
+            <div class="tl-topbar-right">
+                <div class="tl-header-tools">
+                    <div class="tl-tool-group" role="group" aria-label="Text size">
+                        <button type="button" class="tl-tool-btn tl-fs-btn" id="btnFontDecrease" title="Decrease text size" aria-label="Decrease text size">A-</button>
+                        <button type="button" class="tl-tool-btn tl-fs-btn" id="btnFontReset" title="Reset text size" aria-label="Reset text size">A</button>
+                        <button type="button" class="tl-tool-btn tl-fs-btn" id="btnFontIncrease" title="Increase text size" aria-label="Increase text size">A+</button>
+                    </div>
+                    <button type="button" class="tl-tool-btn" id="btnContrastToggle" title="Toggle high contrast" aria-label="Toggle high contrast">
+                        <i class="fa-solid fa-circle-half-stroke"></i>
+                    </button>
+                    <button type="button" class="tl-tool-btn tl-tool-lang" id="btnLangToggle" title="தமிழ் / English" aria-label="Switch language">
+                        <i class="fa-solid fa-language"></i> <span id="langToggleLabel">EN</span>
+                    </button>
+                </div>
+
+                <img src="@(Url.Content("~/Images/Government_of_Puducherry.png"))" alt="Government_of_Puducherry Logo" class="tr-logo" />
+            </div>
         </div>
     </header>
 
@@ -39,54 +58,54 @@
     <nav class="tl-navbar">
         <div class="container">
             <ul class="tl-nav-menu">
-                <li><a href="~/Account/Login">Home</a></li>
+                <li><a href="~/Account/Login" data-en="Home" data-ta="முகப்பு">Home</a></li>
                 <li class="dropdown">
-                    <a href="#about">About Puducherry <span class="dropdown-arrow">▼</span></a>
+                    <a href="#about"><span data-en="About Puducherry" data-ta="புதுச்சேரி பற்றி">About Puducherry</span> <span class="dropdown-arrow">▼</span></a>
                     <ul class="dropdown-menu">
                         <li><a href="#about-sub1">About Sub 1</a></li>
                         <li><a href="#about-sub2">About Sub 2</a></li>
                     </ul>
                 </li>
-                <li><a href="#invest">Why Invest In Pondicherry</a></li>
+                <li><a href="#invest" data-en="Why Invest In Pondicherry" data-ta="ஏன் புதுச்சேரியில் முதலீடு">Why Invest In Pondicherry</a></li>
                 <li class="dropdown">
-                    <a href="#investor">Investor Services <span class="dropdown-arrow">▼</span></a>
+                    <a href="#investor"><span data-en="Investor Services" data-ta="முதலீட்டாளர் சேவைகள்">Investor Services</span> <span class="dropdown-arrow">▼</span></a>
                     <ul class="dropdown-menu">
                         <li><a href="#investor-sub1">Investor Sub 1</a></li>
                         <li><a href="#investor-sub2">Investor Sub 2</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
-                    <a href="#investor">Dashboard <span class="dropdown-arrow">▼</span></a>
+                    <a href="#investor"><span data-en="Dashboard" data-ta="டாஷ்போர்டு">Dashboard</span> <span class="dropdown-arrow">▼</span></a>
                     <ul class="dropdown-menu">
                         <li><a href="#investor-sub1">Main Dashboard</a></li>
                         <li><a href="#investor-sub2">Other Dashboard</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
-                    <a href="#investor">CIS <span class="dropdown-arrow">▼</span></a>
+                    <a href="#investor"><span data-en="CIS" data-ta="CIS">CIS</span> <span class="dropdown-arrow">▼</span></a>
                     <ul class="dropdown-menu">
                         <li><a href="#investor-sub1">Main Dashboard</a></li>
                         <li><a href="#investor-sub2">Other Dashboard</a></li>
                     </ul>
                 </li>
                 <li class="dropdown">
-                    <a href="#investor">Downloads <span class="dropdown-arrow">▼</span></a>
+                    <a href="#investor"><span data-en="Downloads" data-ta="பதிவிறக்கங்கள்">Downloads</span> <span class="dropdown-arrow">▼</span></a>
                     <ul class="dropdown-menu">
                         <li><a href="#investor-sub1">Main Dashboard</a></li>
                         <li><a href="#investor-sub2">Other Dashboard</a></li>
                     </ul>
                 </li>
-                <li><a href="#verification">ThirdParty Verification</a></li>
-                <li><a href="#payment">Unified Payments Gateway</a></li>
-                <li><a href="#testing">Testing Centre Directory</a></li>
+                <li><a href="#verification" data-en="ThirdParty Verification" data-ta="மூன்றாம் தரப்பு சரிபார்ப்பு">ThirdParty Verification</a></li>
+                <li><a href="#payment" data-en="Unified Payments Gateway" data-ta="ஒருங்கிணைந்த கட்டண நுழைவாயில்">Unified Payments Gateway</a></li>
+                <li><a href="#testing" data-en="Testing Centre Directory" data-ta="சோதனை மைய அடைவு">Testing Centre Directory</a></li>
                 <li class="dropdown">
-                    <a href="#eodb">EoDB G.Os <span class="dropdown-arrow">▼</span></a>
+                    <a href="#eodb"><span data-en="EoDB G.Os" data-ta="EoDB G.Os">EoDB G.Os</span> <span class="dropdown-arrow">▼</span></a>
                     <ul class="dropdown-menu">
                         <li><a href="#eodb-sub1">EoDB Sub 1</a></li>
                         <li><a href="#eodb-sub2">EoDB Sub 2</a></li>
                     </ul>
                 </li>
-                <li><a href="@Url.Action("OfficerLogin", "Account")">Official Login</a></li>
+                <li><a href="@Url.Action("OfficerLogin", "Account")" data-en="Official Login" data-ta="அதிகாரி உள்நுழைவு">Official Login</a></li>
             </ul>
         </div>
     </nav>
@@ -124,10 +143,33 @@
         <p>Designed &amp; Developed by National Informatics Centre, Puducherry UT Unit</p>
     </footer>
 
+    <!-- Floating chat widget -->
+    <div class="tl-chat-widget">
+        <div class="tl-chat-panel" id="tlChatPanel">
+            <div class="tl-chat-panel-header">
+                <span><i class="fa-solid fa-headset"></i> Investor Portal Help</span>
+                <button type="button" id="btnCloseChat" aria-label="Close chat">&times;</button>
+            </div>
+            <div class="tl-chat-panel-body" id="tlChatMessages">
+                <div class="tl-chat-bubble tl-chat-bubble-bot">
+                    Hello! How can we help you with your trade licence application today?
+                </div>
+            </div>
+            <form class="tl-chat-panel-input" id="tlChatForm">
+                <input type="text" id="tlChatInput" placeholder="Type your message..." autocomplete="off" />
+                <button type="submit" aria-label="Send"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+        </div>
+        <button type="button" class="tl-chat-fab" id="btnOpenChat" aria-label="Open chat support">
+            <i class="fa-solid fa-comment-dots"></i>
+        </button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@4.0.0/dist/jquery.validate.unobtrusive.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/tl_js/tl_site_tools.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

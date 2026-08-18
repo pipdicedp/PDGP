@@ -34,7 +34,7 @@
             <input type="checkbox" asp-for="IsRegistrationForShopsEstablishment" />
             Registration for Shops And Establishment (Applicable only if there are more than 50 employees) *
         </label>
-        <span class="tl-step-badge">Step: 1 of 8</span>
+        <span class="tl-step-badge">Step: 1 of 7</span>
     </div>
 
     <div class="tl-wizard-links">
@@ -328,7 +328,7 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         // Server-rendered URLs - generated at render time from ASP.NET Core
-        // These URLs are used by the client-side JavaScript (tl_tradelicence_apply.js)
+        // These URLs are used by the client-side JavaScript (tradelicence-apply.js)
         window.TradeLicenceApi = {
             getWardsUrl: '@Url.Action("GetWards", "TradeLicence")',
             getAreasUrl: '@Url.Action("GetAreas", "TradeLicence")',
@@ -344,6 +344,7 @@
     <script src="~/js/tl_js/tl_photo_document_upload.js" asp-append-version="true"></script>
     <script src="~/js/tl_js/tl_shop_establishment.js" asp-append-version="true"></script>
     <script src="~/js/tl_js/tl_confirm_submit.js" asp-append-version="true"></script>
+    <script src="~/js/tl_js/tl_document_preview_modal.js" asp-append-version="true"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

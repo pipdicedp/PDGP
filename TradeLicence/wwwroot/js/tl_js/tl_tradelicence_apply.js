@@ -182,7 +182,7 @@
 
             case 'shops':
                 // Full field-level validation + save already happens in
-                // tl_shop_establishment.js on btnShopsNext — this is just a
+                // shop-establishment.js on btnShopsNext — this is just a
                 // lightweight "has it been filled at all" signal for jumping
                 // away via a tab link instead of the Next button.
                 return !!$('#ApplicantNameShop').val();
@@ -684,22 +684,27 @@
 
             case 'partners':
                 $('#partners-section').show();
+                $(document).trigger('wizard:tabShown', ['partners']);
                 break;
 
             case 'machinery':
                 $('#machinery-section').show();
+                $(document).trigger('wizard:tabShown', ['machinery']);
                 break;
 
             case 'photo':
                 $('#photo-section').show();
+                $(document).trigger('wizard:tabShown', ['photo']);
                 break;
 
             case 'documents':
                 $('#documents-section').show();
+                $(document).trigger('wizard:tabShown', ['documents']);
                 break;
 
             case 'shops':
                 $('#shops-section').show();
+                $(document).trigger('wizard:tabShown', ['shops']);
                 break;
 
             case 'preview':
@@ -907,11 +912,16 @@
         window.scrollTo(0, 0);
     });
 
-    // NOTE: btnShopsNext is intentionally NOT handled here. tl_shop_establishment.js
+    // NOTE: btnShopsNext is intentionally NOT handled here. shop-establishment.js
     // owns that button — it validates required fields and saves via AJAX first,
     // then calls window.TradeLicenceApply.goToPreviewTab() below on success.
     // (A second, unconditional handler used to live here and would advance the
     // tab regardless of whether the save succeeded or validation failed — removed.)
+
+    // NOTE: the document-preview-modal click handler used to live here —
+    // moved to wwwroot/js/document-preview-modal.js so it can be shared
+    // with the officer's read-only application view too. Make sure
+    // Apply.cshtml includes that script.
 
     window.TradeLicenceApply = {
         init: init,

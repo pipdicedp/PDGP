@@ -340,6 +340,48 @@ namespace TradeLicence.Services
 
         // ---------------- Acknowledgement PDF ----------------
 
+        // ---------------- Application Preview (shared by citizen wizard and officer view) ----------------
+
+        public async Task<ApplicationPreviewViewModel?> GetApplicationPreviewAsync(int applicationId)
+        {
+            var application = await GetApplicationAsync(applicationId);
+            if (application == null) return null;
+
+            var model = new ApplicationPreviewViewModel
+            {
+                Application = application,
+                Partners = await GetPartnersAsync(applicationId),
+                Machinery = await GetMachineryAsync(applicationId),
+                Documents = await GetDocumentsAsync(applicationId),
+                ShopRegistration = application.IsRegistrationForShopsEstablishment
+                    ? await GetShopEstablishmentAsync(applicationId)
+                    : null
+            };
+
+            if (application.MunicipalityId.HasValue)
+            {
+                var municipalities = await GetMunicipalitiesAsync();
+                model.MunicipalityName = municipalities.FirstOrDefault(m => m.MunicipalityId == application.MunicipalityId)?.MunicipalityName;
+            }
+            if (application.WardId.HasValue && application.MunicipalityId.HasValue)
+            {
+                var wards = await GetWardsAsync(application.MunicipalityId.Value);
+                model.WardName = wards.FirstOrDefault(w => w.WardId == application.WardId)?.WardName;
+            }
+            if (application.AreaId.HasValue && application.WardId.HasValue)
+            {
+                var areas = await GetAreasAsync(application.WardId.Value);
+                model.AreaName = areas.FirstOrDefault(a => a.AreaId == application.AreaId)?.AreaName;
+            }
+            if (application.StreetId.HasValue && application.AreaId.HasValue)
+            {
+                var streets = await GetStreetsAsync(application.AreaId.Value);
+                model.StreetName = streets.FirstOrDefault(s => s.StreetId == application.StreetId)?.StreetName;
+            }
+
+            return model;
+        }
+
         public async Task<byte[]> GenerateAcknowledgementPdfAsync(int applicationId)
         {
             var application = await _repo.GetApplicationWithDocumentsAsync(applicationId)

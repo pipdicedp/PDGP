@@ -1,141 +1,159 @@
 ﻿
-    <fieldset class="tl-section">
+<fieldset class="tl-section">
 
-        <legend>Upload Documents</legend>
+    <legend>Upload Documents</legend>
 
-        <div class="table-responsive">
+    <div class="table-responsive">
 
-            <table class="table table-bordered table-hover">
+        <table class="table table-bordered table-hover">
 
-                <thead class="table-success">
+            <thead class="table-success">
 
-                    <tr>
-                        <th width="40%">Document Name</th>
-                        <th width="40%">Upload File</th>
-                        <th width="20%">Action</th>
-                    </tr>
+                <tr>
+                    <th width="40%">Document Name</th>
+                    <th width="40%">Upload File</th>
+                    <th width="20%">Action</th>
+                </tr>
 
-                </thead>
+            </thead>
 
-                <tbody>
+            <tbody>
 
-                    <tr>
-                        <td>Aadhaar Copy</td>
+                <tr>
+                    <td>Aadhaar Copy</td>
 
-                        <td>
-                            <input type="file"
-                                   id="AadhaarFile"
-                                   class="form-control"
-                                   accept=".pdf,.jpg,.jpeg,.png" />
-                        </td>
+                    <td>
+                        <input type="file"
+                               id="AadhaarFile"
+                               class="form-control"
+                               accept=".pdf,.jpg,.jpeg,.png" />
+                    </td>
 
-                        <td>
+                    <td>
 
-                            <button type="button"
-                                    id="btnPreviewAadhaar"
-                                    class="btn btn-info btn-sm"
-                                    disabled>
-                                Preview
-                            </button>
+                        <button type="button"
+                                id="btnUploadAadhaar"
+                                class="btn btn-primary btn-sm">
+                            Upload
+                        </button>
 
-                            <button type="button"
-                                    id="btnRemoveAadhaar"
-                                    class="btn btn-danger btn-sm"
-                                    disabled>
-                                Remove
-                            </button>
+                        <button type="button"
+                                id="btnPreviewAadhaar"
+                                class="btn btn-info btn-sm"
+                                disabled>
+                            Preview
+                        </button>
 
-                        </td>
+                        <button type="button"
+                                id="btnRemoveAadhaar"
+                                class="btn btn-danger btn-sm"
+                                disabled>
+                            Remove
+                        </button>
 
-                    </tr>
+                    </td>
 
-                    <tr>
-                        <td>Property Tax Receipt</td>
+                </tr>
 
-                        <td>
-                            <input type="file"
-                                   id="PropertyTaxFile"
-                                   class="form-control"
-                                   accept=".pdf,.jpg,.jpeg,.png" />
-                        </td>
+                <tr>
+                    <td>Property Tax Receipt</td>
 
-                        <td>
+                    <td>
+                        <input type="file"
+                               id="PropertyTaxFile"
+                               class="form-control"
+                               accept=".pdf,.jpg,.jpeg,.png" />
+                    </td>
 
-                            <button type="button"
-                                    id="btnPreviewPropertyTax"
-                                    class="btn btn-info btn-sm"
-                                    disabled>
-                                Preview
-                            </button>
+                    <td>
 
-                            <button type="button"
-                                    id="btnRemovePropertyTax"
-                                    class="btn btn-danger btn-sm"
-                                    disabled>
-                                Remove
-                            </button>
+                        <button type="button"
+                                id="btnUploadPropertyTax"
+                                class="btn btn-primary btn-sm">
+                            Upload
+                        </button>
 
-                        </td>
+                        <button type="button"
+                                id="btnPreviewPropertyTax"
+                                class="btn btn-info btn-sm"
+                                disabled>
+                            Preview
+                        </button>
 
-                    </tr>
+                        <button type="button"
+                                id="btnRemovePropertyTax"
+                                class="btn btn-danger btn-sm"
+                                disabled>
+                            Remove
+                        </button>
 
-                    <tr>
-                        <td>Building Plan</td>
+                    </td>
 
-                        <td>
-                            <input type="file"
-                                   id="BuildingPlanFile"
-                                   class="form-control"
-                                   accept=".pdf,.jpg,.jpeg,.png" />
-                        </td>
+                </tr>
 
-                        <td>
+                <tr>
+                    <td>Building Plan</td>
 
-                            <button type="button"
-                                    id="btnPreviewBuildingPlan"
-                                    class="btn btn-info btn-sm"
-                                    disabled>
-                                Preview
-                            </button>
+                    <td>
+                        <input type="file"
+                               id="BuildingPlanFile"
+                               class="form-control"
+                               accept=".pdf,.jpg,.jpeg,.png" />
+                    </td>
 
-                            <button type="button"
-                                    id="btnRemoveBuildingPlan"
-                                    class="btn btn-danger btn-sm"
-                                    disabled>
-                                Remove
-                            </button>
+                    <td>
 
-                        </td>
+                        <button type="button"
+                                id="btnUploadBuildingPlan"
+                                class="btn btn-primary btn-sm">
+                            Upload
+                        </button>
 
-                    </tr>
+                        <button type="button"
+                                id="btnPreviewBuildingPlan"
+                                class="btn btn-info btn-sm"
+                                disabled>
+                            Preview
+                        </button>
 
-                </tbody>
+                        <button type="button"
+                                id="btnRemoveBuildingPlan"
+                                class="btn btn-danger btn-sm"
+                                disabled>
+                            Remove
+                        </button>
 
-            </table>
+                    </td>
 
-        </div>
+                </tr>
 
-    </fieldset>
+            </tbody>
 
-    <div class="card-footer bg-white">
-
-        <div class="d-flex justify-content-center gap-3">
-
-            <button type="button"
-                    id="btnBackToPhoto"
-                    class="btn btn-secondary">
-                Previous
-            </button>
-
-            <button type="button"
-                id="btnDocumentNext"
-                    class="btn btn-success">
-                Next
-            </button>
-
-        </div>
+        </table>
 
     </div>
+
+</fieldset>
+
+<div class="card-footer bg-white">
+
+    <div class="d-flex justify-content-center gap-3">
+
+        <button type="button"
+                id="btnBackToPhoto"
+                class="btn btn-secondary">
+            Previous
+        </button>
+
+        <button type="button"
+                id="btnDocumentNext"
+                class="btn btn-success">
+            Next
+        </button>
+
+    </div>
+
+</div>
 
 </div>
 

@@ -56,14 +56,14 @@
         <!-- Left panel: Puducherry branding + signature illustration -->
         <div class="tl-login-brandpanel">
             <div class="tl-login-brand-top">
-                <div class="tl-emblem">🏛</div>
+                <img src="@Url.Content("~/Images/puducherry Logo.jpg")" alt="Puducherry Logo" class="tl-login-logo-img" />
                 <div>
-                    <div class="tl-login-brand-title">Online Trade Licence System</div>
+                    <div class="tl-login-brand-title">Investor Portal</div>
                     <div class="tl-login-brand-sub">Government of Puducherry</div>
                 </div>
             </div>
 
-            <div class="tl-login-tagline">Statutory trade licences &amp; shop establishment registration for Puducherry — issued and tracked online.</div>
+            <div class="tl-login-tagline">A single platform for entrepreneurs — apply, track and manage your Puducherry investment approvals online.</div>
         </div>
 
         <!-- Right panel: login form -->
@@ -139,7 +139,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <partial name="_ValidationScriptsPartial" />
     <script>
-        document.getElementById('togglePassword').addEventListener('click', function() {
+        document.getElementById('togglePassword').addEventListener('click', function () {
             const input = document.getElementById('passwordInput');
             const isHidden = input.type === 'password';
             input.type = isHidden ? 'text' : 'password';
@@ -147,7 +147,7 @@
             this.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
         });
 
-        document.getElementById('refreshCaptcha').addEventListener('click', function() {
+        document.getElementById('refreshCaptcha').addEventListener('click', function () {
             const img = document.getElementById('captchaImg');
             img.src = '@Url.Action("CaptchaImage", "Account")?t=' + Date.now();
         });
@@ -160,7 +160,7 @@
                         title: 'User Registered Successfully!',
                         text: @Html.Raw(Json.Serialize(TempData["RegisterSuccess"])),
                         confirmButtonColor: '#1a3a52'
-                            });
+                                            });
                 </text>
         }
 
@@ -168,11 +168,11 @@
             {
                 <text>
                         document.addEventListener('DOMContentLoaded', function () {
-                                var modalEl = document.getElementById('registerModal');
+                                                var modalEl = document.getElementById('registerModal');
                         if (modalEl && window.bootstrap) {
                             new bootstrap.Modal(modalEl).show();
-                                }
-                            });
+                                                }
+                                            });
                 </text>
 
         }

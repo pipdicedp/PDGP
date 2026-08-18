@@ -1,0 +1,298 @@
+/* =====================================
+   Header toolbar (font size / contrast / language) + floating chat
+   widget + high-contrast mode overrides.
+   Separate file from site.css to keep this feature self-contained —
+   safe to remove by deleting one <link> and one <script> tag.
+===================================== */
+
+/* ---------- Header toolbar ---------- */
+/* ---------- Right side grouping (tools + Govt logo) ---------- */
+.tl-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.tl-header-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tl-tool-group {
+    display: flex;
+    background: rgba(255,255,255,0.12);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tl-tool-btn {
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: #fff;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .15s ease;
+}
+
+    .tl-tool-btn:hover {
+        background: rgba(255,255,255,0.28);
+    }
+
+.tl-fs-btn {
+    border-radius: 0;
+    width: 32px;
+}
+
+    .tl-fs-btn + .tl-fs-btn {
+        border-left: 1px solid rgba(255,255,255,0.2);
+    }
+
+.tl-tool-lang {
+    width: auto;
+    padding: 0 10px;
+    gap: 5px;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+@media (max-width: 900px) {
+    .tl-topbar-container {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .tl-topbar-right {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+}
+
+/* ---------- High-contrast mode ---------- */
+/* Toggled via #btnContrastToggle — applies a black/yellow accessible
+   palette across the whole page (WCAG-friendly high-contrast pattern). */
+html.tl-high-contrast body {
+    background: #000 !important;
+    color: #fff !important;
+}
+
+html.tl-high-contrast .tl-topbar,
+html.tl-high-contrast .tl-navbar,
+html.tl-high-contrast .tl-nav {
+    background: #000 !important;
+    border-bottom: 3px solid #FFD400 !important;
+}
+
+html.tl-high-contrast .tl-nav-menu a,
+html.tl-high-contrast .tl-brand-govt,
+html.tl-high-contrast .tl-brand-dept,
+html.tl-high-contrast .tl-title,
+html.tl-high-contrast .user-menu {
+    color: #FFD400 !important;
+}
+
+    html.tl-high-contrast .tl-nav-menu a:hover {
+        background: rgba(255,212,0,0.15) !important;
+    }
+
+html.tl-high-contrast .tl-nav-menu .dropdown-menu {
+    background: #000 !important;
+    border: 1px solid #FFD400 !important;
+}
+
+    html.tl-high-contrast .tl-nav-menu .dropdown-menu a {
+        color: #FFD400 !important;
+    }
+
+html.tl-high-contrast .tl-container,
+html.tl-high-contrast .tl-info-section,
+html.tl-high-contrast .tl-info-card,
+html.tl-high-contrast .dashboard-body,
+html.tl-high-contrast .status-controls-card {
+    background: #000 !important;
+    color: #fff !important;
+    border: 1px solid #FFD400 !important;
+}
+
+    html.tl-high-contrast .tl-info-card h3,
+    html.tl-high-contrast .tl-header,
+    html.tl-high-contrast .dashboard-card h4 {
+        color: #FFD400 !important;
+    }
+
+html.tl-high-contrast a {
+    color: #7FDBFF !important;
+}
+
+html.tl-high-contrast .btn-primary,
+html.tl-high-contrast .dashboard-btn,
+html.tl-high-contrast .tl-login-wrap .tl-login-submit {
+    background: #FFD400 !important;
+    color: #000 !important;
+    border-color: #FFD400 !important;
+}
+
+/* ---------- Font-size toolbar ---------- */
+/* Chromium/Edge support CSS zoom directly; Firefox falls back to
+   transform (slightly different behaviour but still legible). */
+html.tl-fs-lg body {
+    zoom: 1.15;
+}
+
+html.tl-fs-xl body {
+    zoom: 1.3;
+}
+
+@supports not (zoom: 1) {
+    html.tl-fs-lg body {
+        transform: scale(1.15);
+        transform-origin: top left;
+        width: 86.9%;
+    }
+
+    html.tl-fs-xl body {
+        transform: scale(1.3);
+        transform-origin: top left;
+        width: 76.9%;
+    }
+}
+
+/* ---------- Floating chat widget ---------- */
+.tl-chat-widget {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.tl-chat-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a3a52, #2c5282);
+    color: #fff;
+    border: none;
+    font-size: 22px;
+    box-shadow: 0 8px 20px rgba(26,58,82,0.35);
+    cursor: pointer;
+    transition: transform .15s ease;
+}
+
+    .tl-chat-fab:hover {
+        transform: scale(1.06);
+    }
+
+.tl-chat-panel {
+    display: none;
+    flex-direction: column;
+    width: 320px;
+    max-width: calc(100vw - 48px);
+    height: 420px;
+    max-height: 60vh;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 14px 36px rgba(0,0,0,0.22);
+    overflow: hidden;
+}
+
+    .tl-chat-panel.tl-chat-open {
+        display: flex;
+    }
+
+.tl-chat-panel-header {
+    background: linear-gradient(135deg, #1a3a52, #2c5282);
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+    .tl-chat-panel-header button {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+.tl-chat-panel-body {
+    flex: 1;
+    padding: 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #f5f9fa;
+}
+
+.tl-chat-bubble {
+    max-width: 85%;
+    padding: 9px 13px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.tl-chat-bubble-bot {
+    background: #E4EFEE;
+    color: #1C2321;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+.tl-chat-bubble-user {
+    background: #1a3a52;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+.tl-chat-panel-input {
+    display: flex;
+    border-top: 1px solid #eee;
+    padding: 8px;
+    gap: 8px;
+}
+
+    .tl-chat-panel-input input {
+        flex: 1;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+        .tl-chat-panel-input input:focus {
+            outline: none;
+            border-color: #1a3a52;
+        }
+
+    .tl-chat-panel-input button {
+        background: #1a3a52;
+        color: #fff;
+        border: none;
+        width: 38px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+        .tl-chat-panel-input button:hover {
+            background: #0f2438;
+        }

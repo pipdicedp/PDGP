@@ -2,13 +2,58 @@ $(document).ready(function () {
 
     var applicationId = $('#hdnApplicationId').val();
 
+    function getApplicationId() {
+        return $('#hdnApplicationId').val() || $('#ApplicationId').val();
+    }
+
     function getAntiForgeryToken() {
         return $('input[name="__RequestVerificationToken"]').val();
     }
 
+    // ---- Reload previously-saved partners from the database (fixes the
+    // "Previous button shows empty fields" issue — the grid used to only
+    // ever reflect what was added in the CURRENT browser session). ----
+    function loadPartners() {
+        var appId = getApplicationId();
+        if (!appId) return;
+
+        $.ajax({
+            url: '/TradeLicence/NewLicence/Apply/GetPartnersList',
+            type: 'GET',
+            data: { applicationId: appId },
+            success: function (data) {
+                $('#tblPartners tbody').empty();
+                if (data && data.length > 0) {
+                    data.forEach(function (p) {
+                        $('#tblPartners tbody').append(`
+                        <tr>
+                            <td>${p.partnerName}</td>
+                            <td>${p.designation}</td>
+                            <td>${p.address}</td>
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm btnRemovePartner">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    `);
+                    });
+                    $('#partnerTableContainer').show();
+                }
+            }
+        });
+    }
+
+    // Reload whenever the Partners tab is (re)shown, and once now in case
+    // the wizard opens directly on this tab (e.g. via "Continue" from the dashboard).
+    $(document).on('wizard:tabShown', function (e, tabName) {
+        if (tabName === 'partners') loadPartners();
+    });
+    loadPartners();
+
     // ---- Add: local grid only, nothing hits the database yet ----
     // Use event delegation with $(document) to handle dynamically loaded content
-    $(document).on('click', '#btnAddPartner', function () {      
+    $(document).on('click', '#btnAddPartner', function () {
 
         var partnerName = $('#PartnerName').val().trim();
         var designation = $('#Designation').val().trim();
