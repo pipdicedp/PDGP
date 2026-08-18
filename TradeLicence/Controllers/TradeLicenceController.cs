@@ -408,8 +408,8 @@ namespace TradeLicence.Controllers
             if (request?.Partners == null || request.Partners.Count == 0)
                 return BadRequest(new { error = "Please add at least one partner before saving." });
 
-            //if (request.ApplicationId <= 0)
-            //    return BadRequest(new { error = "Invalid application." });
+            if (request.ApplicationId <= 0)
+                return BadRequest(new { error = "Invalid application. Please save Application Details first." });
 
             foreach (var p in request.Partners)
             {
@@ -434,8 +434,8 @@ namespace TradeLicence.Controllers
             if (request?.Machinery == null || request.Machinery.Count == 0)
                 return BadRequest(new { error = "Please add at least one machinery item before saving." });
 
-            //if (request.ApplicationId <= 0)
-            //    return BadRequest(new { error = "Invalid application." });
+            if (request.ApplicationId <= 0)
+                return BadRequest(new { error = "Invalid application. Please save Application Details first." });
 
             foreach (var m in request.Machinery)
             {

@@ -16,3 +16,42 @@ $(document).on('click', '.btn-preview-view-doc', function (e) {
         new bootstrap.Modal(modalEl).show();
     }
 });
+
+document.getElementById('btnReturnToApplicant').addEventListener('click', function () {
+    Swal.fire({
+        title: 'Return to Applicant',
+        text: 'Tell the applicant what needs to be corrected.',
+        input: 'textarea',
+        inputPlaceholder: 'Reason / remarks...',
+        showCancelButton: true,
+        confirmButtonText: 'Return Application',
+        confirmButtonColor: '#D4A017',
+        inputValidator: function (value) {
+            if (!value || !value.trim()) {
+                return 'Please enter a reason before returning the application.';
+            }
+        }
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            document.getElementById('returnRemarks').value = result.value;
+            document.getElementById('returnForm').submit();
+        }
+    });
+});
+
+document.getElementById('btnForwardToGM').addEventListener('click', function () {
+    Swal.fire({
+        title: 'Forward to GM',
+        text: 'Optional remarks for the General Manager.',
+        input: 'textarea',
+        inputPlaceholder: 'Remarks (optional)...',
+        showCancelButton: true,
+        confirmButtonText: 'Forward',
+        confirmButtonColor: '#1a3a52'
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            document.getElementById('forwardRemarks').value = result.value || '';
+            document.getElementById('forwardForm').submit();
+        }
+    });
+});

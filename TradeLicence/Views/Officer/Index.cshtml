@@ -11,15 +11,16 @@
 
 <div class="dashboard-wrapper">
 
-    <div class="status-page-header">
-        Officer Dashboard @(string.IsNullOrEmpty(ViewBag.Designation) ? "" : $"— {ViewBag.Designation}")
-    </div>
-
     <div class="dashboard-body">
 
-        <div class="page-title">
-            <h3>Submitted Applications</h3>
-            <p>Applications awaiting review.</p>
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">🗃️</span>
+                <div>
+                    <h3>Officer Dashboard@(string.IsNullOrEmpty(ViewBag.Designation) ? "" : $" — {ViewBag.Designation}")</h3>
+                    <p>Submitted Applications — awaiting review</p>
+                </div>
+            </div>
         </div>
 
         <div class="status-stats">
@@ -29,76 +30,78 @@
             </div>
         </div>
 
-        <div class="status-table-controls">
-            <div class="status-show-entries">
-                Show
-                <select id="statusPageSize">
-                    <option value="10" selected>10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                entries
+        <div class="status-controls-card">
+            <div class="status-table-controls">
+                <div class="status-show-entries">
+                    Show
+                    <select id="statusPageSize">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    entries
+                </div>
+                <div class="status-search">
+                    Search: <input type="text" id="statusSearchBox" placeholder="Search applications..." />
+                </div>
             </div>
-            <div class="status-search">
-                Search: <input type="text" id="statusSearchBox" placeholder="Search applications..." />
-            </div>
-        </div>
 
-        @if (!Model.Any())
-        {
-            <p class="tl-note">No applications have been submitted yet.</p>
-        }
-        else
-        {
-            <div style="overflow-x:auto;">
-                <table class="tl-partner-table" id="statusTable">
-                    <thead>
-                        <tr>
-                            <th>Sl No.</th>
-                            <th>Application ID</th>
-                            <th>Applicant Name</th>
-                            <th>Trade / Establishment</th>
-                            <th>Mobile Number</th>
-                            <th>Date of Application</th>
-                            <th>Current Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            int slNo = 1;
-                        }
-                        @foreach (var app in Model)
-                        {
-                            var statusClass = app.Status switch
-                            {
-                                "Draft" => "myapps-status-draft",
-                                "Submitted" => "myapps-status-submitted",
-                                "UnderReview" => "myapps-status-review",
-                                "Approved" => "myapps-status-approved",
-                                "Rejected" => "myapps-status-rejected",
-                                _ => "myapps-status-draft"
-                            };
-
+            @if (!Model.Any())
+            {
+                <p class="tl-note">No applications have been submitted yet.</p>
+            }
+            else
+            {
+                <div class="status-table-scroll">
+                    <table class="status-apps-table" id="statusTable">
+                        <thead>
                             <tr>
-                                <td>@slNo</td>
-                                <td>@(app.ApplicationNumber ?? "—")</td>
-                                <td>@(string.IsNullOrEmpty(app.ApplicantName) ? "—" : app.ApplicantName)</td>
-                                <td>@(string.IsNullOrEmpty(app.NameAndStyleOfFactory) ? "—" : app.NameAndStyleOfFactory)</td>
-                                <td>@(app.MobileNumber ?? "—")</td>
-                                <td>@app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
-                                <td><span class="myapps-status-badge @statusClass">@app.Status</span></td>
-                                <td>
-                                    <a class="myapps-btn myapps-btn-view" href="@Url.Action("ViewApplication", "Officer", new { id = app.ApplicationId })">View</a>
-                                </td>
+                                <th>Sl No.</th>
+                                <th>Application ID</th>
+                                <th>Applicant Name</th>
+                                <th>Trade / Establishment</th>
+                                <th>Mobile Number</th>
+                                <th>Date of Application</th>
+                                <th>Current Status</th>
+                                <th>Action</th>
                             </tr>
-                            slNo++;
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
+                        </thead>
+                        <tbody>
+                            @{
+                                int slNo = 1;
+                            }
+                            @foreach (var app in Model)
+                            {
+                                var statusClass = app.Status switch
+                                {
+                                    "Draft" => "myapps-status-draft",
+                                    "Submitted" => "myapps-status-submitted",
+                                    "UnderReview" => "myapps-status-review",
+                                    "Approved" => "myapps-status-approved",
+                                    "Rejected" => "myapps-status-rejected",
+                                    _ => "myapps-status-draft"
+                                };
+
+                                <tr>
+                                    <td>@slNo</td>
+                                    <td>@(app.ApplicationNumber ?? "—")</td>
+                                    <td>@(string.IsNullOrEmpty(app.ApplicantName) ? "—" : app.ApplicantName)</td>
+                                    <td>@(string.IsNullOrEmpty(app.NameAndStyleOfFactory) ? "—" : app.NameAndStyleOfFactory)</td>
+                                    <td>@(app.MobileNumber ?? "—")</td>
+                                    <td>@app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
+                                    <td><span class="myapps-status-badge @statusClass">@app.Status</span></td>
+                                    <td>
+                                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("ViewApplication", "Officer", new { id = app.ApplicationId })">View</a>
+                                    </td>
+                                </tr>
+                                slNo++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
 
     </div>
 

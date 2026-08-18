@@ -93,6 +93,7 @@ namespace TradeLicence.Models
         public decimal? RentEstimatedRentPerMonth { get; set; }
 
         public string Status { get; set; } = "Draft";
+        public string? OfficerRemarks { get; set; }
 
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;

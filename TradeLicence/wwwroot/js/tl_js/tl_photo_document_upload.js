@@ -129,7 +129,10 @@ $(document).ready(function () {
     function uploadDocument(field) {
         var input = document.getElementById(field.inputId);
         var file = input && input.files.length ? input.files[0] : null;
-        if (!file) return;
+        if (!file) {
+            alert('Please choose a file first.');
+            return;
+        }
 
         var applicationId = getApplicationId();
         if (!applicationId) {
@@ -162,7 +165,7 @@ $(document).ready(function () {
     }
 
     documentFields.forEach(function (field) {
-        $('#' + field.inputId).on('change', function () {
+        $('#btnUpload' + field.shortName).on('click', function () {
             uploadDocument(field);
         });
     });

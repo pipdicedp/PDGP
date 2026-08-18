@@ -7,51 +7,100 @@ body {
 .tl-topbar {
     background: linear-gradient(135deg, #1a3a52, #2c5282);
     color: white;
-    padding: 20px;
-    border-bottom: none;
+    padding: 18px 28px;
+    border-bottom: 3px solid #D4A017;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
 }
 
 .tl-topbar-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .tl-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 18px;
 }
 
 .tl-logo {
-    height: 64px;
+    height: 60px;
     width: auto;
     display: block;
+    background: #fff;
+    padding: 4px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 .tr-logo {
-    height: 64px;
+    height: 60px;
     width: auto;
     display: block;
+    background: #fff;
+    padding: 4px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.tl-brand-divider {
+    width: 1px;
+    align-self: stretch;
+    background: rgba(255,255,255,0.25);
+}
+
+.tl-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tl-brand-govt {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #E4EFEE;
+}
+
+.tl-brand-dept {
+    font-size: 0.78rem;
+    color: #A9C4C0;
 }
 
 .tl-title {
     color: white;
-    font-size: 1.8rem;
-    font-weight: 600;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-top: 3px;
 }
 
 @media (max-width: 480px) {
-    .tl-logo {
-        height: 44px;
+    .tl-topbar {
+        padding: 14px 16px;
     }
 
-    .tr-logo {
-        height: 44px;
+    .tl-logo, .tr-logo {
+        height: 42px;
+    }
+
+    .tl-brand {
+        gap: 12px;
+    }
+
+    .tl-brand-divider {
+        display: none;
+    }
+
+    .tl-brand-govt, .tl-brand-dept {
+        font-size: 0.68rem;
     }
 
     .tl-title {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 }
 

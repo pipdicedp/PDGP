@@ -1,7 +1,5 @@
 $(document).ready(function () {
 
-    var applicationId = $('#hdnApplicationId').val();
-
     function getApplicationId() {
         return $('#hdnApplicationId').val() || $('#ApplicationId').val();
     }
@@ -92,6 +90,13 @@ $(document).ready(function () {
     // ---- Save: sends every row currently in the grid to the server at once ----
     $('#btnSaveMachinery').on('click', function () {
 
+        var currentApplicationId = getApplicationId();
+
+        if (!currentApplicationId) {
+            alert('Please save Application Details first before adding machinery.');
+            return;
+        }
+
         var machinery = [];
         $('#tblMachinery tbody tr').each(function () {
             var cells = $(this).find('td');
@@ -117,7 +122,7 @@ $(document).ready(function () {
             contentType: 'application/json',
             headers: { 'RequestVerificationToken': getAntiForgeryToken() },
             data: JSON.stringify({
-                applicationId: applicationId,
+                applicationId: currentApplicationId,
                 machinery: machinery
             }),
             success: function () {

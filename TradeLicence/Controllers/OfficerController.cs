@@ -44,5 +44,43 @@ namespace TradeLicence.Controllers
 
             return View(model);
         }
+
+        // Sends the application back to the applicant for correction —
+        // status changes so it drops off this officer's "Submitted" queue,
+        // and the remarks tell the applicant what needs fixing.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReturnToApplicant(int id, string remarks)
+        {
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound();
+
+            application.Status = "ReturnedToApplicant";
+            application.OfficerRemarks = remarks;
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["OfficerActionMessage"] = "Application returned to the applicant.";
+            return RedirectToAction("Index");
+        }
+
+        // Escalates the application to the General Manager for further review.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForwardToGM(int id, string? remarks)
+        {
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound();
+
+            application.Status = "ForwardedToGM";
+            application.OfficerRemarks = remarks;
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["OfficerActionMessage"] = "Application forwarded to the General Manager.";
+            return RedirectToAction("Index");
+        }
     }
 }

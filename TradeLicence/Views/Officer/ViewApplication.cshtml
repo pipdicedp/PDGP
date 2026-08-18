@@ -4,7 +4,7 @@
     Layout = "~/Views/Shared/_OfficerLayout.cshtml";
 }
 @section Styles {
-    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
 }
 
 <div class="dashboard-wrapper">
@@ -17,8 +17,22 @@
 
         <partial name="_PreviewApplication" model="Model" />
 
+        <form id="returnForm" method="post" asp-action="ReturnToApplicant" style="display:none;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Application.ApplicationId" />
+            <input type="hidden" name="remarks" id="returnRemarks" />
+        </form>
+
+        <form id="forwardForm" method="post" asp-action="ForwardToGM" style="display:none;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Application.ApplicationId" />
+            <input type="hidden" name="remarks" id="forwardRemarks" />
+        </form>
+
         <div class="tl-actions">
             <a class="btn btn-secondary" href="@Url.Action("Index", "Officer")">&laquo; Back to Dashboard</a>
+            <button type="button" id="btnReturnToApplicant" class="btn btn-warning">Return to Applicant</button>
+            <button type="button" id="btnForwardToGM" class="btn btn-primary">Forward to GM</button>
         </div>
 
     </div>
@@ -26,5 +40,6 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/document-preview-modal.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/tl_js/tl_document_preview_modal.js" asp-append-version="true"></script>
 }
