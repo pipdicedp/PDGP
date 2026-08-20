@@ -95,6 +95,18 @@ namespace TradeLicence.Models
         public string Status { get; set; } = "Draft";
         public string? OfficerRemarks { get; set; }
 
+        // ---------------- Officer workflow routing ----------------
+        // Which of the 4 stages this application is currently sitting at.
+        // Set to the AssignedOfficer's Designation whenever it's forwarded —
+        // see OfficerController.ForwardToOfficer. Stays "Initial Scrutiny"
+        // (unassigned) right after citizen submission.
+        public string CurrentStage { get; set; } = "Initial Scrutiny";
+
+        // The specific officer it's currently sitting with. Null means
+        // "not yet picked up by anyone at this stage" — any officer whose
+        // Designation matches CurrentStage can see and claim it.
+        public int? AssignedOfficerId { get; set; }
+
 
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 

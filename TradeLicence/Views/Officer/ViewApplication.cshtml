@@ -4,13 +4,14 @@
     Layout = "~/Views/Shared/_OfficerLayout.cshtml";
 }
 @section Styles {
-    <link rel="stylesheet" href="~/css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
 }
 
 <div class="dashboard-wrapper">
 
     <div class="status-page-header">
         Application Details — @(Model.Application.ApplicationNumber ?? "-")
+        <span class="tl-officer-badge">Stage: @ViewBag.CurrentStage</span>
     </div>
 
     <div class="dashboard-body">
@@ -23,16 +24,77 @@
             <input type="hidden" name="remarks" id="returnRemarks" />
         </form>
 
-        <form id="forwardForm" method="post" asp-action="ForwardToGM" style="display:none;">
+        <form id="approveForm" method="post" asp-action="ApproveApplication" style="display:none;">
             @Html.AntiForgeryToken()
             <input type="hidden" name="id" value="@Model.Application.ApplicationId" />
-            <input type="hidden" name="remarks" id="forwardRemarks" />
+            <input type="hidden" name="remarks" id="approveRemarks" />
         </form>
+
+        @if (!(bool)ViewBag.IsFinalStage)
+        {
+            <fieldset class="tl-section">
+                <legend>Forward to Officer</legend>
+
+                <form method="post" asp-action="ForwardToOfficer" id="forwardOfficerForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Application.ApplicationId" />
+                    <input type="hidden" name="officerId" id="forwardOfficerId" />
+                    <input type="hidden" name="targetStage" id="forwardTargetStage" />
+
+                    <div class="tl-grid-2">
+                        <div class="form-group tl-col-full">
+                            <label>Forward To <span class="req">*</span></label>
+                            <select id="forwardOfficerSelect" class="form-select" required>
+                                <option value="">-- Select officer --</option>
+                                @{
+                                    // Grouped by target STAGE, not raw Designation — a "Manager"
+                                    // can appear under both Verification and Inspection, so the
+                                    // stage the officer is being sent to has to be explicit.
+                                    var forwardableByStage = ((List<(string Stage, TradeLicence.Models.Officer Officer)>)ViewBag.ForwardableByStage)
+                                        .GroupBy(x => x.Stage);
+                                }
+                                @foreach (var group in forwardableByStage)
+                                {
+                                    <optgroup label="@group.Key">
+                                        @foreach (var entry in group)
+                                        {
+                                            <option value="@entry.Officer.OfficerId:@group.Key">@entry.Officer.FullName (@entry.Officer.Username)</option>
+                                        }
+                                    </optgroup>
+                                }
+                            </select>
+                            @if (((List<(string Stage, TradeLicence.Models.Officer Officer)>)ViewBag.ForwardableByStage).Count == 0)
+                            {
+                                <span class="tl-note">No officers found for the next stage(s) — add one under the applicable Designation first.</span>
+                            }
+                        </div>
+
+                        <div class="form-group tl-col-full">
+                            <label>Remarks</label>
+                            <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks for the next officer..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="tl-actions" style="text-align:left; border-top:none; padding-top:0;">
+                        <button type="submit" class="btn btn-primary">Forward Application</button>
+                    </div>
+                </form>
+            </fieldset>
+        }
+        else
+        {
+            <fieldset class="tl-section">
+                <legend>Final Approval</legend>
+                <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, or return it to the applicant if something needs correcting.</p>
+                <div class="tl-actions" style="text-align:left; border-top:none; padding-top:0;">
+                    <button type="button" id="btnApprove" class="btn btn-success">Approve Application</button>
+                </div>
+            </fieldset>
+        }
 
         <div class="tl-actions">
             <a class="btn btn-secondary" href="@Url.Action("Index", "Officer")">&laquo; Back to Dashboard</a>
             <button type="button" id="btnReturnToApplicant" class="btn btn-warning">Return to Applicant</button>
-            <button type="button" id="btnForwardToGM" class="btn btn-primary">Forward to GM</button>
         </div>
 
     </div>
@@ -42,4 +104,5 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/tl_js/tl_document_preview_modal.js" asp-append-version="true"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
 }

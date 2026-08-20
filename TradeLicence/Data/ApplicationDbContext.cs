@@ -132,6 +132,14 @@ namespace TradeLicence.Data
                       .WithMany()
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.SetNull);
+
+                // Officer workflow routing — nullable FK, so deleting an
+                // Officer account never blocks (it just un-assigns the
+                // application, leaving it visible to the rest of that stage).
+                entity.HasOne<Officer>()
+                      .WithMany()
+                      .HasForeignKey(e => e.AssignedOfficerId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
         }
