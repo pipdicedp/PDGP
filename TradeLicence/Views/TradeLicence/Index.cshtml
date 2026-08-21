@@ -24,11 +24,17 @@
                 var statusClass = app.Status switch
                 {
                     "Draft" => "myapps-status-draft",
-                    "Submitted" => "myapps-status-submitted",
-                    "UnderReview" => "myapps-status-review",
+                    "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "myapps-status-submitted" : "myapps-status-review",
+                    "ReturnedToApplicant" => "myapps-status-rejected",
                     "Approved" => "myapps-status-approved",
                     "Rejected" => "myapps-status-rejected",
                     _ => "myapps-status-draft"
+                };
+                var statusText = app.Status switch
+                {
+                    "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "Submitted" : $"In Progress — {app.CurrentStage}",
+                    "ReturnedToApplicant" => "Returned for Correction",
+                    _ => app.Status
                 };
 
                 <div class="myapps-row">
@@ -39,13 +45,13 @@
                             &bull; Started @app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")
                         </span>
                     </div>
-                    <span class="myapps-status-badge @statusClass">@app.Status</span>
+                    <span class="myapps-status-badge @statusClass">@statusText</span>
                     @if (app.Status == "Draft")
                     {
                         <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Continue</a>
                     }
                     else
-                    {                       
+                    {
                         <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>
                     }
                 </div>

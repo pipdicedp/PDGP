@@ -7,6 +7,7 @@ function showOfficerActionAlert(actionType, message) {
     var config = {
         forward: { icon: 'success', title: 'Forwarded!' },
         approve: { icon: 'success', title: 'Approved!' },
+        revert: { icon: 'info', title: 'Reverted' },
         return: { icon: 'warning', title: 'Returned to Applicant' }
     }[actionType] || { icon: 'info', title: 'Done' };
 
@@ -50,6 +51,27 @@ if (btnApprove) {
             if (result.isConfirmed) {
                 document.getElementById('approveRemarks').value = result.value || '';
                 document.getElementById('approveForm').submit();
+            }
+        });
+    });
+}
+
+var btnRevert = document.getElementById('btnRevert');
+if (btnRevert) {
+    btnRevert.addEventListener('click', function () {
+        var revertTo = this.dataset.revertTo;
+        Swal.fire({
+            title: 'Revert to ' + revertTo + '?',
+            text: 'Optional remarks for why it\'s being sent back.',
+            input: 'textarea',
+            inputPlaceholder: 'Remarks (optional)...',
+            showCancelButton: true,
+            confirmButtonText: 'Revert',
+            confirmButtonColor: '#D4A017'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                document.getElementById('revertRemarks').value = result.value || '';
+                document.getElementById('revertForm').submit();
             }
         });
     });

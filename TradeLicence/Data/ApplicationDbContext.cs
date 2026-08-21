@@ -24,6 +24,7 @@ namespace TradeLicence.Data
         public DbSet<ShopEstablishmentRegistration> ShopEstablishmentRegistrations { get; set; }
         public DbSet<ApplicationUser> Users { get; set; } = null!;
         public DbSet<Officer> Officers { get; set; } = null!;
+        public DbSet<ApplicationWorkflowHistory> ApplicationWorkflowHistories { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -123,6 +124,31 @@ namespace TradeLicence.Data
                 entity.ToTable("Officers");
                 entity.HasKey(e => e.OfficerId);
                 entity.HasIndex(e => e.Username).IsUnique();
+            });
+
+            modelBuilder.Entity<ApplicationWorkflowHistory>(entity =>
+            {
+                entity.ToTable("ApplicationWorkflowHistories");
+                entity.HasKey(e => e.HistoryId);
+
+                entity.HasOne(e => e.Application)
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Restrict (not SetNull/Cascade) — an Officer with history
+                // rows can't be deleted outright, which is the right call
+                // for an audit trail. Officer.IsLocked is how you retire
+                // an officer account instead.
+                entity.HasOne(e => e.FromOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.FromOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.ToOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.ToOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
             });
             modelBuilder.Entity<TradeLicenceApplication>(entity =>
             {

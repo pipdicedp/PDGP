@@ -1,7 +1,13 @@
 $(document).ready(function () {
 
     function getApplicationId() {
-        return $('#hdnApplicationId').val() || $('#ApplicationId').val();
+        // #ApplicationId is the single field in the main form (always
+        // correctly kept in sync). #hdnApplicationId is only a fallback —
+        // note that _PartnerDetails.cshtml and _MachineryDetails.cshtml
+        // both render a field with that SAME id (invalid duplicate HTML
+        // id), so checking #ApplicationId first avoids relying on which
+        // duplicate happens to be first in the DOM.
+        return $('#ApplicationId').val() || $('#hdnApplicationId').val();
     }
 
     function getAntiForgeryToken() {

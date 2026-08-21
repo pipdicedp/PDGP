@@ -19,14 +19,22 @@ $(document).ready(function () {
 
         var applicantPreview = document.getElementById('ApplicantPhotoPreview');
         if (applicantPreview) {
-            applicantPreview.onerror = function () { this.style.display = 'none'; };
+            applicantPreview.onload = function () { this.dataset.hasPhoto = 'true'; };
+            applicantPreview.onerror = function () {
+                this.style.display = 'none';
+                this.dataset.hasPhoto = 'false';
+            };
             applicantPreview.src = '/TradeLicence/NewLicence/Apply/ViewApplicantPhoto?applicationId=' + applicationId;
             applicantPreview.style.display = '';
         }
 
         var partnerPreview = document.getElementById('PartnerPhotoPreview');
         if (partnerPreview) {
-            partnerPreview.onerror = function () { this.style.display = 'none'; };
+            partnerPreview.onload = function () { this.dataset.hasPhoto = 'true'; };
+            partnerPreview.onerror = function () {
+                this.style.display = 'none';
+                this.dataset.hasPhoto = 'false';
+            };
             partnerPreview.src = '/TradeLicence/NewLicence/Apply/ViewPartnerPhoto?applicationId=' + applicationId;
             partnerPreview.style.display = '';
         }

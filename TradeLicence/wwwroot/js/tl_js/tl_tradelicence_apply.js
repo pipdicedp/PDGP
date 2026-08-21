@@ -169,7 +169,7 @@
             case 'photo':
                 var applicantPhotoInput = document.getElementById('ApplicantPhoto');
                 var previewImg = document.getElementById('ApplicantPhotoPreview');
-                var hasExistingPreview = !!(previewImg && previewImg.getAttribute('src') && previewImg.style.display !== 'none' && !previewImg.src.endsWith('#'));
+                var hasExistingPreview = !!(previewImg && previewImg.dataset.hasPhoto === 'true');
                 var hasNewFile = !!(applicantPhotoInput && applicantPhotoInput.files && applicantPhotoInput.files.length > 0);
                 return hasNewFile || hasExistingPreview;
 
@@ -404,145 +404,17 @@
             }
         }
 
-        let aadhaarFileUrl = null;
-
-        $('#AadhaarFile').on('change', function () {
-
-            const file = this.files[0];
-
-            if (file) {
-
-                aadhaarFileUrl = URL.createObjectURL(file);
-
-                $('#btnPreviewAadhaar').prop('disabled', false);
-
-                $('#btnRemoveAadhaar').prop('disabled', false);
-            }
-        });
-
-        $(document).on('click', '#btnPreviewAadhaar', function () {
-
-            const file = $('#AadhaarFile')[0].files[0];
-
-            if (!file) {
-                alert('Please select a file');
-                return;
-            }
-
-            const fileUrl = URL.createObjectURL(file);
-
-            $('#documentViewer').attr('src', fileUrl);
-
-            $('#documentPreviewModal').modal('show');
-        });
-
-        $('#btnRemoveAadhaar').on('click', function () {
-
-            $('#AadhaarFile').val('');
-
-            $('#btnPreviewAadhaar').prop('disabled', true);
-
-            $('#btnRemoveAadhaar').prop('disabled', true);
-
-            $('#pdfViewer').attr('src', '');
-
-            aadhaarFileUrl = null;
-        });
-
-        // Property Tax
-
-        let propertyTaxFileUrl = null;
-
-        $('#PropertyTaxFile').on('change', function () {
-
-            const file = this.files[0];
-
-            if (file) {
-
-                propertyTaxFileUrl = URL.createObjectURL(file);
-
-                $('#btnPreviewPropertyTax').prop('disabled', false);
-
-                $('#btnRemovePropertyTax').prop('disabled', false);
-            }
-        });
-
-        $(document).on('click', '#btnPreviewPropertyTax', function () {
-
-            const file = $('#PropertyTaxFile')[0].files[0];
-
-            if (!file) {
-                alert('Please select a file');
-                return;
-            }
-
-            const fileUrl = URL.createObjectURL(file);
-
-            $('#documentViewer').attr('src', fileUrl);
-
-            $('#documentPreviewModal').modal('show');
-        });
-
-        $('#btnRemovePropertyTax').on('click', function () {
-
-            $('#PropertyTaxFile').val('');
-
-            $('#btnPreviewPropertyTax').prop('disabled', true);
-
-            $('#btnRemovePropertyTax').prop('disabled', true);
-
-            $('#documentViewer').attr('src', '');
-
-            propertyTaxFileUrl = null;
-        });
-
-
-        // Building Plan
-
-        let buildingPlanFileUrl = null;
-
-        $('#BuildingPlanFile').on('change', function () {
-
-            const file = this.files[0];
-
-            if (file) {
-
-                buildingPlanFileUrl = URL.createObjectURL(file);
-
-                $('#btnPreviewBuildingPlan').prop('disabled', false);
-
-                $('#btnRemoveBuildingPlan').prop('disabled', false);
-            }
-        });
-
-        $(document).on('click', '#btnPreviewBuildingPlan', function () {
-
-            const file = $('#BuildingPlanFile')[0].files[0];
-
-            if (!file) {
-                alert('Please select a file');
-                return;
-            }
-
-            const fileUrl = URL.createObjectURL(file);
-
-            $('#documentViewer').attr('src', fileUrl);
-
-            $('#documentPreviewModal').modal('show');
-        });
-
-        $('#btnRemoveBuildingPlan').on('click', function () {
-
-            $('#BuildingPlanFile').val('');
-
-            $('#btnPreviewBuildingPlan').prop('disabled', true);
-
-            $('#btnRemoveBuildingPlan').prop('disabled', true);
-
-            $('#documentViewer').attr('src', '');
-
-            buildingPlanFileUrl = null;
-        });
+        // NOTE: document upload/preview/remove (Aadhaar, Property Tax,
+        // Building Plan) used to have a second, legacy set of handlers
+        // right here — bound to the SAME element ids (#AadhaarFile change,
+        // #btnPreviewAadhaar/#btnRemoveAadhaar click, etc.) that
+        // tl_photo_document_upload.js also binds to. Both fired on every
+        // click, and this one showed an unsaved client-side blob preview
+        // and enabled Preview/Remove before the file was actually uploaded
+        // to the server — misleading, and it let Remove silently desync
+        // from the database (no DeleteDocument call). Removed entirely;
+        // tl_photo_document_upload.js is the single owner of that flow now
+        // (it drives the "Upload" button next to each file input).
 
         $('#MaleEmployees,#FemaleEmployees,#TransgenderEmployees').on('input', function () {
 
@@ -814,8 +686,7 @@
 
         var applicantPhotoInput = document.getElementById('ApplicantPhoto');
         var previewImg = document.getElementById('ApplicantPhotoPreview');
-        var hasExistingPreview = previewImg && previewImg.src && previewImg.style.display !== 'none' &&
-            !previewImg.src.endsWith('#') && previewImg.getAttribute('src');
+        var hasExistingPreview = previewImg && previewImg.dataset.hasPhoto === 'true';
         var hasNewFile = applicantPhotoInput && applicantPhotoInput.files && applicantPhotoInput.files.length > 0;
 
         if (!hasNewFile && !hasExistingPreview) {

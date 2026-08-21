@@ -95,6 +95,36 @@ namespace TradeLicence.Controllers
             ViewBag.IsFinalStage = laterStages.Count == 0;
             ViewBag.ForwardableByStage = forwardableByStage;
 
+            // Full audit trail — every Forward/Revert so far, oldest first.
+            // Powers the "Forwarded by ..." timeline at the top of the page
+            // (and for GM, this naturally shows the whole DEO -> Manager ->
+            // Inspection Officer chain since it's just this list).
+            var history = await _context.ApplicationWorkflowHistories
+                .Where(h => h.ApplicationId == id)
+                .OrderBy(h => h.ActionDate)
+                .ToListAsync();
+
+            // Officer names for display — one query instead of N+1 per history row.
+            var officerIds = history
+                .SelectMany(h => new[] { h.FromOfficerId, h.ToOfficerId })
+                .Where(x => x.HasValue).Select(x => x!.Value)
+                .Distinct().ToList();
+            var officerNames = await _context.Officers
+                .Where(o => officerIds.Contains(o.OfficerId))
+                .ToDictionaryAsync(o => o.OfficerId, o => o.FullName ?? o.Username);
+
+            // Revert target — the most recent Forward entry that landed the
+            // application at its CURRENT stage tells us who to send it back
+            // to. Nothing to revert to at Initial Scrutiny (the first stage).
+            var revertTarget = history
+                .Where(h => h.ActionType == "Forward" && h.ToStage == currentStage)
+                .OrderByDescending(h => h.ActionDate)
+                .FirstOrDefault();
+
+            ViewBag.WorkflowHistory = history;
+            ViewBag.OfficerNames = officerNames;
+            ViewBag.RevertTarget = revertTarget;
+
             return View(model);
         }
 
@@ -146,15 +176,81 @@ namespace TradeLicence.Controllers
             if (targetIndex <= currentIndex)
                 return BadRequest(new { error = "You can only forward to a later stage, not the current or an earlier one." });
 
+            var fromStage = application.CurrentStage;
+            var fromOfficerId = application.AssignedOfficerId;
+
             application.AssignedOfficerId = officer.OfficerId;
             application.CurrentStage = targetStage;
             application.OfficerRemarks = remarks;
             application.ModifiedDate = DateTime.UtcNow;
 
+            _context.ApplicationWorkflowHistories.Add(new ApplicationWorkflowHistory
+            {
+                ApplicationId = application.ApplicationId,
+                FromOfficerId = fromOfficerId ?? GetCurrentOfficerId(),
+                FromStage = fromStage,
+                ToOfficerId = officer.OfficerId,
+                ToStage = targetStage,
+                ActionType = "Forward",
+                Remarks = remarks,
+                ActionDate = DateTime.UtcNow
+            });
+
             await _context.SaveChangesAsync();
 
             TempData["OfficerActionMessage"] = $"Application successfully forwarded to {officer.FullName} ({targetStage}).";
             TempData["OfficerActionType"] = "forward";
+            return RedirectToAction("Index");
+        }
+
+        // Sends the application back one step to whichever officer most
+        // recently forwarded it to the current stage — GM reverts to the
+        // Inspection Officer who sent it to them, Inspection Officer
+        // reverts to the Manager, Manager reverts to the DEO. Not offered
+        // at Initial Scrutiny (nothing before it to revert to).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RevertToPreviousOfficer(int id, string remarks)
+        {
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound();
+
+            var revertTarget = await _context.ApplicationWorkflowHistories
+                .Where(h => h.ApplicationId == id && h.ActionType == "Forward" && h.ToStage == application.CurrentStage)
+                .OrderByDescending(h => h.ActionDate)
+                .FirstOrDefaultAsync();
+
+            if (revertTarget == null || revertTarget.FromOfficerId == null)
+                return BadRequest(new { error = "There's no earlier officer to revert this application to." });
+
+            var previousOfficer = await _context.Officers.FindAsync(revertTarget.FromOfficerId.Value);
+            if (previousOfficer == null)
+                return BadRequest(new { error = "The previous officer's account could not be found." });
+
+            var fromStage = application.CurrentStage;
+            var fromOfficerId = application.AssignedOfficerId;
+
+            application.AssignedOfficerId = previousOfficer.OfficerId;
+            application.CurrentStage = revertTarget.FromStage;
+            application.OfficerRemarks = remarks;
+            application.ModifiedDate = DateTime.UtcNow;
+
+            _context.ApplicationWorkflowHistories.Add(new ApplicationWorkflowHistory
+            {
+                ApplicationId = application.ApplicationId,
+                FromOfficerId = fromOfficerId ?? GetCurrentOfficerId(),
+                FromStage = fromStage,
+                ToOfficerId = previousOfficer.OfficerId,
+                ToStage = revertTarget.FromStage,
+                ActionType = "Revert",
+                Remarks = remarks,
+                ActionDate = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+
+            TempData["OfficerActionMessage"] = $"Application reverted to {previousOfficer.FullName} ({revertTarget.FromStage}).";
+            TempData["OfficerActionType"] = "revert";
             return RedirectToAction("Index");
         }
 
