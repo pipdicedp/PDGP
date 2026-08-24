@@ -25,6 +25,10 @@ namespace TradeLicence.Data
         public DbSet<ApplicationUser> Users { get; set; } = null!;
         public DbSet<Officer> Officers { get; set; } = null!;
         public DbSet<ApplicationWorkflowHistory> ApplicationWorkflowHistories { get; set; } = null!;
+        public DbSet<ShopEmployer> ShopEmployers { get; set; } = null!;
+        public DbSet<ShopFormIXPartA> ShopFormIXPartAs { get; set; } = null!;
+        public DbSet<ShopFormIXPartB> ShopFormIXPartBs { get; set; } = null!;
+        public DbSet<ShopAnnexureDocument> ShopAnnexureDocuments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -149,6 +153,46 @@ namespace TradeLicence.Data
                       .WithMany()
                       .HasForeignKey(e => e.ToOfficerId)
                       .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ShopEmployer>(entity =>
+            {
+                entity.ToTable("ShopEmployers");
+                entity.HasKey(e => e.EmployerRowId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ShopFormIXPartA>(entity =>
+            {
+                entity.ToTable("ShopFormIXPartAs");
+                entity.HasKey(e => e.PartARowId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ShopFormIXPartB>(entity =>
+            {
+                entity.ToTable("ShopFormIXPartBs");
+                entity.HasKey(e => e.PartBRowId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ShopAnnexureDocument>(entity =>
+            {
+                entity.ToTable("ShopAnnexureDocuments");
+                entity.HasKey(e => e.AnnexureDocumentId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
             modelBuilder.Entity<TradeLicenceApplication>(entity =>
             {

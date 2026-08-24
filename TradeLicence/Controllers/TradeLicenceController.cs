@@ -569,5 +569,290 @@ namespace TradeLicence.Controllers
 
             return Ok(new { success = true, shopRegistrationId = saved.ShopRegistrationId });
         }
+
+        // ---- Employer other than Manager (repeatable table) ----
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetEmployerList")]
+        public async Task<IActionResult> GetEmployerList(int applicationId)
+        {
+            var rows = await _context.ShopEmployers
+                .Where(e => e.ApplicationId == applicationId)
+                .OrderBy(e => e.EmployerRowId)
+                .ToListAsync();
+
+            return Json(rows.Select(e => new
+            {
+                e.EmployerRowId,
+                e.EmployerType,
+                e.EmployerName,
+                e.IsMinor,
+                e.MobileNumber,
+                e.Email,
+                e.ResidentialAddress,
+                e.District,
+                e.PinCode,
+                e.RcToBeIssued
+            }));
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAllEmployers")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllEmployers([FromBody] SaveEmployersRequest request)
+        {
+            if (request?.Employers == null || request.Employers.Count == 0)
+                return BadRequest(new { error = "Please add at least one employer before saving." });
+
+            if (request.ApplicationId <= 0)
+                return BadRequest(new { error = "Invalid application. Please save Application Details first." });
+
+            foreach (var e in request.Employers)
+            {
+                if (string.IsNullOrWhiteSpace(e.EmployerName)) continue; // skip incomplete rows defensively
+
+                _context.ShopEmployers.Add(new ShopEmployer
+                {
+                    ApplicationId = request.ApplicationId,
+                    EmployerType = e.EmployerType,
+                    EmployerName = e.EmployerName,
+                    IsMinor = e.IsMinor,
+                    MobileNumber = e.MobileNumber,
+                    Email = e.Email,
+                    ResidentialAddress = e.ResidentialAddress,
+                    District = e.District,
+                    PinCode = e.PinCode,
+                    RcToBeIssued = e.RcToBeIssued
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/DeleteEmployer")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteEmployer(int employerRowId)
+        {
+            var row = await _context.ShopEmployers.FindAsync(employerRowId);
+            if (row == null) return NotFound();
+            _context.ShopEmployers.Remove(row);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        // ---- Form IX, Part-A (repeatable table) ----
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetFormIXPartAList")]
+        public async Task<IActionResult> GetFormIXPartAList(int applicationId)
+        {
+            var rows = await _context.ShopFormIXPartAs
+                .Where(r => r.ApplicationId == applicationId)
+                .OrderBy(r => r.PartARowId)
+                .ToListAsync();
+
+            return Json(rows.Select(r => new
+            {
+                r.PartARowId,
+                r.EmployeeName,
+                r.Sex,
+                r.FatherHusbandName,
+                r.Designation,
+                r.EmployeeNumber,
+                dateOfEntryIntoService = r.DateOfEntryIntoService.HasValue ? r.DateOfEntryIntoService.Value.ToString("yyyy-MM-dd") : null,
+                r.PersonCategory,
+                r.Shift,
+                r.TimeOfCommencementOfWork,
+                r.RestIntervalHours,
+                r.TimeWorkEnds,
+                r.WeeklyHoliday
+            }));
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAllFormIXPartA")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllFormIXPartA([FromBody] SaveFormIXPartARequest request)
+        {
+            if (request?.Rows == null || request.Rows.Count == 0)
+                return BadRequest(new { error = "Please add at least one row before saving." });
+
+            if (request.ApplicationId <= 0)
+                return BadRequest(new { error = "Invalid application. Please save Application Details first." });
+
+            foreach (var r in request.Rows)
+            {
+                if (string.IsNullOrWhiteSpace(r.EmployeeName)) continue; // skip incomplete rows defensively
+
+                _context.ShopFormIXPartAs.Add(new ShopFormIXPartA
+                {
+                    ApplicationId = request.ApplicationId,
+                    EmployeeName = r.EmployeeName,
+                    Sex = r.Sex,
+                    FatherHusbandName = r.FatherHusbandName,
+                    Designation = r.Designation,
+                    EmployeeNumber = r.EmployeeNumber,
+                    DateOfEntryIntoService = r.DateOfEntryIntoService,
+                    PersonCategory = r.PersonCategory,
+                    Shift = r.Shift,
+                    TimeOfCommencementOfWork = r.TimeOfCommencementOfWork,
+                    RestIntervalHours = r.RestIntervalHours,
+                    TimeWorkEnds = r.TimeWorkEnds,
+                    WeeklyHoliday = r.WeeklyHoliday
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/DeleteFormIXPartA")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFormIXPartA(int partARowId)
+        {
+            var row = await _context.ShopFormIXPartAs.FindAsync(partARowId);
+            if (row == null) return NotFound();
+            _context.ShopFormIXPartAs.Remove(row);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        // ---- Form IX, Part-B (repeatable table) ----
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetFormIXPartBList")]
+        public async Task<IActionResult> GetFormIXPartBList(int applicationId)
+        {
+            var rows = await _context.ShopFormIXPartBs
+                .Where(r => r.ApplicationId == applicationId)
+                .OrderBy(r => r.PartBRowId)
+                .ToListAsync();
+
+            return Json(rows.Select(r => new { r.PartBRowId, r.ClassOfWorkers, r.MaxRateOfWage, r.MinRateOfWage }));
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAllFormIXPartB")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAllFormIXPartB([FromBody] SaveFormIXPartBRequest request)
+        {
+            if (request?.Rows == null || request.Rows.Count == 0)
+                return BadRequest(new { error = "Please add at least one row before saving." });
+
+            if (request.ApplicationId <= 0)
+                return BadRequest(new { error = "Invalid application. Please save Application Details first." });
+
+            foreach (var r in request.Rows)
+            {
+                if (string.IsNullOrWhiteSpace(r.ClassOfWorkers)) continue; // skip incomplete rows defensively
+
+                _context.ShopFormIXPartBs.Add(new ShopFormIXPartB
+                {
+                    ApplicationId = request.ApplicationId,
+                    ClassOfWorkers = r.ClassOfWorkers,
+                    MaxRateOfWage = r.MaxRateOfWage,
+                    MinRateOfWage = r.MinRateOfWage
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/DeleteFormIXPartB")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFormIXPartB(int partBRowId)
+        {
+            var row = await _context.ShopFormIXPartBs.FindAsync(partBRowId);
+            if (row == null) return NotFound();
+            _context.ShopFormIXPartBs.Remove(row);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
+
+        // ---- Upload Annexure Files (4 fixed slots) ----
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/SaveAnnexureDocument")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveAnnexureDocument(int applicationId, string documentName, IFormFile file)
+        {
+            if (applicationId <= 0 || string.IsNullOrWhiteSpace(documentName))
+                return BadRequest(new { error = "Invalid request." });
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "Please choose a file to upload." });
+
+            if (file.Length > MaxUploadBytes)
+                return BadRequest(new { error = "File must be 5 MB or smaller." });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+
+            // Replace-in-place if this slot was already uploaded before —
+            // same one-slot-per-fixed-name behaviour as Step 5's documents.
+            var existing = await _context.ShopAnnexureDocuments
+                .FirstOrDefaultAsync(d => d.ApplicationId == applicationId && d.DocumentName == documentName);
+
+            if (existing != null)
+            {
+                existing.FileName = file.FileName;
+                existing.ContentType = file.ContentType;
+                existing.FileData = ms.ToArray();
+                existing.UploadedDate = DateTime.UtcNow;
+            }
+            else
+            {
+                existing = new ShopAnnexureDocument
+                {
+                    ApplicationId = applicationId,
+                    DocumentName = documentName,
+                    FileName = file.FileName,
+                    ContentType = file.ContentType,
+                    FileData = ms.ToArray()
+                };
+                _context.ShopAnnexureDocuments.Add(existing);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, documentId = existing.AnnexureDocumentId });
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/GetAnnexureDocumentsList")]
+        public async Task<IActionResult> GetAnnexureDocumentsList(int applicationId)
+        {
+            var docs = await _context.ShopAnnexureDocuments
+                .Where(d => d.ApplicationId == applicationId)
+                .ToListAsync();
+
+            return Json(docs.Select(d => new { d.AnnexureDocumentId, d.DocumentName, d.FileName }));
+        }
+
+        [HttpGet]
+        [Route("TradeLicence/NewLicence/Apply/ViewAnnexureDocument")]
+        public async Task<IActionResult> ViewAnnexureDocument(int documentId)
+        {
+            var doc = await _context.ShopAnnexureDocuments.FindAsync(documentId);
+            if (doc == null || doc.FileData == null) return NotFound();
+            return File(doc.FileData, doc.ContentType ?? "application/octet-stream");
+        }
+
+        [HttpPost]
+        [Route("TradeLicence/NewLicence/Apply/DeleteAnnexureDocument")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAnnexureDocument(int documentId)
+        {
+            var doc = await _context.ShopAnnexureDocuments.FindAsync(documentId);
+            if (doc == null) return NotFound();
+            _context.ShopAnnexureDocuments.Remove(doc);
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true });
+        }
     }
 }
