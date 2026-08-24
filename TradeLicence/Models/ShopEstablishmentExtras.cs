@@ -83,7 +83,8 @@ namespace TradeLicence.Models
         public string DocumentName { get; set; } = string.Empty; // one of the 4 fixed names below
         public string? FileName { get; set; }
         public string? ContentType { get; set; }
-        public byte[]? FileData { get; set; }
+        public byte[]? FileData { get; set; }       // encrypted, same as TradeLicenceDocument.DocumentData
+        public byte[]? FileDataIV { get; set; }      // same as TradeLicenceDocument.DocumentIV
 
         public DateTime UploadedDate { get; set; } = DateTime.UtcNow;
     }

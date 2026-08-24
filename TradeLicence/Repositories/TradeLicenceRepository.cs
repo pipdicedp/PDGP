@@ -182,6 +182,111 @@ namespace TradeLicence.Repositories
             await _context.ShopEstablishmentRegistrations.AddAsync(registration);
         }
 
+        // ---------------- Employer other than Manager ----------------
+
+        public async Task AddEmployerAsync(ShopEmployer employer)
+        {
+            await _context.ShopEmployers.AddAsync(employer);
+        }
+
+        public async Task<List<ShopEmployer>> GetEmployersByApplicationIdAsync(int applicationId)
+        {
+            return await _context.ShopEmployers
+                .Where(x => x.ApplicationId == applicationId)
+                .OrderBy(x => x.EmployerRowId)
+                .ToListAsync();
+        }
+
+        public async Task<ShopEmployer?> GetEmployerAsync(int employerRowId)
+        {
+            return await _context.ShopEmployers.FindAsync(employerRowId);
+        }
+
+        public void RemoveEmployer(ShopEmployer employer)
+        {
+            _context.ShopEmployers.Remove(employer);
+        }
+
+        // ---------------- Form IX, Part-A ----------------
+
+        public async Task AddFormIXPartARowAsync(ShopFormIXPartA row)
+        {
+            await _context.ShopFormIXPartAs.AddAsync(row);
+        }
+
+        public async Task<List<ShopFormIXPartA>> GetFormIXPartAByApplicationIdAsync(int applicationId)
+        {
+            return await _context.ShopFormIXPartAs
+                .Where(x => x.ApplicationId == applicationId)
+                .OrderBy(x => x.PartARowId)
+                .ToListAsync();
+        }
+
+        public async Task<ShopFormIXPartA?> GetFormIXPartARowAsync(int partARowId)
+        {
+            return await _context.ShopFormIXPartAs.FindAsync(partARowId);
+        }
+
+        public void RemoveFormIXPartARow(ShopFormIXPartA row)
+        {
+            _context.ShopFormIXPartAs.Remove(row);
+        }
+
+        // ---------------- Form IX, Part-B ----------------
+
+        public async Task AddFormIXPartBRowAsync(ShopFormIXPartB row)
+        {
+            await _context.ShopFormIXPartBs.AddAsync(row);
+        }
+
+        public async Task<List<ShopFormIXPartB>> GetFormIXPartBByApplicationIdAsync(int applicationId)
+        {
+            return await _context.ShopFormIXPartBs
+                .Where(x => x.ApplicationId == applicationId)
+                .OrderBy(x => x.PartBRowId)
+                .ToListAsync();
+        }
+
+        public async Task<ShopFormIXPartB?> GetFormIXPartBRowAsync(int partBRowId)
+        {
+            return await _context.ShopFormIXPartBs.FindAsync(partBRowId);
+        }
+
+        public void RemoveFormIXPartBRow(ShopFormIXPartB row)
+        {
+            _context.ShopFormIXPartBs.Remove(row);
+        }
+
+        // ---------------- Shop Establishment Annexure Documents ----------------
+
+        public async Task<ShopAnnexureDocument?> GetAnnexureDocumentByApplicationAndNameAsync(int applicationId, string documentName)
+        {
+            return await _context.ShopAnnexureDocuments
+                .FirstOrDefaultAsync(x => x.ApplicationId == applicationId && x.DocumentName == documentName);
+        }
+
+        public async Task<ShopAnnexureDocument?> GetAnnexureDocumentByIdAsync(int documentId)
+        {
+            return await _context.ShopAnnexureDocuments.FindAsync(documentId);
+        }
+
+        public async Task<List<ShopAnnexureDocument>> GetAnnexureDocumentsByApplicationIdAsync(int applicationId)
+        {
+            return await _context.ShopAnnexureDocuments
+                .Where(x => x.ApplicationId == applicationId)
+                .ToListAsync();
+        }
+
+        public async Task AddAnnexureDocumentAsync(ShopAnnexureDocument document)
+        {
+            await _context.ShopAnnexureDocuments.AddAsync(document);
+        }
+
+        public void RemoveAnnexureDocument(ShopAnnexureDocument document)
+        {
+            _context.ShopAnnexureDocuments.Remove(document);
+        }
+
         public async Task<bool> UpdateCurrentStepAsync(int applicationId, int step)
         {
             var application = await _context.TradeLicenceApplications.FindAsync(applicationId);

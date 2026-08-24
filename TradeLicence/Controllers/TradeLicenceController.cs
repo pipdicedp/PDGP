@@ -576,10 +576,7 @@ namespace TradeLicence.Controllers
         [Route("TradeLicence/NewLicence/Apply/GetEmployerList")]
         public async Task<IActionResult> GetEmployerList(int applicationId)
         {
-            var rows = await _context.ShopEmployers
-                .Where(e => e.ApplicationId == applicationId)
-                .OrderBy(e => e.EmployerRowId)
-                .ToListAsync();
+            var rows = await _service.GetEmployersAsync(applicationId);
 
             return Json(rows.Select(e => new
             {
@@ -610,23 +607,9 @@ namespace TradeLicence.Controllers
             foreach (var e in request.Employers)
             {
                 if (string.IsNullOrWhiteSpace(e.EmployerName)) continue; // skip incomplete rows defensively
-
-                _context.ShopEmployers.Add(new ShopEmployer
-                {
-                    ApplicationId = request.ApplicationId,
-                    EmployerType = e.EmployerType,
-                    EmployerName = e.EmployerName,
-                    IsMinor = e.IsMinor,
-                    MobileNumber = e.MobileNumber,
-                    Email = e.Email,
-                    ResidentialAddress = e.ResidentialAddress,
-                    District = e.District,
-                    PinCode = e.PinCode,
-                    RcToBeIssued = e.RcToBeIssued
-                });
+                await _service.AddEmployerAsync(request.ApplicationId, e);
             }
 
-            await _context.SaveChangesAsync();
             return Ok(new { success = true });
         }
 
@@ -635,10 +618,8 @@ namespace TradeLicence.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteEmployer(int employerRowId)
         {
-            var row = await _context.ShopEmployers.FindAsync(employerRowId);
-            if (row == null) return NotFound();
-            _context.ShopEmployers.Remove(row);
-            await _context.SaveChangesAsync();
+            var deleted = await _service.DeleteEmployerAsync(employerRowId);
+            if (!deleted) return NotFound();
             return Ok(new { success = true });
         }
 
@@ -648,10 +629,7 @@ namespace TradeLicence.Controllers
         [Route("TradeLicence/NewLicence/Apply/GetFormIXPartAList")]
         public async Task<IActionResult> GetFormIXPartAList(int applicationId)
         {
-            var rows = await _context.ShopFormIXPartAs
-                .Where(r => r.ApplicationId == applicationId)
-                .OrderBy(r => r.PartARowId)
-                .ToListAsync();
+            var rows = await _service.GetFormIXPartAAsync(applicationId);
 
             return Json(rows.Select(r => new
             {
@@ -685,26 +663,9 @@ namespace TradeLicence.Controllers
             foreach (var r in request.Rows)
             {
                 if (string.IsNullOrWhiteSpace(r.EmployeeName)) continue; // skip incomplete rows defensively
-
-                _context.ShopFormIXPartAs.Add(new ShopFormIXPartA
-                {
-                    ApplicationId = request.ApplicationId,
-                    EmployeeName = r.EmployeeName,
-                    Sex = r.Sex,
-                    FatherHusbandName = r.FatherHusbandName,
-                    Designation = r.Designation,
-                    EmployeeNumber = r.EmployeeNumber,
-                    DateOfEntryIntoService = r.DateOfEntryIntoService,
-                    PersonCategory = r.PersonCategory,
-                    Shift = r.Shift,
-                    TimeOfCommencementOfWork = r.TimeOfCommencementOfWork,
-                    RestIntervalHours = r.RestIntervalHours,
-                    TimeWorkEnds = r.TimeWorkEnds,
-                    WeeklyHoliday = r.WeeklyHoliday
-                });
+                await _service.AddFormIXPartARowAsync(request.ApplicationId, r);
             }
 
-            await _context.SaveChangesAsync();
             return Ok(new { success = true });
         }
 
@@ -713,10 +674,8 @@ namespace TradeLicence.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFormIXPartA(int partARowId)
         {
-            var row = await _context.ShopFormIXPartAs.FindAsync(partARowId);
-            if (row == null) return NotFound();
-            _context.ShopFormIXPartAs.Remove(row);
-            await _context.SaveChangesAsync();
+            var deleted = await _service.DeleteFormIXPartARowAsync(partARowId);
+            if (!deleted) return NotFound();
             return Ok(new { success = true });
         }
 
@@ -726,11 +685,7 @@ namespace TradeLicence.Controllers
         [Route("TradeLicence/NewLicence/Apply/GetFormIXPartBList")]
         public async Task<IActionResult> GetFormIXPartBList(int applicationId)
         {
-            var rows = await _context.ShopFormIXPartBs
-                .Where(r => r.ApplicationId == applicationId)
-                .OrderBy(r => r.PartBRowId)
-                .ToListAsync();
-
+            var rows = await _service.GetFormIXPartBAsync(applicationId);
             return Json(rows.Select(r => new { r.PartBRowId, r.ClassOfWorkers, r.MaxRateOfWage, r.MinRateOfWage }));
         }
 
@@ -748,17 +703,9 @@ namespace TradeLicence.Controllers
             foreach (var r in request.Rows)
             {
                 if (string.IsNullOrWhiteSpace(r.ClassOfWorkers)) continue; // skip incomplete rows defensively
-
-                _context.ShopFormIXPartBs.Add(new ShopFormIXPartB
-                {
-                    ApplicationId = request.ApplicationId,
-                    ClassOfWorkers = r.ClassOfWorkers,
-                    MaxRateOfWage = r.MaxRateOfWage,
-                    MinRateOfWage = r.MinRateOfWage
-                });
+                await _service.AddFormIXPartBRowAsync(request.ApplicationId, r);
             }
 
-            await _context.SaveChangesAsync();
             return Ok(new { success = true });
         }
 
@@ -767,10 +714,8 @@ namespace TradeLicence.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFormIXPartB(int partBRowId)
         {
-            var row = await _context.ShopFormIXPartBs.FindAsync(partBRowId);
-            if (row == null) return NotFound();
-            _context.ShopFormIXPartBs.Remove(row);
-            await _context.SaveChangesAsync();
+            var deleted = await _service.DeleteFormIXPartBRowAsync(partBRowId);
+            if (!deleted) return NotFound();
             return Ok(new { success = true });
         }
 
@@ -793,44 +738,16 @@ namespace TradeLicence.Controllers
             using var ms = new MemoryStream();
             await file.CopyToAsync(ms);
 
-            // Replace-in-place if this slot was already uploaded before —
-            // same one-slot-per-fixed-name behaviour as Step 5's documents.
-            var existing = await _context.ShopAnnexureDocuments
-                .FirstOrDefaultAsync(d => d.ApplicationId == applicationId && d.DocumentName == documentName);
+            var saved = await _service.SaveAnnexureDocumentAsync(applicationId, documentName, file.FileName, ms.ToArray(), file.ContentType);
 
-            if (existing != null)
-            {
-                existing.FileName = file.FileName;
-                existing.ContentType = file.ContentType;
-                existing.FileData = ms.ToArray();
-                existing.UploadedDate = DateTime.UtcNow;
-            }
-            else
-            {
-                existing = new ShopAnnexureDocument
-                {
-                    ApplicationId = applicationId,
-                    DocumentName = documentName,
-                    FileName = file.FileName,
-                    ContentType = file.ContentType,
-                    FileData = ms.ToArray()
-                };
-                _context.ShopAnnexureDocuments.Add(existing);
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new { success = true, documentId = existing.AnnexureDocumentId });
+            return Ok(new { success = true, documentId = saved.AnnexureDocumentId });
         }
 
         [HttpGet]
         [Route("TradeLicence/NewLicence/Apply/GetAnnexureDocumentsList")]
         public async Task<IActionResult> GetAnnexureDocumentsList(int applicationId)
         {
-            var docs = await _context.ShopAnnexureDocuments
-                .Where(d => d.ApplicationId == applicationId)
-                .ToListAsync();
-
+            var docs = await _service.GetAnnexureDocumentsAsync(applicationId);
             return Json(docs.Select(d => new { d.AnnexureDocumentId, d.DocumentName, d.FileName }));
         }
 
@@ -838,9 +755,9 @@ namespace TradeLicence.Controllers
         [Route("TradeLicence/NewLicence/Apply/ViewAnnexureDocument")]
         public async Task<IActionResult> ViewAnnexureDocument(int documentId)
         {
-            var doc = await _context.ShopAnnexureDocuments.FindAsync(documentId);
-            if (doc == null || doc.FileData == null) return NotFound();
-            return File(doc.FileData, doc.ContentType ?? "application/octet-stream");
+            var result = await _service.GetDecryptedAnnexureDocumentAsync(documentId);
+            if (result == null) return NotFound();
+            return File(result.Value.Bytes, result.Value.ContentType);
         }
 
         [HttpPost]
@@ -848,10 +765,8 @@ namespace TradeLicence.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteAnnexureDocument(int documentId)
         {
-            var doc = await _context.ShopAnnexureDocuments.FindAsync(documentId);
-            if (doc == null) return NotFound();
-            _context.ShopAnnexureDocuments.Remove(doc);
-            await _context.SaveChangesAsync();
+            var deleted = await _service.DeleteAnnexureDocumentAsync(documentId);
+            if (!deleted) return NotFound();
             return Ok(new { success = true });
         }
     }

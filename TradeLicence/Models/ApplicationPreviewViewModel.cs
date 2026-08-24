@@ -10,6 +10,12 @@ namespace TradeLicence.Models
         public List<TradeLicenceDocument> Documents { get; set; } = new();
         public ShopEstablishmentRegistration? ShopRegistration { get; set; }
 
+        // Populated by TradeLicenceService.GetApplicationPreviewAsync — same
+        // as Partners/Machinery/Documents above.
+        public List<ShopEmployer> Employers { get; set; } = new();
+        public List<ShopFormIXPartA> FormIXPartA { get; set; } = new();
+        public List<ShopFormIXPartB> FormIXPartB { get; set; } = new();
+
         // Resolved from the raw MunicipalityId/WardId/AreaId/StreetId on
         // Application, so the preview can show names instead of raw IDs.
         public string? MunicipalityName { get; set; }
