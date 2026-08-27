@@ -338,6 +338,163 @@ namespace TradeLicence.Services
             return await _repo.GetMachineryByApplicationIdAsync(applicationId);
         }
 
+        // ---------------- Employer other than Manager ----------------
+
+        public async Task<List<ShopEmployer>> GetEmployersAsync(int applicationId)
+        {
+            return await _repo.GetEmployersByApplicationIdAsync(applicationId);
+        }
+
+        public async Task<ShopEmployer> AddEmployerAsync(int applicationId, EmployerRowDto input)
+        {
+            var employer = new ShopEmployer
+            {
+                ApplicationId = applicationId,
+                EmployerType = input.EmployerType,
+                EmployerName = input.EmployerName?.Trim(),
+                IsMinor = input.IsMinor,
+                MobileNumber = input.MobileNumber,
+                Email = input.Email,
+                ResidentialAddress = input.ResidentialAddress,
+                District = input.District,
+                PinCode = input.PinCode,
+                RcToBeIssued = input.RcToBeIssued
+            };
+            await _repo.AddEmployerAsync(employer);
+            await _repo.SaveChangesAsync();
+            return employer;
+        }
+
+        public async Task<bool> DeleteEmployerAsync(int employerRowId)
+        {
+            var employer = await _repo.GetEmployerAsync(employerRowId);
+            if (employer == null) return false;
+            _repo.RemoveEmployer(employer);
+            await _repo.SaveChangesAsync();
+            return true;
+        }
+
+        // ---------------- Form IX, Part-A ----------------
+
+        public async Task<List<ShopFormIXPartA>> GetFormIXPartAAsync(int applicationId)
+        {
+            return await _repo.GetFormIXPartAByApplicationIdAsync(applicationId);
+        }
+
+        public async Task<ShopFormIXPartA> AddFormIXPartARowAsync(int applicationId, FormIXPartARowDto input)
+        {
+            var row = new ShopFormIXPartA
+            {
+                ApplicationId = applicationId,
+                EmployeeName = input.EmployeeName?.Trim(),
+                Sex = input.Sex,
+                FatherHusbandName = input.FatherHusbandName,
+                Designation = input.Designation,
+                EmployeeNumber = input.EmployeeNumber,
+                DateOfEntryIntoService = input.DateOfEntryIntoService,
+                PersonCategory = input.PersonCategory,
+                Shift = input.Shift,
+                TimeOfCommencementOfWork = input.TimeOfCommencementOfWork,
+                RestIntervalHours = input.RestIntervalHours,
+                TimeWorkEnds = input.TimeWorkEnds,
+                WeeklyHoliday = input.WeeklyHoliday
+            };
+            await _repo.AddFormIXPartARowAsync(row);
+            await _repo.SaveChangesAsync();
+            return row;
+        }
+
+        public async Task<bool> DeleteFormIXPartARowAsync(int partARowId)
+        {
+            var row = await _repo.GetFormIXPartARowAsync(partARowId);
+            if (row == null) return false;
+            _repo.RemoveFormIXPartARow(row);
+            await _repo.SaveChangesAsync();
+            return true;
+        }
+
+        // ---------------- Form IX, Part-B ----------------
+
+        public async Task<List<ShopFormIXPartB>> GetFormIXPartBAsync(int applicationId)
+        {
+            return await _repo.GetFormIXPartBByApplicationIdAsync(applicationId);
+        }
+
+        public async Task<ShopFormIXPartB> AddFormIXPartBRowAsync(int applicationId, FormIXPartBRowDto input)
+        {
+            var row = new ShopFormIXPartB
+            {
+                ApplicationId = applicationId,
+                ClassOfWorkers = input.ClassOfWorkers?.Trim(),
+                MaxRateOfWage = input.MaxRateOfWage,
+                MinRateOfWage = input.MinRateOfWage
+            };
+            await _repo.AddFormIXPartBRowAsync(row);
+            await _repo.SaveChangesAsync();
+            return row;
+        }
+
+        public async Task<bool> DeleteFormIXPartBRowAsync(int partBRowId)
+        {
+            var row = await _repo.GetFormIXPartBRowAsync(partBRowId);
+            if (row == null) return false;
+            _repo.RemoveFormIXPartBRow(row);
+            await _repo.SaveChangesAsync();
+            return true;
+        }
+
+        // ---------------- Shop Establishment Annexure Documents ----------------
+        // Same encrypted-bytes pattern as SaveDocumentAsync (Step 5).
+
+        public async Task<ShopAnnexureDocument> SaveAnnexureDocumentAsync(int applicationId, string documentName, string fileName, byte[] fileBytes, string contentType)
+        {
+            var (cipher, iv) = _encryption.Encrypt(fileBytes);
+
+            var doc = await _repo.GetAnnexureDocumentByApplicationAndNameAsync(applicationId, documentName);
+            if (doc == null)
+            {
+                doc = new ShopAnnexureDocument
+                {
+                    ApplicationId = applicationId,
+                    DocumentName = documentName
+                };
+                await _repo.AddAnnexureDocumentAsync(doc);
+            }
+
+            doc.FileName = fileName;
+            doc.FileData = cipher;
+            doc.FileDataIV = iv;
+            doc.ContentType = contentType;
+            doc.UploadedDate = DateTime.UtcNow;
+
+            await _repo.SaveChangesAsync();
+            return doc;
+        }
+
+        public async Task<List<ShopAnnexureDocument>> GetAnnexureDocumentsAsync(int applicationId)
+        {
+            return await _repo.GetAnnexureDocumentsByApplicationIdAsync(applicationId);
+        }
+
+        public async Task<(byte[] Bytes, string ContentType, string FileName)?> GetDecryptedAnnexureDocumentAsync(int documentId)
+        {
+            var doc = await _repo.GetAnnexureDocumentByIdAsync(documentId);
+            if (doc?.FileData == null || doc.FileDataIV == null) return null;
+
+            var bytes = _encryption.Decrypt(doc.FileData, doc.FileDataIV);
+            return (bytes, doc.ContentType ?? "application/octet-stream", doc.FileName ?? "document");
+        }
+
+        public async Task<bool> DeleteAnnexureDocumentAsync(int documentId)
+        {
+            var doc = await _repo.GetAnnexureDocumentByIdAsync(documentId);
+            if (doc == null) return false;
+
+            _repo.RemoveAnnexureDocument(doc);
+            await _repo.SaveChangesAsync();
+            return true;
+        }
+
         // ---------------- Acknowledgement PDF ----------------
 
         // ---------------- Application Preview (shared by citizen wizard and officer view) ----------------
@@ -355,7 +512,16 @@ namespace TradeLicence.Services
                 Documents = await GetDocumentsAsync(applicationId),
                 ShopRegistration = application.IsRegistrationForShopsEstablishment
                     ? await GetShopEstablishmentAsync(applicationId)
-                    : null
+                    : null,
+                Employers = application.IsRegistrationForShopsEstablishment
+                    ? await GetEmployersAsync(applicationId)
+                    : new List<ShopEmployer>(),
+                FormIXPartA = application.IsRegistrationForShopsEstablishment
+                    ? await GetFormIXPartAAsync(applicationId)
+                    : new List<ShopFormIXPartA>(),
+                FormIXPartB = application.IsRegistrationForShopsEstablishment
+                    ? await GetFormIXPartBAsync(applicationId)
+                    : new List<ShopFormIXPartB>()
             };
 
             if (application.MunicipalityId.HasValue)

@@ -296,10 +296,115 @@
                 @Html.Raw(Field("Migrant Workers (Through Contractor)", shop.MigrantWorkersThroughContractor?.ToString()))
 
                 @Html.Raw(Field("Date of Payment of Wages", shop.DateOfPaymentOfWages))
+                @Html.Raw(Field("Note", shop.FormIXNote))
                 @Html.Raw(Field("Amount Paid", shop.AmountPaid?.ToString()))
                 @Html.Raw(Field("GRAS Reference Number", shop.GrasReferenceNumber))
                 @Html.Raw(Field("Date of Payment", shop.DateOfPayment?.ToString("dd-MM-yyyy")))
             </div>
+
+            @if (Model.Employers.Any())
+            {
+                <h6 style="margin-top:18px; color:#1a3a52;">Employer(s) Other Than Manager</h6>
+                <table class="tl-partner-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Minor</th>
+                            <th>Mobile</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>District</th>
+                            <th>Pin Code</th>
+                            <th>RC Required</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var emp in Model.Employers)
+                        {
+                            <tr>
+                                <td>@(emp.EmployerType ?? "-")</td>
+                                <td>@(emp.EmployerName ?? "-")</td>
+                                <td>@(emp.IsMinor ? "Yes" : "No")</td>
+                                <td>@(emp.MobileNumber ?? "-")</td>
+                                <td>@(emp.Email ?? "-")</td>
+                                <td>@(emp.ResidentialAddress ?? "-")</td>
+                                <td>@(emp.District ?? "-")</td>
+                                <td>@(emp.PinCode ?? "-")</td>
+                                <td>@(emp.RcToBeIssued ? "Yes" : "No")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            @if (Model.FormIXPartA.Any())
+            {
+                <h6 style="margin-top:18px; color:#1a3a52;">Form IX, Part-A</h6>
+                <div style="overflow-x:auto;">
+                    <table class="tl-partner-table">
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Sex</th>
+                                <th>Father/Husband</th>
+                                <th>Designation</th>
+                                <th>Emp. No.</th>
+                                <th>Date of Entry</th>
+                                <th>Category</th>
+                                <th>Shift</th>
+                                <th>Start Time</th>
+                                <th>Rest Hours</th>
+                                <th>End Time</th>
+                                <th>Weekly Holiday</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.FormIXPartA)
+                            {
+                                <tr>
+                                    <td>@(row.EmployeeName ?? "-")</td>
+                                    <td>@(row.Sex ?? "-")</td>
+                                    <td>@(row.FatherHusbandName ?? "-")</td>
+                                    <td>@(row.Designation ?? "-")</td>
+                                    <td>@(row.EmployeeNumber ?? "-")</td>
+                                    <td>@(row.DateOfEntryIntoService?.ToString("dd-MM-yyyy") ?? "-")</td>
+                                    <td>@(row.PersonCategory ?? "-")</td>
+                                    <td>@(row.Shift ?? "-")</td>
+                                    <td>@(row.TimeOfCommencementOfWork ?? "-")</td>
+                                    <td>@(row.RestIntervalHours ?? "-")</td>
+                                    <td>@(row.TimeWorkEnds ?? "-")</td>
+                                    <td>@(row.WeeklyHoliday ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+            @if (Model.FormIXPartB.Any())
+            {
+                <h6 style="margin-top:18px; color:#1a3a52;">Form IX, Part-B</h6>
+                <table class="tl-partner-table">
+                    <thead>
+                        <tr>
+                            <th>Class of Workers</th>
+                            <th>Max Rate of Wage</th>
+                            <th>Min Rate of Wage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.FormIXPartB)
+                        {
+                            <tr>
+                                <td>@(row.ClassOfWorkers ?? "-")</td>
+                                <td>@(row.MaxRateOfWage?.ToString() ?? "-")</td>
+                                <td>@(row.MinRateOfWage?.ToString() ?? "-")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
         }
         else
         {

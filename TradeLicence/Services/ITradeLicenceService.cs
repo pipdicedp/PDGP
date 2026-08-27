@@ -38,6 +38,27 @@ namespace TradeLicence.Services
         Task<ShopEstablishmentRegistration?> GetShopEstablishmentAsync(int applicationId);
         Task<List<TradeLicenceMachinery>> GetMachineryAsync(int applicationId);
 
+        // ---------------- Employer other than Manager ----------------
+        Task<List<ShopEmployer>> GetEmployersAsync(int applicationId);
+        Task<ShopEmployer> AddEmployerAsync(int applicationId, EmployerRowDto input);
+        Task<bool> DeleteEmployerAsync(int employerRowId);
+
+        // ---------------- Form IX, Part-A ----------------
+        Task<List<ShopFormIXPartA>> GetFormIXPartAAsync(int applicationId);
+        Task<ShopFormIXPartA> AddFormIXPartARowAsync(int applicationId, FormIXPartARowDto input);
+        Task<bool> DeleteFormIXPartARowAsync(int partARowId);
+
+        // ---------------- Form IX, Part-B ----------------
+        Task<List<ShopFormIXPartB>> GetFormIXPartBAsync(int applicationId);
+        Task<ShopFormIXPartB> AddFormIXPartBRowAsync(int applicationId, FormIXPartBRowDto input);
+        Task<bool> DeleteFormIXPartBRowAsync(int partBRowId);
+
+        // ---------------- Shop Establishment Annexure Documents ----------------
+        Task<ShopAnnexureDocument> SaveAnnexureDocumentAsync(int applicationId, string documentName, string fileName, byte[] fileBytes, string contentType);
+        Task<List<ShopAnnexureDocument>> GetAnnexureDocumentsAsync(int applicationId);
+        Task<(byte[] Bytes, string ContentType, string FileName)?> GetDecryptedAnnexureDocumentAsync(int documentId);
+        Task<bool> DeleteAnnexureDocumentAsync(int documentId);
+
         // ---------------- Acknowledgement PDF ----------------
         Task<byte[]> GenerateAcknowledgementPdfAsync(int applicationId);
 

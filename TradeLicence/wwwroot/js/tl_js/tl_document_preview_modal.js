@@ -38,20 +38,3 @@ document.getElementById('btnReturnToApplicant').addEventListener('click', functi
         }
     });
 });
-
-document.getElementById('btnForwardToGM').addEventListener('click', function () {
-    Swal.fire({
-        title: 'Forward to GM',
-        text: 'Optional remarks for the General Manager.',
-        input: 'textarea',
-        inputPlaceholder: 'Remarks (optional)...',
-        showCancelButton: true,
-        confirmButtonText: 'Forward',
-        confirmButtonColor: '#1a3a52'
-    }).then(function (result) {
-        if (result.isConfirmed) {
-            document.getElementById('forwardRemarks').value = result.value || '';
-            document.getElementById('forwardForm').submit();
-        }
-    });
-});

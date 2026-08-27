@@ -1,9 +1,13 @@
 $(document).ready(function () {
 
-    var applicationId = $('#hdnApplicationId').val();
-
     function getApplicationId() {
-        return $('#hdnApplicationId').val() || $('#ApplicationId').val();
+        // #ApplicationId is the single field in the main form (always
+        // correctly kept in sync). #hdnApplicationId is only a fallback —
+        // note that _PartnerDetails.cshtml and _MachineryDetails.cshtml
+        // both render a field with that SAME id (invalid duplicate HTML
+        // id), so checking #ApplicationId first avoids relying on which
+        // duplicate happens to be first in the DOM.
+        return $('#ApplicationId').val() || $('#hdnApplicationId').val();
     }
 
     function getAntiForgeryToken() {
@@ -114,7 +118,12 @@ $(document).ready(function () {
             return;
         }
 
-        var applicationId = $('#hdnApplicationId').val();
+        var applicationId = getApplicationId();
+
+        if (!applicationId) {
+            alert('Please save Application Details first before adding partners.');
+            return;
+        }
 
         var $btn = $(this);
         var originalText = $btn.text();

@@ -24,6 +24,11 @@ namespace TradeLicence.Data
         public DbSet<ShopEstablishmentRegistration> ShopEstablishmentRegistrations { get; set; }
         public DbSet<ApplicationUser> Users { get; set; } = null!;
         public DbSet<Officer> Officers { get; set; } = null!;
+        public DbSet<ApplicationWorkflowHistory> ApplicationWorkflowHistories { get; set; } = null!;
+        public DbSet<ShopEmployer> ShopEmployers { get; set; } = null!;
+        public DbSet<ShopFormIXPartA> ShopFormIXPartAs { get; set; } = null!;
+        public DbSet<ShopFormIXPartB> ShopFormIXPartBs { get; set; } = null!;
+        public DbSet<ShopAnnexureDocument> ShopAnnexureDocuments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -124,6 +129,71 @@ namespace TradeLicence.Data
                 entity.HasKey(e => e.OfficerId);
                 entity.HasIndex(e => e.Username).IsUnique();
             });
+
+            modelBuilder.Entity<ApplicationWorkflowHistory>(entity =>
+            {
+                entity.ToTable("ApplicationWorkflowHistories");
+                entity.HasKey(e => e.HistoryId);
+
+                entity.HasOne(e => e.Application)
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Restrict (not SetNull/Cascade) — an Officer with history
+                // rows can't be deleted outright, which is the right call
+                // for an audit trail. Officer.IsLocked is how you retire
+                // an officer account instead.
+                entity.HasOne(e => e.FromOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.FromOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.ToOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.ToOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<ShopEmployer>(entity =>
+            {
+                entity.ToTable("ShopEmployers");
+                entity.HasKey(e => e.EmployerRowId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ShopFormIXPartA>(entity =>
+            {
+                entity.ToTable("ShopFormIXPartAs");
+                entity.HasKey(e => e.PartARowId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ShopFormIXPartB>(entity =>
+            {
+                entity.ToTable("ShopFormIXPartBs");
+                entity.HasKey(e => e.PartBRowId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<ShopAnnexureDocument>(entity =>
+            {
+                entity.ToTable("ShopAnnexureDocuments");
+                entity.HasKey(e => e.AnnexureDocumentId);
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
             modelBuilder.Entity<TradeLicenceApplication>(entity =>
             {
                 // ... your existing config lines stay as they are ...
@@ -131,6 +201,14 @@ namespace TradeLicence.Data
                 entity.HasOne<ApplicationUser>()
                       .WithMany()
                       .HasForeignKey(e => e.UserId)
+                      .OnDelete(DeleteBehavior.SetNull);
+
+                // Officer workflow routing — nullable FK, so deleting an
+                // Officer account never blocks (it just un-assigns the
+                // application, leaving it visible to the rest of that stage).
+                entity.HasOne<Officer>()
+                      .WithMany()
+                      .HasForeignKey(e => e.AssignedOfficerId)
                       .OnDelete(DeleteBehavior.SetNull);
             });
 

@@ -108,5 +108,17 @@
 </div>
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="~/js/tl_js/tl_status.js" asp-append-version="true"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+
+    @if (TempData["OfficerActionMessage"] != null)
+    {
+        <script>
+            showOfficerActionAlert(
+                            @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
+                @Html.Raw(Json.Serialize(TempData["OfficerActionMessage"]))
+            );
+        </script>
+    }
 }

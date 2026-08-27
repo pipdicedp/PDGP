@@ -4,11 +4,17 @@
     Layout = "~/Views/Shared/_UserLayout.cshtml";
 
     // ---- status counts for the summary cards ----
+    // Officer workflow keeps Status = "Submitted" all the way through
+    // Initial Scrutiny -> Verification -> Inspection -> Approval — only
+    // CurrentStage changes as it moves. So "freshly submitted, nobody's
+    // picked it up yet" vs "actively being worked on by an officer" is
+    // told apart by CurrentStage, not by a separate "UnderReview" status
+    // (that value was never actually being set anywhere).
     int draftCount = Model.Count(a => a.Status == "Draft");
-    int submittedCount = Model.Count(a => a.Status == "Submitted");
-    int progressCount = Model.Count(a => a.Status == "UnderReview");
+    int submittedCount = Model.Count(a => a.Status == "Submitted" && a.CurrentStage == "Initial Scrutiny");
+    int progressCount = Model.Count(a => a.Status == "Submitted" && a.CurrentStage != "Initial Scrutiny");
     int approvedCount = Model.Count(a => a.Status == "Approved");
-    int rejectedCount = Model.Count(a => a.Status == "Rejected");
+    int rejectedCount = Model.Count(a => a.Status == "Rejected" || a.Status == "ReturnedToApplicant");
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
@@ -94,14 +100,24 @@
                         }
                         @foreach (var app in Model)
                         {
+                            // Same CurrentStage-aware logic as the counts above —
+                            // "Submitted" only means "not yet picked up by an
+                            // officer"; once it moves past Initial Scrutiny it
+                            // reads as "In Progress — <stage>" instead.
                             var statusClass = app.Status switch
                             {
                                 "Draft" => "myapps-status-draft",
-                                "Submitted" => "myapps-status-submitted",
-                                "UnderReview" => "myapps-status-review",
+                                "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "myapps-status-submitted" : "myapps-status-review",
+                                "ReturnedToApplicant" => "myapps-status-rejected",
                                 "Approved" => "myapps-status-approved",
                                 "Rejected" => "myapps-status-rejected",
                                 _ => "myapps-status-draft"
+                            };
+                            var statusText = app.Status switch
+                            {
+                                "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "Submitted" : $"In Progress — {app.CurrentStage}",
+                                "ReturnedToApplicant" => "Returned for Correction",
+                                _ => app.Status
                             };
                             var daysElapsed = (DateTime.Now.Date - app.CreatedDate.Date).Days;
 
@@ -111,7 +127,7 @@
                                 <td>@(string.IsNullOrEmpty(app.ApplicantName) ? "—" : app.ApplicantName)</td>
                                 <td>@(string.IsNullOrEmpty(app.PurposeOfLicence) ? "Trade Licence" : app.PurposeOfLicence)</td>
                                 <td>@app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
-                                <td><span class="myapps-status-badge @statusClass">@app.Status</span></td>
+                                <td><span class="myapps-status-badge @statusClass">@statusText</span></td>
                                 <td>@daysElapsed</td>
                                 <td>
                                     @if (app.Status == "Draft")
