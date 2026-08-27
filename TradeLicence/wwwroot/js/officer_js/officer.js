@@ -8,6 +8,7 @@ function showOfficerActionAlert(actionType, message) {
         forward: { icon: 'success', title: 'Forwarded!' },
         approve: { icon: 'success', title: 'Approved!' },
         revert: { icon: 'info', title: 'Reverted' },
+        reject: { icon: 'error', title: 'Rejected' },
         return: { icon: 'warning', title: 'Returned to Applicant' }
     }[actionType] || { icon: 'info', title: 'Done' };
 
@@ -72,6 +73,31 @@ if (btnRevert) {
             if (result.isConfirmed) {
                 document.getElementById('revertRemarks').value = result.value || '';
                 document.getElementById('revertForm').submit();
+            }
+        });
+    });
+}
+
+var btnReject = document.getElementById('btnReject');
+if (btnReject) {
+    btnReject.addEventListener('click', function () {
+        Swal.fire({
+            title: 'Reject Application',
+            text: 'This is final — the applicant cannot correct and resubmit a rejected application. Please state the reason.',
+            input: 'textarea',
+            inputPlaceholder: 'Reason for rejection (required)...',
+            showCancelButton: true,
+            confirmButtonText: 'Reject',
+            confirmButtonColor: '#C0392B',
+            inputValidator: function (value) {
+                if (!value || !value.trim()) {
+                    return 'Please enter a reason before rejecting the application.';
+                }
+            }
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                document.getElementById('rejectRemarks').value = result.value;
+                document.getElementById('rejectForm').submit();
             }
         });
     });

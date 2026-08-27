@@ -280,5 +280,34 @@ namespace TradeLicence.Controllers
             TempData["OfficerActionType"] = "approve";
             return RedirectToAction("Index");
         }
+
+        // Final, terminal rejection — only valid at the last stage (same as
+        // Approve). Unlike ReturnToApplicant, this ends the application; the
+        // applicant cannot correct and resubmit it. Remarks are required so
+        // the applicant knows why.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectApplication(int id, string remarks)
+        {
+            if (string.IsNullOrWhiteSpace(remarks))
+                return BadRequest(new { error = "Please provide a reason for rejecting this application." });
+
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound();
+
+            var lastStage = OfficerWorkflow.Stages[^1]; // "Approval"
+            if (application.CurrentStage != lastStage)
+                return BadRequest(new { error = "This application hasn't reached the final approval stage yet." });
+
+            application.Status = "Rejected";
+            application.OfficerRemarks = remarks;
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["OfficerActionMessage"] = "Application rejected.";
+            TempData["OfficerActionType"] = "reject";
+            return RedirectToAction("Index");
+        }
     }
 }
