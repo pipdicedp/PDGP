@@ -48,7 +48,7 @@ namespace TradeLicence.Helpers
                         }
                     });
                     menu.Add(new() { Text = "All Applications", Controller = "Officer", Action = "All" });
-                    menu.Add(new() { Text = "User Creation", Controller = "Officer", Action = "Inspections" });
+                    menu.Add(new() { Text = "User Creation", Controller = "Officer", Action = "CreateUser" });
                     break;
 
                 case "DEO":

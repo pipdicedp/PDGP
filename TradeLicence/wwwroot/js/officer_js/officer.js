@@ -8,7 +8,8 @@ function showOfficerActionAlert(actionType, message) {
         forward: { icon: 'success', title: 'Forwarded!' },
         approve: { icon: 'success', title: 'Approved!' },
         revert: { icon: 'info', title: 'Reverted' },
-        return: { icon: 'warning', title: 'Returned to Applicant' }
+        return: { icon: 'warning', title: 'Returned to Applicant' },
+        created: { icon: 'success', title: 'User Created!' }
     }[actionType] || { icon: 'info', title: 'Done' };
 
     Swal.fire({
