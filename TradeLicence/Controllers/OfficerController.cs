@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
@@ -12,6 +13,7 @@ namespace TradeLicence.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ITradeLicenceService _service;
+        private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
         public OfficerController(ApplicationDbContext context, ITradeLicenceService service)
         {
@@ -27,6 +29,13 @@ namespace TradeLicence.Controllers
             var raw = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             return int.TryParse(raw, out var id) ? id : 0;
         }
+
+        // Only the Admin designation (e.g. tladmin) may create officer
+        // accounts — every officer has Role "Officer" (see
+        // AccountController.OfficerLogin), so Designation is what actually
+        // tells Admin apart from DEO/Manager/Inspection Officer/GM here.
+        private bool IsCurrentOfficerAdmin() =>
+            User.FindFirst("Designation")?.Value == "Admin";
 
         public async Task<IActionResult> Index()
         {
@@ -281,33 +290,94 @@ namespace TradeLicence.Controllers
             return RedirectToAction("Index");
         }
 
-        // Final, terminal rejection — only valid at the last stage (same as
-        // Approve). Unlike ReturnToApplicant, this ends the application; the
-        // applicant cannot correct and resubmit it. Remarks are required so
-        // the applicant knows why.
+        // ---------------- Admin: Officer (User) Creation ----------------
+        // Admin-only "User Creation" page. Creates a row in the Officers
+        // table. The Designation picked here is exactly the value
+        // ForwardToOfficer/ViewApplication filter Officers by (see
+        // OfficerWorkflow.StageToDesignation) — so e.g. a new officer
+        // created with Designation "Manager" shows up in the Verification
+        // stage's "Forward To" dropdown immediately, with no other change
+        // needed anywhere else in the app.
+        [HttpGet]
+        public async Task<IActionResult> CreateUser()
+        {
+            if (!IsCurrentOfficerAdmin()) return Forbid();
+
+            ViewBag.Designations = OfficerWorkflow.AllDesignations;
+            ViewBag.ExistingOfficers = await _context.Officers
+                .OrderByDescending(o => o.CreatedDate)
+                .ToListAsync();
+
+            return View(new OfficerCreateViewModel());
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectApplication(int id, string remarks)
+        public async Task<IActionResult> CreateUser(OfficerCreateViewModel model)
         {
-            if (string.IsNullOrWhiteSpace(remarks))
-                return BadRequest(new { error = "Please provide a reason for rejecting this application." });
+            if (!IsCurrentOfficerAdmin()) return Forbid();
 
-            var application = await _context.TradeLicenceApplications.FindAsync(id);
-            if (application == null) return NotFound();
+            // Re-populate what the view needs on every path that redisplays it.
+            async Task LoadPageDataAsync()
+            {
+                ViewBag.Designations = OfficerWorkflow.AllDesignations;
+                ViewBag.ExistingOfficers = await _context.Officers
+                    .OrderByDescending(o => o.CreatedDate)
+                    .ToListAsync();
+            }
 
-            var lastStage = OfficerWorkflow.Stages[^1]; // "Approval"
-            if (application.CurrentStage != lastStage)
-                return BadRequest(new { error = "This application hasn't reached the final approval stage yet." });
+            if (!ModelState.IsValid)
+            {
+                await LoadPageDataAsync();
+                return View(model);
+            }
 
-            application.Status = "Rejected";
-            application.OfficerRemarks = remarks;
-            application.ModifiedDate = DateTime.UtcNow;
+            var usernameTaken = await _context.Officers.AnyAsync(o => o.Username == model.Username);
+            if (usernameTaken)
+            {
+                ModelState.AddModelError(nameof(model.Username), "This username is already taken.");
+            }
 
+            if (!string.IsNullOrWhiteSpace(model.Email))
+            {
+                var emailTaken = await _context.Officers.AnyAsync(o => o.Email == model.Email);
+                if (emailTaken)
+                {
+                    ModelState.AddModelError(nameof(model.Email), "This email is already registered.");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await LoadPageDataAsync();
+                return View(model);
+            }
+
+            var newOfficer = new Officer
+            {
+                Username = model.Username,
+                FullName = model.FullName,
+                Department = model.Department,
+                Designation = model.Designation,
+                Email = model.Email,
+                IsLocked = model.IsLocked,
+                FailedLoginAttempts = 0,
+                LastLoginDate = null,
+                CreatedDate = DateTime.UtcNow,
+                CreatedBy = User.Identity?.Name
+            };
+            // Same PasswordHasher<Officer> approach AccountController uses to
+            // verify logins — never store the typed password as-is.
+            newOfficer.PasswordHash = _officerPasswordHasher.HashPassword(newOfficer, model.Password);
+
+            _context.Officers.Add(newOfficer);
             await _context.SaveChangesAsync();
 
-            TempData["OfficerActionMessage"] = "Application rejected.";
-            TempData["OfficerActionType"] = "reject";
-            return RedirectToAction("Index");
+            TempData["OfficerActionMessage"] =
+                $"Officer account '{newOfficer.Username}' created successfully as {newOfficer.Designation}.";
+            TempData["OfficerActionType"] = "created";
+
+            return RedirectToAction("CreateUser");
         }
     }
 }

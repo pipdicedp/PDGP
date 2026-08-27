@@ -30,6 +30,16 @@ namespace TradeLicence.Models
             { "Approval",         "GM" }
         };
 
+        // Every Designation value the app actually recognizes: the ones
+        // wired into the workflow above, plus "Admin" (which sits outside
+        // the 4 stages — see the class comment). Used to build the
+        // Designation dropdown on Officer/CreateUser, so a newly created
+        // officer's Designation is guaranteed to match what
+        // ForwardToOfficer/ViewApplication filter Officers by — no extra
+        // wiring needed for them to show up in the right "Forward To" list.
+        public static readonly string[] AllDesignations =
+            new[] { "Admin" }.Concat(StageToDesignation.Values.Distinct()).ToArray();
+
         // Reverse lookup — a Designation ("Manager") can cover more than one
         // stage, so this returns a list, not a single stage.
         public static List<string> StagesForDesignation(string? designation)
