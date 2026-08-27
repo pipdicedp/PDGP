@@ -13,9 +13,14 @@
     @* ===== NEW: Your Applications — only shows if the user has any ===== *@
     @if (myApplications != null && myApplications.Any())
     {
-        <div class="page-title">
-            <h3>Your Applications</h3>
-            <p>Continue a draft, or check the status of a submitted application.</p>
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📄</span>
+                <div>
+                    <h3>Your Applications</h3>
+                    <p>Continue a draft, or check the status of a submitted application.</p>
+                </div>
+            </div>
         </div>
 
         <div class="myapps-list">
@@ -36,19 +41,36 @@
                     "ReturnedToApplicant" => "Returned for Correction",
                     _ => app.Status
                 };
+                var rowAccentClass = app.Status switch
+                {
+                    "Draft" => "myapps-row-draft",
+                    "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "myapps-row-submitted" : "myapps-row-review",
+                    "ReturnedToApplicant" => "myapps-row-rejected",
+                    "Approved" => "myapps-row-approved",
+                    "Rejected" => "myapps-row-rejected",
+                    _ => "myapps-row-draft"
+                };
 
-                <div class="myapps-row">
+                <div class="myapps-row @rowAccentClass">
                     <div class="myapps-info">
                         <span class="myapps-name">@(string.IsNullOrEmpty(app.ApplicantName) ? "Untitled application" : app.ApplicantName)</span>
                         <span class="myapps-meta">
                             @(app.ApplicationNumber ?? "No application number yet")
                             &bull; Started @app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")
                         </span>
+                        @if (app.Status == "ReturnedToApplicant" && !string.IsNullOrWhiteSpace(app.OfficerRemarks))
+                        {
+                            <span class="myapps-remarks">Officer's note: "@app.OfficerRemarks"</span>
+                        }
                     </div>
                     <span class="myapps-status-badge @statusClass">@statusText</span>
                     @if (app.Status == "Draft")
                     {
                         <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Continue</a>
+                    }
+                    else if (app.Status == "ReturnedToApplicant")
+                    {
+                        <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Correct &amp; Resubmit</a>
                     }
                     else
                     {
@@ -61,7 +83,7 @@
         @* ===== New Application button — below the grid, for a fresh application ===== *@
         <div class="myapps-new-wrap">
             <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
-                <i class="fas fa-plus"></i> New Application
+                <i class="fa-solid fa-plus"></i> New Application
             </a>
         </div>
 
@@ -70,15 +92,24 @@
     else
     {
         @* No applications yet — invite them to start their first one *@
-        <div class="page-title">
-            <h3>Your Applications</h3>
-            <p>You haven't started any applications yet.</p>
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📄</span>
+                <div>
+                    <h3>Your Applications</h3>
+                    <p>You haven't started any applications yet.</p>
+                </div>
+            </div>
         </div>
 
-        <div class="myapps-new-wrap">
-            <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
-                <i class="fas fa-plus"></i> New Application
-            </a>
+        <div class="myapps-empty">
+            <div class="myapps-empty-icon">🗂️</div>
+            <p>No applications yet — start your first trade licence application below.</p>
+            <div class="myapps-new-wrap">
+                <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
+                    <i class="fa-solid fa-plus"></i> New Application
+                </a>
+            </div>
         </div>
     }
     @* ===== END new section ===== *@

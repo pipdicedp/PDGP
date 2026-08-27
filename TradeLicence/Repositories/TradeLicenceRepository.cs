@@ -39,11 +39,22 @@ namespace TradeLicence.Repositories
             var originalCreatedDate = existing.CreatedDate;
             var originalUserId = existing.UserId;
 
+            // The citizen wizard form never includes these — without
+            // preserving them, every save (and especially a "Correct &
+            // Resubmit" after an officer's Return) would silently reset
+            // the application back to Initial Scrutiny / unassigned,
+            // instead of going back to whichever officer/stage sent it
+            // back for correction.
+            var originalCurrentStage = existing.CurrentStage;
+            var originalAssignedOfficerId = existing.AssignedOfficerId;
+
             _context.Entry(existing).CurrentValues.SetValues(application);
 
             // The wizard form doesn't round-trip every field on every step —
             // never let a re-save clobber these with a blank/default value.
             existing.CreatedDate = originalCreatedDate;
+            existing.CurrentStage = originalCurrentStage;
+            existing.AssignedOfficerId = originalAssignedOfficerId;
             if (application.UserId == null)
             {
                 existing.UserId = originalUserId;

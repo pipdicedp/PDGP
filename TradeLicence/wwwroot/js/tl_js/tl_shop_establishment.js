@@ -489,10 +489,10 @@ $(document).ready(function () {
     // Upload Annexure Files (4 fixed slots)
     // =========================================================
     var annexureFields = [
-        { inputId: 'AnnexureFeesFile', shortName: 'AnnexureFees', documentName: 'Details of Fees Submitted' },
-        { inputId: 'AnnexureOccupancyFile', shortName: 'AnnexureOccupancy', documentName: 'Proof for Legal Occupancy' },
-        { inputId: 'AnnexureEmployerIdFile', shortName: 'AnnexureEmployerId', documentName: 'ID Proof of the Employer' },
-        { inputId: 'AnnexurePremisesPhotoFile', shortName: 'AnnexurePremisesPhoto', documentName: 'Photo of the Premises With Name Board' }
+        { inputId: 'AnnexureFeesFile', shortName: 'Fees', documentName: 'Details of Fees Submitted' },
+        { inputId: 'AnnexureOccupancyFile', shortName: 'Occupancy', documentName: 'Proof for Legal Occupancy' },
+        { inputId: 'AnnexureEmployerIdFile', shortName: 'EmployerId', documentName: 'ID Proof of the Employer' },
+        { inputId: 'AnnexurePremisesPhotoFile', shortName: 'PremisesPhoto', documentName: 'Photo of the Premises With Name Board' }
     ];
 
     function loadAnnexureDocuments() {
@@ -508,8 +508,8 @@ $(document).ready(function () {
                 annexureFields.forEach(function (field) {
                     var match = data.find(function (d) { return d.documentName === field.documentName; });
                     if (match) {
-                        $('#btnPreview' + field.shortName).prop('disabled', false).data('documentId', match.annexureDocumentId);
-                        $('#btnRemove' + field.shortName).prop('disabled', false).data('documentId', match.annexureDocumentId);
+                        $('#btnAnnexurePreview' + field.shortName).prop('disabled', false).data('documentId', match.annexureDocumentId);
+                        $('#btnAnnexureRemove' + field.shortName).prop('disabled', false).data('documentId', match.annexureDocumentId);
                     }
                 });
             }
@@ -539,8 +539,8 @@ $(document).ready(function () {
             contentType: false,
             headers: { 'RequestVerificationToken': getAntiForgeryToken() },
             success: function (data) {
-                $('#btnPreview' + field.shortName).prop('disabled', false).data('documentId', data.documentId);
-                $('#btnRemove' + field.shortName).prop('disabled', false).data('documentId', data.documentId);
+                $('#btnAnnexurePreview' + field.shortName).prop('disabled', false).data('documentId', data.documentId);
+                $('#btnAnnexureRemove' + field.shortName).prop('disabled', false).data('documentId', data.documentId);
                 alert(field.documentName + ' uploaded successfully.');
             },
             error: function (xhr) {
@@ -550,10 +550,10 @@ $(document).ready(function () {
     }
 
     annexureFields.forEach(function (field) {
-        $('#btnUpload' + field.shortName).on('click', function () { uploadAnnexureDocument(field); });
+        $('#btnUploadAnnexure' + field.shortName).on('click', function () { uploadAnnexureDocument(field); });
     });
 
-    $(document).on('click', '[id^="btnPreviewAnnexure"]', function () {
+    $(document).on('click', '[id^="btnAnnexurePreview"]', function () {
         var docId = $(this).data('documentId');
         if (!docId) return;
         $('#annexureDocumentViewer').attr('src', '/TradeLicence/NewLicence/Apply/ViewAnnexureDocument?documentId=' + docId);
@@ -561,7 +561,7 @@ $(document).ready(function () {
         if (modalEl && window.bootstrap) new bootstrap.Modal(modalEl).show();
     });
 
-    $(document).on('click', '[id^="btnRemoveAnnexure"]', function () {
+    $(document).on('click', '[id^="btnAnnexureRemove"]', function () {
         var $btn = $(this);
         var docId = $btn.data('documentId');
         if (!docId) return;
@@ -573,9 +573,9 @@ $(document).ready(function () {
             headers: { 'RequestVerificationToken': getAntiForgeryToken() },
             data: { documentId: docId },
             success: function () {
-                var shortName = $btn.attr('id').replace('btnRemove', '');
-                $('#' + shortName + 'File').val('');
-                $('#btnPreview' + shortName).prop('disabled', true).removeData('documentId');
+                var shortName = $btn.attr('id').replace('btnAnnexureRemove', '');
+                $('#Annexure' + shortName + 'File').val('');
+                $('#btnAnnexurePreview' + shortName).prop('disabled', true).removeData('documentId');
                 $btn.prop('disabled', true).removeData('documentId');
             },
             error: function () { alert('Failed to remove document. Please try again.'); }

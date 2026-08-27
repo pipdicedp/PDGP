@@ -823,3 +823,62 @@ body {
         min-width: 30px;
     }
 }
+
+/* =====================================
+   "Your Applications" (citizen Dashboard/Index) polish — status-coloured
+   left accent per row, hover lift, and a nicer empty state.
+===================================== */
+.myapps-row {
+    border-left: 4px solid #DCD7CB;
+    box-shadow: 0 3px 10px rgba(0,0,0,.04);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+    .myapps-row:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px rgba(0,0,0,.08);
+    }
+
+.myapps-row-draft {
+    border-left-color: #8A4A12;
+}
+
+.myapps-row-submitted {
+    border-left-color: #1D4E89;
+}
+
+.myapps-row-review {
+    border-left-color: #1a3a52;
+}
+
+.myapps-row-approved {
+    border-left-color: #1D6E3E;
+}
+
+.myapps-row-rejected {
+    border-left-color: #7A241D;
+}
+
+.myapps-empty {
+    text-align: center;
+    padding: 30px 20px 10px;
+}
+
+.myapps-empty-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+}
+
+.myapps-empty p {
+    color: #6B7280;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+}
+
+.myapps-remarks {
+    display: block;
+    font-size: 0.78rem;
+    color: #7A241D;
+    font-style: italic;
+    margin-top: 4px;
+}

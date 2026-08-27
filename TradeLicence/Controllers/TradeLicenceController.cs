@@ -57,6 +57,19 @@ namespace TradeLicence.Controllers
             {
                 var existing = await _service.GetApplicationAsync(id.Value);
                 if (existing == null) return NotFound();
+
+                // Only a Draft (not yet submitted) or a ReturnedToApplicant
+                // application (officer sent it back for correction) may be
+                // edited. Once it's Submitted/In Progress/Approved/Rejected,
+                // this is enforced server-side — not just by hiding the
+                // "Edit" link on the dashboard — so typing the URL directly
+                // can't be used to bypass it.
+                var editableStatuses = new[] { "Draft", "ReturnedToApplicant" };
+                if (!editableStatuses.Contains(existing.Status))
+                {
+                    return RedirectToAction("Confirmation", new { id = existing.ApplicationId });
+                }
+
                 model = existing;
             }
             else
@@ -183,6 +196,20 @@ namespace TradeLicence.Controllers
                         kvp => kvp.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
 
                 return BadRequest(new { success = false, errors });
+            }
+
+            // Re-check against the DB's own copy of Status — never trust the
+            // posted model's Status field for this (a crafted/replayed
+            // request could set it to anything). Same rule as the GET guard:
+            // only Draft or ReturnedToApplicant may be (re)submitted.
+            if (model.ApplicationId > 0)
+            {
+                var current = await _service.GetApplicationAsync(model.ApplicationId);
+                var editableStatuses = new[] { "Draft", "ReturnedToApplicant" };
+                if (current == null || !editableStatuses.Contains(current.Status))
+                {
+                    return BadRequest(new { success = false, error = "This application can no longer be edited or resubmitted." });
+                }
             }
 
             if (model.UserId == null)

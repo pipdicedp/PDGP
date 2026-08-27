@@ -82,6 +82,12 @@
                 <input type="hidden" name="remarks" id="revertRemarks" />
             </form>
 
+            <form id="rejectForm" method="post" asp-action="RejectApplication" style="display:none;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Application.ApplicationId" />
+                <input type="hidden" name="remarks" id="rejectRemarks" />
+            </form>
+
             <div class="tl-grid-2">
 
                 <!-- LEFT: Forward to Officer / Final Approval -->
@@ -143,9 +149,10 @@
                     {
                         <fieldset class="tl-section">
                             <legend>Final Approval</legend>
-                            <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, or return it to the applicant if something needs correcting.</p>
+                            <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, return it to the applicant if something needs correcting, or reject it outright.</p>
                             <div class="tl-actions" style="text-align:left; border-top:none; padding-top:0;">
                                 <button type="button" id="btnApprove" class="btn btn-success">Approve Application</button>
+                                <button type="button" id="btnReject" class="btn btn-danger">Reject Application</button>
                                 @if (revertTarget != null)
                                 {
                                     <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName">Revert to @revertToName</button>
