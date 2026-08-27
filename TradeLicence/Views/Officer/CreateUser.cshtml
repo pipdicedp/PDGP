@@ -1,10 +1,9 @@
 ﻿@model TradeLicence.Models.OfficerCreateViewModel
 @{
-    ViewData["Title"] = "User Creation";
+    ViewData["Title"] = "Officer Creation";
     Layout = "~/Views/Shared/_OfficerLayout.cshtml";
 
     var designations = (string[])(ViewBag.Designations ?? Array.Empty<string>());
-    var existingOfficers = (List<TradeLicence.Models.Officer>)(ViewBag.ExistingOfficers ?? new List<TradeLicence.Models.Officer>());
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
@@ -18,8 +17,8 @@
             <div class="dashboard-banner-text">
                 <span class="dashboard-banner-icon">🧑‍💼</span>
                 <div>
-                    <h3>User Creation</h3>
-                    <p>Create Officer accounts — each Designation drives which workflow stage they can act on</p>
+                    <h3>Officer Creation</h3>
+                    <p>Create a new Officer account — each Designation drives which workflow stage they can act on</p>
                 </div>
             </div>
         </div>
@@ -92,74 +91,21 @@
                             </span>
                         </div>
 
-                        <div class="form-group" style="align-self:end;">
+                        @* <div class="form-group" style="align-self:end;">
                             <div class="form-check">
                                 <input asp-for="IsLocked" class="form-check-input" />
                                 <label asp-for="IsLocked" class="form-check-label">Lock this account immediately</label>
                             </div>
-                        </div>
+                        </div> *@
                     </div>
                 </fieldset>
 
                 <div class="tl-actions" style="text-align:left; border-top:none; padding-top:0;">
                     <button type="submit" class="btn btn-primary">Create User</button>
+                    <a class="btn btn-secondary" href="@Url.Action("ExistingOfficers", "Officer")">View Existing Officers</a>
                     <a class="btn btn-secondary" href="@Url.Action("Index", "Officer")">Back to Dashboard</a>
                 </div>
             </form>
-        </div>
-
-        <div class="status-controls-card" style="margin-top:24px;">
-            <h5 style="margin-bottom:16px;">Existing Officers (@existingOfficers.Count)</h5>
-
-            @if (!existingOfficers.Any())
-            {
-                <p class="tl-note">No officer accounts yet.</p>
-            }
-            else
-            {
-                <div class="status-table-scroll">
-                    <table class="status-apps-table">
-                        <thead>
-                            <tr>
-                                <th>Sl No.</th>
-                                <th>Username</th>
-                                <th>Full Name</th>
-                                <th>Designation</th>
-                                <th>Department</th>
-                                <th>Email</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @{ int slNo = 1; }
-                            @foreach (var o in existingOfficers)
-                            {
-                                <tr>
-                                    <td>@slNo</td>
-                                    <td>@o.Username</td>
-                                    <td>@(o.FullName ?? "—")</td>
-                                    <td>@(o.Designation ?? "—")</td>
-                                    <td>@(o.Department ?? "—")</td>
-                                    <td>@(o.Email ?? "—")</td>
-                                    <td>
-                                        @if (o.IsLocked)
-                                        {
-                                            <span class="myapps-status-badge myapps-status-rejected">Locked</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="myapps-status-badge myapps-status-approved">Active</span>
-                                        }
-                                    </td>
-                                    <td>@o.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
-                                </tr>
-                                slNo++;
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
         </div>
 
     </div>

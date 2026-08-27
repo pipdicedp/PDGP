@@ -1,0 +1,134 @@
+﻿@model List<TradeLicence.Models.Officer>
+@{
+    ViewData["Title"] = "Existing Officers";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">🗂️</span>
+                <div>
+                    <h3>Existing Officers</h3>
+                    <p>Click a status button to activate/deactivate an account, or delete an account entirely</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-controls-card">
+
+            <div class="tl-actions" style="text-align:left; border-top:none; padding-top:0; margin-bottom:16px;">
+                <a class="btn btn-primary" href="@Url.Action("CreateUser", "Officer")">+ Create New Officer</a>
+            </div>
+
+            @if (Model.Any())
+            {
+                <div class="status-table-controls">
+                    <div class="status-show-entries">
+                        Show
+                        <select id="statusPageSize">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        entries
+                    </div>
+                    <div class="status-search">
+                        Search: <input type="text" id="statusSearchBox" placeholder="Search officers..." />
+                    </div>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <p class="tl-note">No officer accounts yet.</p>
+            }
+            else
+            {
+                <div class="status-table-scroll">
+                    <table class="status-apps-table" id="statusTable">
+                        <thead>
+                            <tr>
+                                <th>Sl No.</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Designation</th>
+                                <th>Department</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                @* <th>Action</th> *@
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int slNo = 1; }
+                            @foreach (var o in Model)
+                            {
+                                <tr>
+                                    <td>@slNo</td>
+                                    <td>@o.Username</td>
+                                    <td>@(o.FullName ?? "—")</td>
+                                    <td>@(o.Designation ?? "—")</td>
+                                    <td>@(o.Department ?? "—")</td>
+                                    <td>@(o.Email ?? "—")</td>
+                                    <td>
+                                        <form id="toggleForm-@o.OfficerId" method="post" asp-action="ToggleOfficerStatus" style="display:none;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="officerId" value="@o.OfficerId" />
+                                        </form>
+                                        <button type="button"
+                                                class="btn-status-toggle @(o.IsLocked ? "btn-status-inactive" : "btn-status-active")"
+                                                data-officer-id="@o.OfficerId"
+                                                data-officer-name="@o.Username"
+                                                data-current-status="@(o.IsLocked ? "Inactive" : "Active")">
+                                            @(o.IsLocked ? "Inactive" : "Active")
+                                        </button>
+                                    </td>
+                                    <td>@o.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
+                                    <td>
+                                        <form id="deleteForm-@o.OfficerId" method="post" asp-action="DeleteOfficer" style="display:none;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="officerId" value="@o.OfficerId" />
+                                        </form>
+                                       @*  <button type="button"
+                                                class="myapps-btn myapps-btn-delete btn-delete-officer"
+                                                data-officer-id="@o.OfficerId"
+                                                data-officer-name="@o.Username">
+                                            <i class="fa-solid fa-trash"></i> Delete
+                                        </button> *@
+                                    </td>
+                                </tr>
+                                slNo++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/tl_js/tl_status.js" asp-append-version="true"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+
+    @if (TempData["OfficerActionMessage"] != null)
+    {
+        <script>
+            showOfficerActionAlert(
+                            @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
+                @Html.Raw(Json.Serialize(TempData["OfficerActionMessage"]))
+            );
+        </script>
+    }
+}

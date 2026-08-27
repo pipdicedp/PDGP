@@ -9,7 +9,9 @@ function showOfficerActionAlert(actionType, message) {
         approve: { icon: 'success', title: 'Approved!' },
         revert: { icon: 'info', title: 'Reverted' },
         return: { icon: 'warning', title: 'Returned to Applicant' },
-        created: { icon: 'success', title: 'User Created!' }
+        created: { icon: 'success', title: 'User Created!' },
+        deleted: { icon: 'success', title: 'User Deleted' },
+        toggled: { icon: 'success', title: 'Status Updated' }
     }[actionType] || { icon: 'info', title: 'Done' };
 
     Swal.fire({
@@ -77,3 +79,55 @@ if (btnRevert) {
         });
     });
 }
+
+// ---------------- Existing Officers page ----------------
+// Both buttons live in a table with one row per officer, so — unlike the
+// single buttons above — these are delegated on `document` rather than
+// looked up by a single id. Each row already carries its own hidden
+// #toggleForm-<id> / #deleteForm-<id>, so all these handlers do is confirm
+// and then submit the right one.
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.btn-status-toggle');
+    if (!btn) return;
+
+    var id = btn.dataset.officerId;
+    var name = btn.dataset.officerName;
+    var current = btn.dataset.currentStatus;
+    var next = current === 'Active' ? 'Inactive' : 'Active';
+
+    Swal.fire({
+        icon: 'question',
+        title: 'Change Status?',
+        text: 'Set "' + name + '" to ' + next + '?',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, ' + next,
+        confirmButtonColor: '#1a3a52'
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            document.getElementById('toggleForm-' + id).submit();
+        }
+    });
+});
+
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.btn-delete-officer');
+    if (!btn) return;
+
+    var id = btn.dataset.officerId;
+    var name = btn.dataset.officerName;
+
+    Swal.fire({
+        icon: 'warning',
+        title: 'Delete this user?',
+        text: 'This permanently deletes the officer account "' + name + '". This cannot be undone.',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#B3261E'
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            document.getElementById('deleteForm-' + id).submit();
+        }
+    });
+});
