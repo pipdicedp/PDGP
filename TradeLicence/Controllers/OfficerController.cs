@@ -299,15 +299,11 @@ namespace TradeLicence.Controllers
         // stage's "Forward To" dropdown immediately, with no other change
         // needed anywhere else in the app.
         [HttpGet]
-        public async Task<IActionResult> CreateUser()
+        public IActionResult CreateUser()
         {
             if (!IsCurrentOfficerAdmin()) return Forbid();
 
             ViewBag.Designations = OfficerWorkflow.AllDesignations;
-            ViewBag.ExistingOfficers = await _context.Officers
-                .OrderByDescending(o => o.CreatedDate)
-                .ToListAsync();
-
             return View(new OfficerCreateViewModel());
         }
 
@@ -317,18 +313,10 @@ namespace TradeLicence.Controllers
         {
             if (!IsCurrentOfficerAdmin()) return Forbid();
 
-            // Re-populate what the view needs on every path that redisplays it.
-            async Task LoadPageDataAsync()
-            {
-                ViewBag.Designations = OfficerWorkflow.AllDesignations;
-                ViewBag.ExistingOfficers = await _context.Officers
-                    .OrderByDescending(o => o.CreatedDate)
-                    .ToListAsync();
-            }
+            ViewBag.Designations = OfficerWorkflow.AllDesignations;
 
             if (!ModelState.IsValid)
             {
-                await LoadPageDataAsync();
                 return View(model);
             }
 
@@ -349,7 +337,6 @@ namespace TradeLicence.Controllers
 
             if (!ModelState.IsValid)
             {
-                await LoadPageDataAsync();
                 return View(model);
             }
 
@@ -378,6 +365,104 @@ namespace TradeLicence.Controllers
             TempData["OfficerActionType"] = "created";
 
             return RedirectToAction("CreateUser");
+        }
+
+        // Read-only list of every officer account, with an Active/Inactive
+        // toggle and a delete option per row. Separate page from CreateUser
+        // so the creation form isn't cluttered with the full list every time.
+        [HttpGet]
+        public async Task<IActionResult> ExistingOfficers()
+        {
+            if (!IsCurrentOfficerAdmin()) return Forbid();
+
+            var officers = await _context.Officers
+                .OrderByDescending(o => o.CreatedDate)
+                .ToListAsync();
+
+            return View(officers);
+        }
+
+        // Flips Officer.IsLocked — the same flag AccountController.OfficerLogin
+        // checks before verifying a password, so "Inactive" here means the
+        // account genuinely can't log in, not just a cosmetic label.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleOfficerStatus(int officerId)
+        {
+            if (!IsCurrentOfficerAdmin()) return Forbid();
+
+            var officer = await _context.Officers.FindAsync(officerId);
+            if (officer == null) return NotFound();
+
+            // Guard against an admin locking themselves out mid-session —
+            // there's no other way back in if they're the only Admin account.
+            if (officerId == GetCurrentOfficerId() && !officer.IsLocked)
+            {
+                TempData["OfficerActionMessage"] = "You can't set your own account to Inactive while logged in.";
+                TempData["OfficerActionType"] = "return";
+                return RedirectToAction("ExistingOfficers");
+            }
+
+            officer.IsLocked = !officer.IsLocked;
+
+            // Unlocking without resetting this would leave them one or two
+            // bad logins away from being auto-locked again immediately —
+            // see AccountController.OfficerLogin's MaxFailedAttempts check.
+            if (!officer.IsLocked)
+            {
+                officer.FailedLoginAttempts = 0;
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["OfficerActionMessage"] =
+                $"'{officer.Username}' is now {(officer.IsLocked ? "Inactive" : "Active")}.";
+            TempData["OfficerActionType"] = "toggled";
+
+            return RedirectToAction("ExistingOfficers");
+        }
+
+        // Permanently removes an officer account. Officers.OfficerId is
+        // referenced by ApplicationWorkflowHistories.FromOfficerId/ToOfficerId
+        // with no cascade or set-null configured (see the Database script) —
+        // deleting an officer who has ever forwarded/received an application
+        // would violate that FK, so that case is caught and turned into a
+        // friendly message rather than a raw SQL error. Locking (via
+        // ToggleOfficerStatus) is the fallback for those accounts.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteOfficer(int officerId)
+        {
+            if (!IsCurrentOfficerAdmin()) return Forbid();
+
+            var officer = await _context.Officers.FindAsync(officerId);
+            if (officer == null) return NotFound();
+
+            if (officerId == GetCurrentOfficerId())
+            {
+                TempData["OfficerActionMessage"] = "You can't delete your own account while logged in.";
+                TempData["OfficerActionType"] = "return";
+                return RedirectToAction("ExistingOfficers");
+            }
+
+            var username = officer.Username;
+
+            try
+            {
+                _context.Officers.Remove(officer);
+                await _context.SaveChangesAsync();
+
+                TempData["OfficerActionMessage"] = $"Officer account '{username}' deleted.";
+                TempData["OfficerActionType"] = "deleted";
+            }
+            catch (DbUpdateException)
+            {
+                TempData["OfficerActionMessage"] =
+                    $"'{username}' can't be deleted — they appear in the workflow history of one or more applications. Set them to Inactive instead.";
+                TempData["OfficerActionType"] = "return";
+            }
+
+            return RedirectToAction("ExistingOfficers");
         }
     }
 }

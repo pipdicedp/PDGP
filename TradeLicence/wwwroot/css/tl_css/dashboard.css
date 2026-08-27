@@ -391,6 +391,43 @@ body {
         background: #4B5563;
     }
 
+/* Officer status toggle — a clickable button styled like the status badges
+   (same green/red palette as myapps-status-approved/rejected) so it reads
+   as "state" at a glance, but with a pointer cursor + hover state since,
+   unlike the badges, this one is interactive. */
+.btn-status-toggle {
+    border: none;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: opacity .15s ease;
+}
+
+    .btn-status-toggle:hover {
+        opacity: 0.8;
+    }
+
+.btn-status-active {
+    background: #DCF3E4;
+    color: #1D6E3E;
+}
+
+.btn-status-inactive {
+    background: #FBEAE8;
+    color: #7A241D;
+}
+
+.myapps-btn-delete {
+    background: #B3261E;
+}
+
+    .myapps-btn-delete:hover {
+        background: #8C1D17;
+    }
+
 .myapps-divider {
     border: none;
     border-top: 1px solid #DCD7CB;
