@@ -33,6 +33,10 @@ namespace TradeLicence.Services
             {
                 model.CreatedDate = DateTime.UtcNow;
             }
+            else
+            {
+                model.ModifiedDate = DateTime.UtcNow;
+            }
 
             if (string.IsNullOrEmpty(model.ApplicationNumber))
             {
@@ -80,6 +84,15 @@ namespace TradeLicence.Services
             {
                 model.CreatedDate = DateTime.UtcNow;
             }
+            else
+            {
+                model.ModifiedDate = DateTime.UtcNow;
+            }
+
+            // SubmittedDate is set here only — this is the one place Status
+            // actually becomes "Submitted", so it's the true "citizen hit
+            // Submit" timestamp (CreatedDate is set earlier, at first Draft save).
+            model.SubmittedDate = DateTime.UtcNow;
 
             if (string.IsNullOrEmpty(model.ApplicationNumber))
             {
@@ -583,16 +596,23 @@ namespace TradeLicence.Services
 
                         col.Item().Background("#f5f9fa").Padding(10).Row(row =>
                         {
-                            row.RelativeItem().Text(t =>
+                            row.RelativeItem(2).Column(c =>
                             {
-                                t.Span("Application Number: ").SemiBold();
-                                t.Span(application.ApplicationNumber ?? "-");
+                                c.Item().Text("Application Number").FontSize(9).FontColor("#5a6b78");
+                                c.Item().Text(application.ApplicationNumber ?? "-").FontSize(12).SemiBold();
                             });
-                            row.RelativeItem().AlignRight().Text(t =>
+
+                            row.RelativeItem(2).Column(c =>
                             {
-                                t.Span("Status: ").SemiBold();
-                                t.Span(application.Status);
+                                c.Item().Text("Submitted Date").FontSize(9).FontColor("#5a6b78");
+                                c.Item().Text(application.SubmittedDate.HasValue
+                                    ? application.SubmittedDate.Value.ToString("dd-MM-yyyy hh:mm tt")
+                                    : "-").FontSize(12).SemiBold();
                             });
+
+                            row.ConstantItem(100).AlignRight().AlignMiddle().Background("#1a7f4b")
+                                .PaddingVertical(4).PaddingHorizontal(10)
+                                .Text(application.Status).FontColor("#ffffff").FontSize(10).SemiBold();
                         });
 
                         col.Item().Text("Applicant & Trade Details").Bold().FontSize(12).FontColor("#1a3a52");

@@ -112,6 +112,11 @@ namespace TradeLicence.Models
 
         public DateTime? ModifiedDate { get; set; }
 
+        // Set exactly once, in SubmitApplicationAsync, when Status first
+        // becomes "Submitted". Unlike CreatedDate (set at first Draft save)
+        // this reflects the citizen's actual final-submit moment.
+        public DateTime? SubmittedDate { get; set; }
+
         public string? CreatedByUserId { get; set; }
 
         public int CurrentStep { get; set; } = 1;

@@ -168,44 +168,54 @@
                     {
                         <fieldset class="tl-section">
                             <legend>Forwarding History</legend>
-                            @for (int i = 0; i < history.Count; i++)
-                            {
-                                var h = history[i];
-                                var fromName = h.FromOfficerId.HasValue && officerNames.ContainsKey(h.FromOfficerId.Value)
-                                    ? officerNames[h.FromOfficerId.Value] : "Applicant";
-                                var toName = h.ToOfficerId.HasValue && officerNames.ContainsKey(h.ToOfficerId.Value)
-                                    ? officerNames[h.ToOfficerId.Value] : "-";
-                                var isRevert = h.ActionType == "Revert";
+                            <div class="tl-history-scroll">
+                                @for (int i = history.Count - 1; i >= 0; i--)
+                                {
+                                    var h = history[i];
+                                    var fromName = h.FromOfficerId.HasValue && officerNames.ContainsKey(h.FromOfficerId.Value)
+                                        ? officerNames[h.FromOfficerId.Value] : "Applicant";
+                                    var toName = h.ToOfficerId.HasValue && officerNames.ContainsKey(h.ToOfficerId.Value)
+                                        ? officerNames[h.ToOfficerId.Value] : "-";
+                                    var isRevert = h.ActionType == "Revert";
 
-                                // "Received on" for the first hop is when the citizen
-                                // submitted (Application.CreatedDate) — every hop after
-                                // that, it's simply when the previous hop happened.
-                                var receivedOn = i > 0 ? history[i - 1].ActionDate : Model.Application.CreatedDate;
-                                var forwardedOn = h.ActionDate;
-                                var duration = forwardedOn - receivedOn;
-                                var takenText = duration.TotalDays >= 1
-                                    ? $"{(int)duration.TotalDays} day{((int)duration.TotalDays == 1 ? "" : "s")}"
-                                    : duration.TotalHours >= 1
-                                        ? $"{(int)duration.TotalHours} hour{((int)duration.TotalHours == 1 ? "" : "s")}"
-                                        : "under an hour";
+                                    // "Received on" for the first hop is when the citizen
+                                    // submitted (Application.CreatedDate) — every hop after
+                                    // that, it's simply when the previous hop happened.
+                                    // (i still walks in chronological order here — only the
+                                    // rendering above starts from the end, not this lookup.)
+                                    var receivedOn = i > 0 ? history[i - 1].ActionDate : Model.Application.CreatedDate;
+                                    var forwardedOn = h.ActionDate;
+                                    var duration = forwardedOn - receivedOn;
+                                    var takenText = duration.TotalDays >= 1
+                                        ? $"{(int)duration.TotalDays} day{((int)duration.TotalDays == 1 ? "" : "s")}"
+                                        : duration.TotalHours >= 1
+                                            ? $"{(int)duration.TotalHours} hour{((int)duration.TotalHours == 1 ? "" : "s")}"
+                                            : "under an hour";
 
-                                <div class="tl-history-item @(isRevert ? "tl-history-revert" : "")">
-                                    <i class="fa-solid @(isRevert ? "fa-rotate-left" : "fa-share") tl-history-icon"></i>
-                                    <div class="tl-history-body">
-                                        <div class="tl-history-action">@(isRevert ? "Reverted" : "Forwarded")</div>
-                                        <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @toName (@h.ToStage)</div>
-                                        <div class="tl-history-meta">
-                                            Received: @receivedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
-                                            Forwarded: @forwardedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
-                                            Time taken: @takenText
+                                    <div class="tl-history-item @(isRevert ? "tl-history-revert" : "")">
+                                        <i class="fa-solid @(isRevert ? "fa-rotate-left" : "fa-share") tl-history-icon"></i>
+                                        <div class="tl-history-body">
+                                            <div class="tl-history-action">
+                                                @(isRevert ? "Reverted" : "Forwarded")
+                                                @if (i == history.Count - 1)
+                                                {
+                                                    <span class="tl-history-latest-tag">Latest</span>
+                                                }
+                                            </div>
+                                            <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @toName (@h.ToStage)</div>
+                                            <div class="tl-history-meta">
+                                                Received: @receivedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
+                                                Forwarded: @forwardedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
+                                                Time taken: @takenText
+                                            </div>
+                                            @if (!string.IsNullOrWhiteSpace(h.Remarks))
+                                            {
+                                                <div class="tl-history-remarks">"@h.Remarks"</div>
+                                            }
                                         </div>
-                                        @if (!string.IsNullOrWhiteSpace(h.Remarks))
-                                        {
-                                            <div class="tl-history-remarks">"@h.Remarks"</div>
-                                        }
                                     </div>
-                                </div>
-                            }
+                                }
+                            </div>
                         </fieldset>
                     }
                     else
