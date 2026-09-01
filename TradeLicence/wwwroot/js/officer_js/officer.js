@@ -105,6 +105,107 @@ if (btnRevert) {
     });
 }
 
+// ---------------- Stage Supporting Document upload (Verification/Inspection) ----------------
+// Submitted via fetch, not a normal form post: the page must stay exactly
+// where it is (no redirect, no scroll-to-top), and this action has nothing
+// to do with the Forward/Approve/Return popup wiring in showOfficerActionAlert
+// above — that one is only for actions that redirect back to the dashboard.
+var stageUploadForm = document.getElementById('stageDocumentUploadForm');
+if (stageUploadForm) {
+    stageUploadForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var fileInput = stageUploadForm.querySelector('input[type="file"]');
+        if (!fileInput.files.length) return;
+
+        var formData = new FormData(stageUploadForm);
+        var token = stageUploadForm.querySelector('input[name="__RequestVerificationToken"]').value;
+        var submitBtn = stageUploadForm.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+
+        fetch(stageUploadForm.action, {
+            method: 'POST',
+            headers: { 'RequestVerificationToken': token },
+            body: formData
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    return response.json().then(function (data) {
+                        throw new Error(data.error || 'Upload failed.');
+                    });
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                var note = document.getElementById('currentStageFileNote');
+                if (note) {
+                    note.innerHTML = 'Current file: <strong>' + data.fileName + '</strong> (uploaded ' +
+                        data.uploadedDate + '). Uploading a new file will replace it.';
+                    note.style.display = '';
+                }
+
+                var previewBtn = document.getElementById('stageDocPreviewBtn');
+                if (previewBtn) {
+                    previewBtn.dataset.previewUrl = '/Officer/PreviewStageDocument?docId=' + data.docId;
+                    previewBtn.dataset.contentType = data.contentType;
+                    previewBtn.dataset.fileName = data.fileName;
+                    previewBtn.style.display = '';
+                }
+
+                fileInput.value = '';
+                // No popup here on purpose — the updated "Current file" note
+                // and Preview button above are the feedback; a SweetAlert
+                // modal isn't wanted for this action.
+            })
+            .catch(function (err) {
+                Swal.fire({ icon: 'error', title: 'Upload failed', text: err.message, confirmButtonColor: '#1a3a52' });
+            })
+            .finally(function () {
+                submitBtn.disabled = false;
+            });
+    });
+}
+
+// ---------------- Stage document preview (shows inline, doesn't download) ----------------
+document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.tl-stage-preview-btn');
+    if (!btn || !btn.dataset.previewUrl) return;
+
+    var url = btn.dataset.previewUrl;
+    var contentType = btn.dataset.contentType || '';
+    var fileName = btn.dataset.fileName || 'document';
+    var content = document.getElementById('stageDocPreviewContent');
+    var title = document.getElementById('stageDocPreviewTitle');
+
+    title.textContent = fileName;
+
+    if (contentType.indexOf('image/') === 0) {
+        content.innerHTML = '<img src="' + url + '" alt="' + fileName + '">';
+    } else if (contentType === 'application/pdf') {
+        content.innerHTML = '<iframe src="' + url + '"></iframe>';
+    } else {
+        content.innerHTML = '<p>This file type can\'t be previewed here. <a href="' + url + '" target="_blank">Open it in a new tab</a> instead.</p>';
+    }
+
+    document.getElementById('stageDocPreviewModal').style.display = 'flex';
+});
+
+var stageDocPreviewClose = document.getElementById('stageDocPreviewClose');
+if (stageDocPreviewClose) {
+    stageDocPreviewClose.addEventListener('click', closeStageDocPreview);
+}
+var stageDocPreviewModal = document.getElementById('stageDocPreviewModal');
+if (stageDocPreviewModal) {
+    // Click on the dark overlay (not the box itself) also closes it.
+    stageDocPreviewModal.addEventListener('click', function (e) {
+        if (e.target === stageDocPreviewModal) closeStageDocPreview();
+    });
+}
+function closeStageDocPreview() {
+    document.getElementById('stageDocPreviewModal').style.display = 'none';
+    document.getElementById('stageDocPreviewContent').innerHTML = '';
+}
+
 // ---------------- Existing Officers page ----------------
 // Both buttons live in a table with one row per officer, so — unlike the
 // single buttons above — these are delegated on `document` rather than

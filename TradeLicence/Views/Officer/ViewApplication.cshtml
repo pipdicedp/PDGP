@@ -60,6 +60,11 @@
 
         <div class="tl-officer-panel">
 
+            @{
+                var canUploadStageDocument = (bool)ViewBag.CanUploadStageDocument;
+                var existingForCurrentStage = (TradeLicence.Models.OfficerSupportingDocument?)ViewBag.ExistingStageDocumentForCurrentStage;
+            }
+
             <div class="tl-officer-panel-title">
                 <i class="fa-solid fa-users-gear"></i> Officer Workflow
             </div>
@@ -134,19 +139,76 @@
                                     <label>Remarks</label>
                                     <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks for the next officer..."></textarea>
                                 </div>
-
-                                <div class="tl-officer-actions-group">
-                                    <button type="submit" class="btn btn-primary">Forward Application</button>
-                                    @if (revertTarget != null)
-                                    {
-                                        <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName"><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
-                                    }
-                                </div>
                             </form>
+
+                            @if (canUploadStageDocument)
+                            {
+                                <div class="form-group">
+                                    <label>Upload @ViewBag.CurrentStage Document</label>
+                                    <p id="currentStageFileNote" class="tl-note" style="@(existingForCurrentStage == null ? "display:none;" : "")">
+                                        @if (existingForCurrentStage != null)
+                                        {
+                                            <text>
+                                                Current file: <strong>@existingForCurrentStage.FileName</strong>
+                                                (uploaded @existingForCurrentStage.UploadedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")).
+                                                Uploading a new file will replace it.
+                                            </text>
+                                        }
+                                    </p>
+                                    <form id="stageDocumentUploadForm" method="post"
+                                          asp-action="UploadStageDocument" asp-route-id="@Model.Application.ApplicationId"
+                                          enctype="multipart/form-data" style="display:flex; gap:10px; align-items:center;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@Model.Application.ApplicationId" />
+                                        <input type="file" name="file" class="form-control" required style="flex:1;" />
+                                        <button type="submit" class="btn btn-primary" style="flex-shrink:0;">Upload</button>
+                                        <button type="button" id="stageDocPreviewBtn" class="btn btn-secondary tl-stage-preview-btn"
+                                                style="flex-shrink:0; @(existingForCurrentStage == null ? "display:none;" : "")"
+                                                data-preview-url="@(existingForCurrentStage != null ? Url.Action("PreviewStageDocument", new { docId = existingForCurrentStage.OfficerSupportingDocumentId }) : "")"
+                                                data-content-type="@existingForCurrentStage?.ContentType"
+                                                data-file-name="@existingForCurrentStage?.FileName">
+                                            Preview
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+
+                            <div class="tl-officer-actions-group">
+                                <button type="submit" form="forwardOfficerForm" class="btn btn-primary">Forward Application</button>
+                                @if (revertTarget != null)
+                                {
+                                    <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName"><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
+                                }
+                            </div>
                         </fieldset>
                     }
                     else
                     {
+                        var stageDocuments = (List<TradeLicence.Models.OfficerSupportingDocument>)ViewBag.StageDocuments;
+                        var stageDocOfficerNames = (Dictionary<int, string>)ViewBag.StageDocumentOfficerNames;
+
+                        if (stageDocuments.Count > 0)
+                        {
+                            <fieldset class="tl-section">
+                                <legend>Stage Supporting Documents</legend>
+                                @foreach (var doc in stageDocuments)
+                                {
+                                    var uploaderName = stageDocOfficerNames.ContainsKey(doc.UploadedByOfficerId)
+                                        ? stageDocOfficerNames[doc.UploadedByOfficerId] : "-";
+                                    <div class="tl-history-item">
+                                        <i class="fa-solid fa-file-lines tl-history-icon"></i>
+                                        <div class="tl-history-body">
+                                            <div class="tl-history-action">@doc.Stage</div>
+                                            <div class="tl-history-meta">
+                                                <a href="@Url.Action("DownloadStageDocument", new { docId = doc.OfficerSupportingDocumentId })" target="_blank">@doc.FileName</a><br />
+                                                Uploaded by @uploaderName on @doc.UploadedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </fieldset>
+                        }
+
                         <fieldset class="tl-section">
                             <legend>Final Approval</legend>
                             <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, return it to the applicant if something needs correcting, or reject it outright.</p>
@@ -236,6 +298,16 @@
 
         </div>
 
+    </div>
+
+    <div id="stageDocPreviewModal" class="tl-stage-preview-overlay" style="display:none;">
+        <div class="tl-stage-preview-box">
+            <div class="tl-stage-preview-header">
+                <span id="stageDocPreviewTitle">Preview</span>
+                <button type="button" id="stageDocPreviewClose" class="tl-stage-preview-close">&times;</button>
+            </div>
+            <div id="stageDocPreviewContent" class="tl-stage-preview-body"></div>
+        </div>
     </div>
 
 </div>

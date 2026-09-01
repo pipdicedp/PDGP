@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
+using TradeLicence.Interfaces;
 using TradeLicence.Models;
 using TradeLicence.Services;
 
@@ -13,12 +15,14 @@ namespace TradeLicence.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ITradeLicenceService _service;
+        private readonly IFileEncryptionService _encryption;
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
-        public OfficerController(ApplicationDbContext context, ITradeLicenceService service)
+        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption)
         {
             _context = context;
             _service = service;
+            _encryption = encryption;
         }
 
         // The officer's own id is set as ClaimTypes.NameIdentifier at login
@@ -134,7 +138,116 @@ namespace TradeLicence.Controllers
             ViewBag.OfficerNames = officerNames;
             ViewBag.RevertTarget = revertTarget;
 
+            // One row per stage at most (unique index), oldest-uploaded
+            // stage first — so Verification's file (if any) shows before
+            // Inspection's. Visible to every officer viewing this
+            // application regardless of their own stage (e.g. the final
+            // Approval officer sees both Verification's and Inspection's
+            // uploads here), not just the officer currently holding it.
+            var stageDocuments = await _context.OfficerSupportingDocuments
+                .Where(d => d.ApplicationId == id)
+                .OrderBy(d => d.UploadedDate)
+                .ToListAsync();
+
+            var stageDocOfficerIds = stageDocuments.Select(d => d.UploadedByOfficerId).Distinct().ToList();
+            var stageDocOfficerNames = await _context.Officers
+                .Where(o => stageDocOfficerIds.Contains(o.OfficerId))
+                .ToDictionaryAsync(o => o.OfficerId, o => o.FullName ?? o.Username);
+
+            // Only "Verification" and "Inspection" ever get an upload
+            // widget — Initial Scrutiny and Approval are excluded by design
+            // (see the Officer Document Upload feature note).
+            var canUploadStageDocument = currentStage == "Verification" || currentStage == "Inspection";
+
+            ViewBag.StageDocuments = stageDocuments;
+            ViewBag.StageDocumentOfficerNames = stageDocOfficerNames;
+            ViewBag.CanUploadStageDocument = canUploadStageDocument;
+            ViewBag.ExistingStageDocumentForCurrentStage = stageDocuments.FirstOrDefault(d => d.Stage == currentStage);
+
             return View(model);
+        }
+
+        // Verification/Inspection officer's own supporting file (verification
+        // report, site inspection photos) — separate from citizen-uploaded
+        // documents. One file per stage: re-uploading at the same stage
+        // replaces the previous file rather than adding a second one.
+        //
+        // Called via fetch() from officer.js, not a normal form post — the
+        // page stays exactly where it is (no redirect, no TempData popup;
+        // that popup wiring is Index.cshtml's, for Forward/Approve/Return).
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UploadStageDocument(int id, IFormFile file)
+        {
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound(new { error = "Application not found." });
+
+            if (application.CurrentStage != "Verification" && application.CurrentStage != "Inspection")
+                return BadRequest(new { error = "A supporting document can only be uploaded at the Verification or Inspection stage." });
+
+            if (file == null || file.Length == 0)
+                return BadRequest(new { error = "Please choose a file to upload." });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var (cipher, iv) = _encryption.Encrypt(ms.ToArray());
+
+            var existing = await _context.OfficerSupportingDocuments
+                .FirstOrDefaultAsync(d => d.ApplicationId == id && d.Stage == application.CurrentStage);
+
+            if (existing == null)
+            {
+                existing = new OfficerSupportingDocument
+                {
+                    ApplicationId = id,
+                    Stage = application.CurrentStage
+                };
+                _context.OfficerSupportingDocuments.Add(existing);
+            }
+
+            existing.UploadedByOfficerId = GetCurrentOfficerId();
+            existing.FileName = file.FileName;
+            existing.ContentType = file.ContentType;
+            existing.FileData = cipher;
+            existing.FileIV = iv;
+            existing.UploadedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                docId = existing.OfficerSupportingDocumentId,
+                fileName = existing.FileName,
+                contentType = existing.ContentType,
+                stage = existing.Stage,
+                uploadedDate = existing.UploadedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+            });
+        }
+
+        // Forces a download (Content-Disposition: attachment) — used by the
+        // "Uploaded Documents" audit list, where downloading to view is fine.
+        [HttpGet]
+        public async Task<IActionResult> DownloadStageDocument(int docId)
+        {
+            var doc = await _context.OfficerSupportingDocuments.FindAsync(docId);
+            if (doc?.FileData == null || doc.FileIV == null) return NotFound();
+
+            var bytes = _encryption.Decrypt(doc.FileData, doc.FileIV);
+            return File(bytes, doc.ContentType ?? "application/octet-stream", doc.FileName ?? "document");
+        }
+
+        // No fileDownloadName -> no Content-Disposition: attachment, so the
+        // browser renders it inline instead of downloading it. Used by the
+        // "Preview" button's popup (image/PDF shown directly in the modal).
+        [HttpGet]
+        public async Task<IActionResult> PreviewStageDocument(int docId)
+        {
+            var doc = await _context.OfficerSupportingDocuments.FindAsync(docId);
+            if (doc?.FileData == null || doc.FileIV == null) return NotFound();
+
+            var bytes = _encryption.Decrypt(doc.FileData, doc.FileIV);
+            return File(bytes, doc.ContentType ?? "application/octet-stream");
         }
 
         // Sends the application back to the applicant for correction —
