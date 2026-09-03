@@ -70,7 +70,7 @@
 
         <div class="form-group">
             <label>Pin Code</label>
-            <input type="text" id="ShopPinCode" class="form-control" />
+            <input type="text" id="ShopPinCode" class="form-control" maxlength="6" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" />
         </div>
 
     </div>
@@ -106,7 +106,7 @@
 
         <div class="form-group">
             <label>Pin Code</label>
-            <input type="text" id="CommPinCode" class="form-control" />
+            <input type="text" id="CommPinCode" class="form-control" maxlength="6" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" />
         </div>
 
     </div>
@@ -233,7 +233,7 @@
         </div>
         <div class="form-group">
             <label>Pin Code</label>
-            <input type="text" id="EmployerPinCode" class="form-control" />
+            <input type="text" id="EmployerPinCode" class="form-control" maxlength="6" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,6)" />
         </div>
         <div class="form-group">
             <label>RC to Be Issued to This Employer</label>
@@ -443,7 +443,7 @@
 
         <div class="form-group">
             <label>GRAS Reference Number</label>
-            <input type="text" id="GrasReferenceNumber" class="form-control" />
+            <input type="text" id="GrasReferenceNumber" class="form-control" maxlength="25" />
         </div>
 
         <div class="form-group">

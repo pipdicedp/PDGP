@@ -72,8 +72,41 @@ namespace TradeLicence.Controllers
 
                 model = existing;
             }
+            //else
+            //{
+            //    model = new TradeLicenceApplication
+            //    {
+            //        IsApplicationForTradeLicence = true,
+            //        IsRegistrationForShopsEstablishment = true,
+            //        DateOfCommencement = DateTime.Today,
+            //        CurrentStep = 1
+            //    };
+            //}
+
             else
             {
+                var userId = GetCurrentUserId();
+                if (userId.HasValue)
+                {
+                    var active = await GetActiveApplicationAsync(userId.Value);
+                    if (active != null)
+                    {
+                        if (active.Status == "Draft" || active.Status == "ReturnedToApplicant")
+                        {
+                            return RedirectToAction("Apply", new { id = active.ApplicationId });
+                        }
+
+                        if (active.Status == "Approved")
+                        {
+                            TempData["InfoMessage"] = "You already have an approved trade licence. Renewal isn't available yet — please check back soon.";
+                            return RedirectToAction("ViewApplication", new { id = active.ApplicationId });
+                        }
+
+                        TempData["InfoMessage"] = "You already have a pending application. You can apply again once it's resolved.";
+                        return RedirectToAction("ViewApplication", new { id = active.ApplicationId });
+                    }
+                }
+
                 model = new TradeLicenceApplication
                 {
                     IsApplicationForTradeLicence = true,
@@ -358,6 +391,14 @@ namespace TradeLicence.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return int.TryParse(userIdClaim, out var id) ? id : (int?)null;
+        }
+
+        private async Task<TradeLicenceApplication?> GetActiveApplicationAsync(int userId)
+        {
+            return await _context.TradeLicenceApplications
+                .Where(a => a.UserId == userId && a.Status != "Rejected")
+                .OrderByDescending(a => a.CreatedDate)
+                .FirstOrDefaultAsync();
         }
 
         private async Task PopulateDropdownsAsync(TradeLicenceApplication? model = null)

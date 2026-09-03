@@ -2,6 +2,13 @@
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_UserLayout.cshtml";
     var myApplications = (List<TradeLicence.Models.TradeLicenceApplication>)ViewBag.MyApplications;
+
+    // A user with anything other than Rejected already has a "live"
+    // application (Draft to finish, one pending with an officer, or an
+    // Approved licence) — same rule as the server-side check in
+    // TradeLicenceController.Apply(). All-Rejected or no applications
+    // at all = free to start a fresh one.
+    var hasActiveApplication = myApplications != null && myApplications.Any(a => a.Status != "Rejected");
 }
 @section Styles {
     <link rel="stylesheet"
@@ -80,12 +87,21 @@
             }
         </div>
 
-        @* ===== New Application button — below the grid, for a fresh application ===== *@
-        <div class="myapps-new-wrap">
-            <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
-                <i class="fa-solid fa-plus"></i> New Application
-            </a>
-        </div>
+        @* ===== New Application button — only if nothing is currently active ===== *@
+        @if (!hasActiveApplication)
+        {
+            <div class="myapps-new-wrap">
+                <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
+                    <i class="fa-solid fa-plus"></i> New Application
+                </a>
+            </div>
+        }
+        else
+        {
+            <p class="tl-note" style="margin-top:12px;">
+                You already have an application in progress. Finish, correct, or wait for it to be resolved before starting a new one.
+            </p>
+        }
 
         <hr class="myapps-divider" />
     }
