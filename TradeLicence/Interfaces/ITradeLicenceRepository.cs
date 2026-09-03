@@ -27,6 +27,9 @@ namespace TradeLicence.Interfaces
         Task<bool> UpdateCurrentStepAsync(int applicationId, int step);
         Task SaveChangesAsync();
 
+        // ---------------- Certificate download tracking ----------------
+        Task<bool> MarkCertificateDownloadedAsync(int applicationId);
+
         Task<TradeLicencePhotograph?> GetPhotographByApplicationIdAsync(int applicationId);
         Task AddPhotographAsync(TradeLicencePhotograph photograph);
 

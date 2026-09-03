@@ -79,6 +79,19 @@
                     {
                         <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Correct &amp; Resubmit</a>
                     }
+                    else if (app.Status == "Approved" && app.IsCertificateDownloaded)
+                    {
+                        <span class="myapps-downloaded" style="color:#1a7f4b;font-weight:600;font-size:13px;white-space:nowrap;">
+                            <i class="fas fa-check-circle"></i>
+                            Downloaded on @(app.CertificateDownloadedDate?.ToString("dd-MM-yyyy") ?? "-")
+                        </span>
+                    }
+                    else if (app.Status == "Approved")
+                    {
+                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("DownloadCertificate", "TradeLicence", new { id = app.ApplicationId })">
+                            <i class="fas fa-download"></i> Download Certificate
+                        </a>
+                    }
                     else
                     {
                         <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>

@@ -690,6 +690,132 @@ namespace TradeLicence.Services
             return document.GeneratePdf();
         }
 
+        // NOTE: Dummy/placeholder certificate for now — layout, seal, QR code,
+        // signatory block etc. can be refined once the actual certificate
+        // format from the department is finalized.
+        public async Task<byte[]> GenerateCertificatePdfAsync(int applicationId)
+        {
+            var application = await _repo.GetApplicationWithDocumentsAsync(applicationId)
+                ?? throw new InvalidOperationException("Application not found.");
+
+            if (application.Status != "Approved")
+                throw new InvalidOperationException("Certificate is available only for approved applications.");
+
+            var certificateNumber = $"TLC/{application.ApplicationNumber ?? application.ApplicationId.ToString()}";
+            var issueDate = (application.ModifiedDate ?? DateTime.UtcNow).ToLocalTime();
+            var validUpto = issueDate.AddYears(1);
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.DefaultTextStyle(x => x.FontSize(10));
+                    page.Background().Border(3).BorderColor("#c9a227").Padding(6).Border(1).BorderColor("#1a3a52");
+
+                    page.Header().PaddingTop(15).Column(col =>
+                    {
+                        col.Item().AlignCenter().Text("GOVERNMENT OF PUDUCHERRY")
+                            .Bold().FontSize(14).FontColor("#1a3a52");
+                        col.Item().AlignCenter().Text("Local Administration Department")
+                            .FontSize(10).FontColor(Colors.Grey.Darken1);
+                        col.Item().PaddingTop(8).AlignCenter().Text("TRADE LICENCE CERTIFICATE")
+                            .Bold().FontSize(18).FontColor("#c9a227");
+                        col.Item().PaddingTop(10).LineHorizontal(1).LineColor("#c9a227");
+                    });
+
+                    page.Content().PaddingTop(20).Column(col =>
+                    {
+                        col.Spacing(14);
+
+                        col.Item().Background("#f5f9fa").Padding(10).Row(row =>
+                        {
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Certificate Number").FontSize(9).FontColor("#5a6b78");
+                                c.Item().Text(certificateNumber).FontSize(12).SemiBold();
+                            });
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Date of Issue").FontSize(9).FontColor("#5a6b78");
+                                c.Item().Text(issueDate.ToString("dd-MM-yyyy")).FontSize(12).SemiBold();
+                            });
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Valid Upto").FontSize(9).FontColor("#5a6b78");
+                                c.Item().Text(validUpto.ToString("dd-MM-yyyy")).FontSize(12).SemiBold();
+                            });
+                            row.RelativeItem().Column(c =>
+                            {
+                                c.Item().Text("Status").FontSize(9).FontColor("#5a6b78");
+                                c.Item().PaddingTop(2).Element(e =>
+                                {
+                                    e.AlignLeft().Background("#1a7f4b").PaddingVertical(3).PaddingHorizontal(10)
+                                        .Text(application.Status).FontColor("#ffffff").FontSize(10).SemiBold();
+                                });
+                            });
+                        });
+
+                        col.Item().PaddingTop(4).Text(text =>
+                        {
+                            text.Span("This is to certify that a Trade Licence has been granted to ").FontSize(11);
+                            text.Span(application.ApplicantName).Bold().FontSize(11);
+                            text.Span(" for carrying on the trade/business of ").FontSize(11);
+                            text.Span(application.PurposeOfLicence).Bold().FontSize(11);
+                            text.Span(" under the name and style of ").FontSize(11);
+                            text.Span(application.NameAndStyleOfFactory).Bold().FontSize(11);
+                            text.Span(", at the premises described below, subject to the provisions of the applicable Municipal/Local Body Act and Rules.").FontSize(11);
+                        });
+
+                        col.Item().Element(c => AddDetailTable(c, new (string, string)[]
+                        {
+                            ("Applicant Name", application.ApplicantName),
+                            ("Father/Husband Name", application.ApplicantFatherHusbandName),
+                            ("Trade Place Address", application.TradePlaceCommunicationAddress),
+                            ("Ownership Type", application.OwnershipType),
+                            ("Total Area (Sq.Ft.)", application.TotalAreaCoveredSqFt.ToString()),
+                            ("Licence Period", application.LicencePeriod)
+                        }));
+
+                        col.Item().PaddingTop(20).Row(row =>
+                        {
+                            row.RelativeItem();
+                            row.ConstantItem(180).Column(c =>
+                            {
+                                c.Item().AlignCenter().PaddingBottom(30).Text("");
+                                c.Item().LineHorizontal(1).LineColor(Colors.Grey.Darken1);
+                                c.Item().AlignCenter().Text("Issuing Authority").FontSize(9).FontColor(Colors.Grey.Darken2);
+                            });
+                        });
+
+                        col.Item().PaddingTop(10).Background("#FFF8E6").Padding(8).Text(
+                            "This is a system-generated placeholder certificate for demo purposes.")
+                            .FontSize(8).Italic().FontColor(Colors.Grey.Darken2);
+                    });
+
+                    page.Footer().AlignCenter().Text(t =>
+                    {
+                        t.Span("Generated on ").FontSize(8);
+                        t.Span(DateTime.Now.ToString("dd-MM-yyyy hh:mm tt")).FontSize(8);
+                    });
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+        // ---------------- Certificate download tracking ----------------
+        public async Task<bool> MarkCertificateDownloadedAsync(int applicationId)
+        {
+            var result = await _repo.MarkCertificateDownloadedAsync(applicationId);
+            if (result)
+            {
+                await _repo.SaveChangesAsync();
+            }
+            return result;
+        }
+
         private static void AddDetailTable(IContainer container, (string Label, string? Value)[] rows)
         {
             container.Table(table =>

@@ -263,6 +263,15 @@ namespace TradeLicence.Controllers
         {
             var application = await _service.GetApplicationAsync(id);
             if (application == null) return NotFound();
+
+            // Approved applications get the certificate page instead of the
+            // plain acknowledgement slip — dashboard "View" still points here,
+            // so nothing on the dashboard/link side needs to change.
+            if (application.Status == "Approved")
+            {
+                return View("Certificate", application);
+            }
+
             return View(application);
         }
 
@@ -275,6 +284,29 @@ namespace TradeLicence.Controllers
 
             var pdfBytes = await _service.GenerateAcknowledgementPdfAsync(id);
             var fileName = $"Acknowledgement_{application.ApplicationNumber ?? id.ToString()}.pdf";
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        // Downloads the trade licence certificate as a PDF — only for Approved applications.
+        [HttpGet]
+        public async Task<IActionResult> DownloadCertificate(int id)
+        {
+            var application = await _service.GetApplicationAsync(id);
+            if (application == null) return NotFound();
+
+            if (application.Status != "Approved")
+                return BadRequest(new { error = "Certificate is available only for approved applications." });
+
+            // Certificate can only be downloaded once — dashboard hides the button
+            // after the first download, but this stops a direct/guessed URL too.
+            if (application.IsCertificateDownloaded)
+                return BadRequest(new { error = "This certificate has already been downloaded and cannot be downloaded again." });
+
+            var pdfBytes = await _service.GenerateCertificatePdfAsync(id);
+            var fileName = $"TradeLicenceCertificate_{application.ApplicationNumber ?? id.ToString()}.pdf";
+
+            await _service.MarkCertificateDownloadedAsync(id);
 
             return File(pdfBytes, "application/pdf", fileName);
         }

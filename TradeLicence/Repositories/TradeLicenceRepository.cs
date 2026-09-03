@@ -313,6 +313,26 @@ namespace TradeLicence.Repositories
 
             return true;
         }
+
+        // ---------------- Certificate download tracking ----------------
+        public async Task<bool> MarkCertificateDownloadedAsync(int applicationId)
+        {
+            var application = await _context.TradeLicenceApplications.FindAsync(applicationId);
+            if (application == null) return false;
+
+            // Keep the FIRST download timestamp — re-downloads shouldn't
+            // overwrite when the citizen originally got their certificate.
+            if (!application.IsCertificateDownloaded)
+            {
+                application.IsCertificateDownloaded = true;
+                // Stored as local (IST) server time, not UTC — matches what's
+                // shown on the certificate/dashboard, so no conversion needed at display time.
+                application.CertificateDownloadedDate = DateTime.Now;
+            }
+
+            return true;
+        }
+
         public async Task<int> GetNextApplicationSequenceNumberAsync()
         {
             // "NEXT VALUE FOR" is evaluated atomically by SQL Server itself — no

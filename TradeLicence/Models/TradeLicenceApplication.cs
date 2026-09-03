@@ -121,6 +121,10 @@ namespace TradeLicence.Models
 
         public int CurrentStep { get; set; } = 1;
 
+        // ---------------- Certificate download tracking ----------------
+        public bool IsCertificateDownloaded { get; set; } = false;
+        public DateTime? CertificateDownloadedDate { get; set; }
+
         // Navigation properties
         public virtual ICollection<ApplicationDocument>? ApplicationDocuments { get; set; }
         public virtual ICollection<TradeLicencePartner>? Partners { get; set; }

@@ -1,0 +1,108 @@
+﻿@model TradeLicence.Models.TradeLicenceApplication
+@{
+    ViewData["Title"] = "Trade Licence Certificate";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    var issueDate = (Model.ModifiedDate ?? DateTime.UtcNow).ToLocalTime();
+    var validUpto = issueDate.AddYears(1);
+    var certificateNumber = $"TLC/{Model.ApplicationNumber ?? Model.ApplicationId.ToString()}";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/site.css" />
+}
+
+<div class="cert-wrap">
+    <div class="cert-frame">
+        <div class="cert-inner">
+            <div class="cert-header">
+                <div class="cert-gov">GOVERNMENT OF PUDUCHERRY</div>
+                <div class="cert-dept">Local Administration Department</div>
+                <div class="cert-title">TRADE LICENCE CERTIFICATE</div>
+            </div>
+            <hr class="cert-divider" />
+
+            <div class="cert-meta">
+                <div class="item">
+                    <div class="label">Certificate Number</div>
+                    <div class="value">@certificateNumber</div>
+                </div>
+                <div class="item">
+                    <div class="label">Date of Issue</div>
+                    <div class="value">@issueDate.ToString("dd-MM-yyyy")</div>
+                </div>
+                <div class="item">
+                    <div class="label">Valid Upto</div>
+                    <div class="value">@validUpto.ToString("dd-MM-yyyy")</div>
+                </div>
+                <div class="item">
+                    <div class="label">Status</div>
+                    <div class="value"><span class="cert-status-badge">@Model.Status</span></div>
+                </div>
+            </div>
+
+            <div class="cert-body">
+                This is to certify that a Trade Licence has been granted to
+                <strong>@Model.ApplicantName</strong> for carrying on the trade/business of
+                <strong>@Model.PurposeOfLicence</strong> under the name and style of
+                <strong>@Model.NameAndStyleOfFactory</strong>, at the premises described below,
+                subject to the provisions of the applicable Municipal/Local Body Act and Rules.
+            </div>
+
+            <table class="cert-table">
+                <tr>
+                    <th>Applicant Name</th>
+                    <td>@Model.ApplicantName</td>
+                </tr>
+                <tr>
+                    <th>Father/Husband Name</th>
+                    <td>@Model.ApplicantFatherHusbandName</td>
+                </tr>
+                <tr>
+                    <th>Trade Place Address</th>
+                    <td>@Model.TradePlaceCommunicationAddress</td>
+                </tr>
+                <tr>
+                    <th>Ownership Type</th>
+                    <td>@Model.OwnershipType</td>
+                </tr>
+                <tr>
+                    <th>Total Area (Sq.Ft.)</th>
+                    <td>@Model.TotalAreaCoveredSqFt</td>
+                </tr>
+                <tr>
+                    <th>Licence Period</th>
+                    <td>@Model.LicencePeriod</td>
+                </tr>
+            </table>
+
+            <div class="cert-signature">
+                <div class="sig-box">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Issuing Authority</div>
+                </div>
+            </div>
+
+            <div class="cert-disclaimer">
+                This is a system-generated placeholder certificate for demo purposes.
+            </div>
+        </div>
+    </div>
+
+    <div class="cert-actions">
+        @if (Model.IsCertificateDownloaded)
+        {
+            <p style="color:#1a7f4b;font-weight:600;margin-bottom:14px;">
+                <i class="fas fa-check-circle"></i>
+                Downloaded on @(Model.CertificateDownloadedDate?.ToString("dd-MM-yyyy") ?? "-")
+            </p>
+        }
+        else
+        {
+            <a class="btn btn-primary" href="@Url.Action("DownloadCertificate", "TradeLicence", new { id = Model.ApplicationId })">
+                <i class="fas fa-download"></i> Download Certificate
+            </a>
+        }
+        <a class="btn btn-secondary" href="@Url.Action("Index", "TradeLicence")">
+            Back to Dashboard
+        </a>
+    </div>
+</div>
