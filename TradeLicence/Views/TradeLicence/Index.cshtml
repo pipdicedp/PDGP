@@ -92,6 +92,16 @@
                             <i class="fas fa-download"></i> Download Certificate
                         </a>
                     }
+                    else if (app.PaymentStatus == "Pending")
+                    {
+                        <form method="post" asp-action="PayNow" asp-controller="TradeLicence" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@app.ApplicationId" />
+                            <button type="button" class="myapps-btn btn-pay-now" style="background:#1D6E3E; border:none; cursor:pointer;">
+                                <i class="fas fa-indian-rupee-sign"></i> Pay Now (Test)
+                            </button>
+                        </form>
+                    }
                     else
                     {
                         <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>

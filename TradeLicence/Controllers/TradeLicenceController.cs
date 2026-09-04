@@ -311,6 +311,45 @@ namespace TradeLicence.Controllers
             return File(pdfBytes, "application/pdf", fileName);
         }
 
+        // TEMPORARY — stands in for the real payment gateway until it's
+        // wired up. Lets the applicant simulate paying the Inspection-stage
+        // payment so the Inspection -> Approval flow can be tested end to
+        // end. Whatever replaces this must end the same way: PaymentStatus
+        // set to "Paid" on both TradeLicencePayments and this application.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PayNow(int id)
+        {
+            var userId = GetCurrentUserId();
+
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound();
+
+            // Only the applicant who owns this application can pay for it.
+            if (application.UserId != userId) return Forbid();
+
+            var payment = await _context.TradeLicencePayments
+                .FirstOrDefaultAsync(p => p.ApplicationId == id);
+
+            if (payment == null || payment.PaymentStatus != "Pending" || application.PaymentStatus != "Pending")
+                return BadRequest(new { error = "There's no pending payment for this application." });
+
+            payment.PaymentStatus = "Paid";
+            payment.PaymentCompletedDate = DateTime.UtcNow;
+
+            // Doesn't touch CurrentStage/AssignedOfficerId — the application
+            // was never taken away from the Inspection officer while payment
+            // was pending, so it's already sitting with them, just with
+            // PaymentStatus now flipped to "Paid" for their Forward button to see.
+            application.PaymentStatus = "Paid";
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Payment successful! Your application has been sent back to the Inspection officer for forwarding.";
+            return RedirectToAction(nameof(Index));
+        }
+
         // Called by the Confirm tab to fill in the read-only summary
         // (Applicant Name / Trade Name / Mobile Number) from saved data.
         [HttpGet]

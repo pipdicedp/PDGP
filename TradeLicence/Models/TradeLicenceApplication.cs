@@ -125,6 +125,14 @@ namespace TradeLicence.Models
         public bool IsCertificateDownloaded { get; set; } = false;
         public DateTime? CertificateDownloadedDate { get; set; }
 
+        // ---------------- Inspection-stage payment ----------------
+        // Mirrors the latest TradeLicencePayment row's status for this
+        // application ("NotRequested" / "Pending" / "Paid") — the full
+        // breakdown (amount, extra charge, dates) lives in TradeLicencePayments;
+        // this column exists purely so ForwardToOfficer can gate on it
+        // without a join.
+        public string PaymentStatus { get; set; } = "NotRequested";
+
         // Navigation properties
         public virtual ICollection<ApplicationDocument>? ApplicationDocuments { get; set; }
         public virtual ICollection<TradeLicencePartner>? Partners { get; set; }

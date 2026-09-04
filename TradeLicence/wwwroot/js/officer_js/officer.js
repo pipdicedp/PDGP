@@ -12,7 +12,8 @@ function showOfficerActionAlert(actionType, message) {
         return: { icon: 'warning', title: 'Returned to Applicant' },
         created: { icon: 'success', title: 'User Created!' },
         deleted: { icon: 'success', title: 'User Deleted' },
-        toggled: { icon: 'success', title: 'Status Updated' }
+        toggled: { icon: 'success', title: 'Status Updated' },
+        payment: { icon: 'success', title: 'Payment Updated' }
     }[actionType] || { icon: 'info', title: 'Done' };
 
     Swal.fire({
@@ -100,6 +101,50 @@ if (btnRevert) {
             if (result.isConfirmed) {
                 document.getElementById('revertRemarks').value = result.value || '';
                 document.getElementById('revertForm').submit();
+            }
+        });
+    });
+}
+
+// ---------------- Inspection-stage payment ----------------
+var paymentAccordionHeader = document.getElementById('paymentAccordionHeader');
+if (paymentAccordionHeader) {
+    var togglePaymentAccordion = function () {
+        var body = document.getElementById('paymentAccordionBody');
+        var isOpen = paymentAccordionHeader.getAttribute('aria-expanded') === 'true';
+        var willOpen = !isOpen;
+
+        paymentAccordionHeader.setAttribute('aria-expanded', String(willOpen));
+        body.classList.toggle('tl-payment-body-open', willOpen);
+        // Set directly too, not just via the class, so this doesn't depend
+        // on dashboard.css having refreshed in the browser's cache.
+        body.style.display = willOpen ? 'block' : 'none';
+    };
+
+    paymentAccordionHeader.addEventListener('click', togglePaymentAccordion);
+    // It's a <div role="button"> now (not a real <legend>/<button>), so
+    // Enter/Space need to be wired up manually for keyboard users.
+    paymentAccordionHeader.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            togglePaymentAccordion();
+        }
+    });
+}
+
+var btnSendPayment = document.getElementById('btnSendPayment');
+if (btnSendPayment) {
+    btnSendPayment.addEventListener('click', function () {
+        Swal.fire({
+            icon: 'question',
+            title: 'Send Payment Request?',
+            text: 'The applicant will be asked to pay ₹1500 (₹1000 Application Payment + ₹500 Extra Charge) before this application can be forwarded for approval.',
+            showCancelButton: true,
+            confirmButtonText: 'Send Request',
+            confirmButtonColor: '#1a3a52'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                document.getElementById('sendPaymentForm').submit();
             }
         });
     });

@@ -5,6 +5,7 @@
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
 }
 
 <div class="dashboard-wrapper">
@@ -58,6 +59,10 @@
 
         <partial name="_PreviewApplication" model="Model" />
 
+        <div class="tl-section-divider">
+            <span class="tl-section-divider-icon"><i class="fa-solid fa-angles-down"></i></span>
+        </div>
+
         <div class="tl-officer-panel">
 
             @{
@@ -97,10 +102,78 @@
 
                 <!-- LEFT: Forward to Officer / Final Approval -->
                 <div>
+                    @{
+                        var isInspectionStage = (string)ViewBag.CurrentStage == "Inspection";
+                        var payment = (TradeLicence.Models.TradeLicencePayment?)ViewBag.Payment;
+                        var paymentStatus = payment?.PaymentStatus ?? "NotRequested";
+                        var forwardBlocked = isInspectionStage && paymentStatus != "Paid";
+                        var paymentPendingBlock = paymentStatus == "Pending";
+                    }
+                    @if (isInspectionStage)
+                    {
+                        var paymentStatusIcon = paymentStatus == "Paid" ? "fa-circle-check" : paymentStatus == "Pending" ? "fa-hourglass-half" : "fa-circle-info";
+                        var paymentStatusLabel = paymentStatus == "Paid" ? "Paid" : paymentStatus == "Pending" ? "Pending" : "Not Requested";
+
+                        <div class="tl-section tl-card-blue">
+                            <div id="paymentAccordionHeader" class="tl-payment-legend" role="button" tabindex="0" aria-expanded="false">
+                                <span><i class="fa-solid fa-indian-rupee-sign"></i> Payment Calculation</span>
+                                <span class="tl-payment-header-right">
+                                    <span class="tl-payment-status tl-payment-status-@(paymentStatus.ToLower())">
+                                        <i class="fa-solid @paymentStatusIcon"></i> @paymentStatusLabel
+                                    </span>
+                                    <i class="fa-solid fa-chevron-down tl-payment-chevron"></i>
+                                </span>
+                            </div>
+
+                            <form id="sendPaymentForm" method="post" asp-action="SendPaymentRequest" style="display:none;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Application.ApplicationId" />
+                            </form>
+
+                            <div id="paymentAccordionBody" class="tl-payment-body" style="display:none;">
+                                <div class="tl-payment-card">
+                                    <div class="tl-payment-row">
+                                        <span>Application Payment</span>
+                                        <span>&#8377;@((payment?.PaymentAmount ?? 1000m).ToString("N2"))</span>
+                                    </div>
+                                    <div class="tl-payment-row">
+                                        <span>Extra Charge</span>
+                                        <span>&#8377;@((payment?.ExtraCharge ?? 500m).ToString("N2"))</span>
+                                    </div>
+                                    <div class="tl-payment-row tl-payment-row-total">
+                                        <span>Total Amount</span>
+                                        <span>&#8377;@((payment?.TotalPaymentAmount ?? 1500m).ToString("N2"))</span>
+                                    </div>
+                                </div>
+
+                                @if (paymentStatus == "Paid")
+                                {
+                                    <p class="tl-payment-note tl-payment-note-paid">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                        Payment received on @(payment?.PaymentCompletedDate?.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt") ?? "-")
+                                    </p>
+                                }
+                                else if (paymentStatus == "Pending")
+                                {
+                                    <p class="tl-payment-note tl-payment-note-pending">
+                                        <i class="fa-solid fa-hourglass-half"></i>
+                                        Requested on @(payment?.PaymentRequestedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt") ?? "-") — awaiting payment from the applicant.
+                                    </p>
+                                }
+                                else
+                                {
+                                    <div class="tl-officer-actions-group">
+                                        <button type="button" id="btnSendPayment" class="btn btn-primary">Send Payment Request to Applicant</button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
                     @if (!(bool)ViewBag.IsFinalStage)
                     {
-                        <fieldset class="tl-section">
-                            <legend>Forward to Officer</legend>
+                        <fieldset class="tl-section tl-card-navy">
+                            <legend><i class="fa-solid fa-paper-plane"></i> Forward to Officer</legend>
 
                             <form method="post" asp-action="ForwardToOfficer" id="forwardOfficerForm">
                                 @Html.AntiForgeryToken()
@@ -110,7 +183,7 @@
 
                                 <div class="form-group">
                                     <label>Forward To <span class="req">*</span></label>
-                                    <select id="forwardOfficerSelect" class="form-select" required>
+                                    <select id="forwardOfficerSelect" class="form-select" required @(forwardBlocked ? "disabled" : "")>
                                         <option value="">-- Select officer --</option>
                                         @{
                                             // Grouped by target STAGE, not raw Designation — a "Manager"
@@ -133,11 +206,15 @@
                                     {
                                         <span class="tl-note">No officers found for the next stage(s) — add one under the applicable Designation first.</span>
                                     }
+                                    @if (forwardBlocked)
+                                    {
+                                        <span class="tl-note" style="color:#B3261E;">This application can't be forwarded until the payment above has been received.</span>
+                                    }
                                 </div>
 
                                 <div class="form-group">
                                     <label>Remarks</label>
-                                    <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks for the next officer..."></textarea>
+                                    <textarea name="remarks" class="form-control" rows="2" placeholder="Optional remarks for the next officer..." @(forwardBlocked ? "disabled" : "")></textarea>
                                 </div>
                             </form>
 
@@ -174,12 +251,16 @@
                             }
 
                             <div class="tl-officer-actions-group">
-                                <button type="submit" form="forwardOfficerForm" class="btn btn-primary">Forward Application</button>
+                                <button type="submit" form="forwardOfficerForm" class="btn btn-primary" @(forwardBlocked ? "disabled" : "")>Forward Application</button>
                                 @if (revertTarget != null)
                                 {
-                                    <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName"><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
+                                    <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName" @(paymentPendingBlock ? "disabled" : "")><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
                                 }
                             </div>
+                            @if (paymentPendingBlock)
+                            {
+                                <span class="tl-note" style="color:#B3261E;">Revert and Return-to-Applicant are disabled while a payment is pending with the applicant.</span>
+                            }
                         </fieldset>
                     }
                     else
@@ -189,14 +270,14 @@
 
                         if (stageDocuments.Count > 0)
                         {
-                            <fieldset class="tl-section">
-                                <legend>Stage Supporting Documents</legend>
+                            <fieldset class="tl-section tl-card-purple">
+                                <legend><i class="fa-solid fa-folder-open"></i> Stage Supporting Documents</legend>
                                 @foreach (var doc in stageDocuments)
                                 {
                                     var uploaderName = stageDocOfficerNames.ContainsKey(doc.UploadedByOfficerId)
                                         ? stageDocOfficerNames[doc.UploadedByOfficerId] : "-";
                                     <div class="tl-history-item">
-                                        <i class="fa-solid fa-file-lines tl-history-icon"></i>
+                                        <span class="tl-history-icon"><i class="fa-solid fa-file-lines"></i></span>
                                         <div class="tl-history-body">
                                             <div class="tl-history-action">@doc.Stage</div>
                                             <div class="tl-history-meta">
@@ -209,15 +290,15 @@
                             </fieldset>
                         }
 
-                        <fieldset class="tl-section">
-                            <legend>Final Approval</legend>
+                        <fieldset class="tl-section tl-card-green">
+                            <legend><i class="fa-solid fa-stamp"></i> Final Approval</legend>
                             <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, return it to the applicant if something needs correcting, or reject it outright.</p>
                             <div class="tl-officer-actions-group">
                                 <button type="button" id="btnApprove" class="btn btn-success">Approve Application</button>
                                 <button type="button" id="btnReject" class="btn btn-danger">Reject Application</button>
                                 @if (revertTarget != null)
                                 {
-                                    <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName"><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
+                                    <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName" @(paymentPendingBlock ? "disabled" : "")><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
                                 }
                             </div>
                         </fieldset>
@@ -228,8 +309,8 @@
                 <div>
                     @if (history.Count > 0)
                     {
-                        <fieldset class="tl-section">
-                            <legend>Forwarding History</legend>
+                        <fieldset class="tl-section tl-card-gold">
+                            <legend><i class="fa-solid fa-clock-rotate-left"></i> Forwarding History</legend>
                             <div class="tl-history-scroll">
                                 @for (int i = history.Count - 1; i >= 0; i--)
                                 {
@@ -255,7 +336,7 @@
                                             : "under an hour";
 
                                     <div class="tl-history-item @(isRevert ? "tl-history-revert" : "")">
-                                        <i class="fa-solid @(isRevert ? "fa-rotate-left" : "fa-share") tl-history-icon"></i>
+                                        <span class="tl-history-icon"><i class="fa-solid @(isRevert ? "fa-rotate-left" : "fa-share")"></i></span>
                                         <div class="tl-history-body">
                                             <div class="tl-history-action">
                                                 @(isRevert ? "Reverted" : "Forwarded")
@@ -282,8 +363,8 @@
                     }
                     else
                     {
-                        <fieldset class="tl-section">
-                            <legend>Forwarding History</legend>
+                        <fieldset class="tl-section tl-card-gold">
+                            <legend><i class="fa-solid fa-clock-rotate-left"></i> Forwarding History</legend>
                             <p class="tl-note">No forwarding activity yet.</p>
                         </fieldset>
                     }
@@ -293,7 +374,7 @@
 
             <div class="tl-actions">
                 <a class="btn btn-secondary" href="@Url.Action("Index", "Officer")">&laquo; Back to Dashboard</a>
-                <button type="button" id="btnReturnToApplicant" class="btn btn-warning">Return to Applicant</button>
+                <button type="button" id="btnReturnToApplicant" class="btn btn-warning" @(paymentPendingBlock ? "disabled" : "")>Return to Applicant</button>
             </div>
 
         </div>

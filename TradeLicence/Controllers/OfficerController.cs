@@ -164,6 +164,11 @@ namespace TradeLicence.Controllers
             ViewBag.CanUploadStageDocument = canUploadStageDocument;
             ViewBag.ExistingStageDocumentForCurrentStage = stageDocuments.FirstOrDefault(d => d.Stage == currentStage);
 
+            // Inspection-stage payment (Application Payment + Extra Charge) —
+            // null if it hasn't been requested yet.
+            ViewBag.Payment = await _context.TradeLicencePayments
+                .FirstOrDefaultAsync(p => p.ApplicationId == id);
+
             return View(model);
         }
 
@@ -260,6 +265,14 @@ namespace TradeLicence.Controllers
             var application = await _context.TradeLicenceApplications.FindAsync(id);
             if (application == null) return NotFound();
 
+            // While a payment is Pending, the applicant's dashboard shows a
+            // "Pay Now" button for this exact application. Returning it for
+            // correction switches Status to "ReturnedToApplicant", which
+            // takes priority in that dashboard's button logic — the Pay Now
+            // button would disappear and the payment could never be completed.
+            if (application.PaymentStatus == "Pending")
+                return BadRequest(new { error = "This application can't be returned to the applicant while a payment is pending." });
+
             application.Status = "ReturnedToApplicant";
             application.OfficerRemarks = remarks;
             application.ModifiedDate = DateTime.UtcNow;
@@ -269,6 +282,50 @@ namespace TradeLicence.Controllers
             TempData["OfficerActionMessage"] = "Application returned to the applicant successfully.";
             TempData["OfficerActionType"] = "return";
             return RedirectToAction("Index");
+        }
+
+        // Inspection officer sends the applicant a payment request — fixed
+        // Application Payment (1000) + Extra Charge (500) = Total (1500).
+        // Only valid at the Inspection stage; doesn't move CurrentStage or
+        // AssignedOfficerId, so the application stays with this same officer
+        // the whole time — nothing to "resend" once the applicant pays.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendPaymentRequest(int id)
+        {
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound();
+
+            if (application.CurrentStage != "Inspection")
+                return BadRequest(new { error = "Payment can only be requested at the Inspection stage." });
+
+            const decimal applicationPayment = 1000m;
+            const decimal extraCharge = 500m;
+
+            var payment = await _context.TradeLicencePayments
+                .FirstOrDefaultAsync(p => p.ApplicationId == id);
+
+            if (payment == null)
+            {
+                payment = new TradeLicencePayment { ApplicationId = id };
+                _context.TradeLicencePayments.Add(payment);
+            }
+
+            payment.PaymentAmount = applicationPayment;
+            payment.ExtraCharge = extraCharge;
+            payment.TotalPaymentAmount = applicationPayment + extraCharge;
+            payment.PaymentStatus = "Pending";
+            payment.PaymentRequestedDate = DateTime.UtcNow;
+            payment.PaymentCompletedDate = null;
+
+            application.PaymentStatus = "Pending";
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["OfficerActionMessage"] = "Payment request sent to the applicant.";
+            TempData["OfficerActionType"] = "payment";
+            return RedirectToAction("ViewApplication", new { id });
         }
 
         // Forwards the application to a specific officer AT A SPECIFIC STAGE
@@ -297,6 +354,12 @@ namespace TradeLicence.Controllers
 
             if (targetIndex <= currentIndex)
                 return BadRequest(new { error = "You can only forward to a later stage, not the current or an earlier one." });
+
+            // Inspection can't hand off to Approval until the applicant has
+            // paid — mirrors the disabled Forward button in ViewApplication.cshtml,
+            // this is the server-side enforcement of the same rule.
+            if (application.CurrentStage == "Inspection" && application.PaymentStatus != "Paid")
+                return BadRequest(new { error = "This application can't be forwarded until the payment has been received." });
 
             var fromStage = application.CurrentStage;
             var fromOfficerId = application.AssignedOfficerId;
@@ -336,6 +399,12 @@ namespace TradeLicence.Controllers
         {
             var application = await _context.TradeLicenceApplications.FindAsync(id);
             if (application == null) return NotFound();
+
+            // A pending payment is tied to the current stage — reverting
+            // moves the application away from it, orphaning the payment
+            // request the applicant is expected to act on.
+            if (application.PaymentStatus == "Pending")
+                return BadRequest(new { error = "This application can't be reverted while a payment is pending with the applicant." });
 
             var revertTarget = await _context.ApplicationWorkflowHistories
                 .Where(h => h.ApplicationId == id && h.ActionType == "Forward" && h.ToStage == application.CurrentStage)

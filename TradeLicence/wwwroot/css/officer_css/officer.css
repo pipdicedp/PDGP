@@ -1,0 +1,973 @@
+/* ============================================================
+   Officer Workflow — full stylesheet for Officer/ViewApplication.cshtml
+   Covers the officer panel shell, Forward/Revert/Approve/Return actions,
+   Payment Calculation, Forwarding History, the stage document preview
+   modal, and the 4-step progress bar. Loaded ONLY on that page — see
+   its Styles section — so nothing here touches citizen-facing pages.
+============================================================ */
+
+/* ============================================================
+   BASE — layout, structure, and color for every officer-panel piece
+============================================================ */
+
+/* =====================================
+   Officer workflow panel — wraps Forward-to-Officer, Forwarding History,
+   and the Back/Return actions in one visually distinct area below the
+   read-only application preview.
+===================================== */
+.tl-officer-panel {
+    background: #f8fafb;
+    border: 1px solid #e2e8ec;
+    border-radius: 14px;
+    padding: 24px;
+    margin-top: 28px;
+}
+
+.tl-officer-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1a3a52;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #D4A017;
+}
+
+/* ---------- Revert button — distinct from navy (Forward) and
+   green (Approve): warm amber outline that fills solid on hover ---------- */
+.btn-revert {
+    background: #D4A017;
+    border: 2px solid #D4A017;
+    color: #fff;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 8px;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+    .btn-revert:hover {
+        background: #b8880f;
+        border-color: #b8880f;
+        color: #fff;
+    }
+
+/* ---------- Forwarding History — card-style entries instead of
+   plain stacked text ---------- */
+.tl-history-item {
+    display: flex;
+    gap: 12px;
+    background: #fff;
+    border: 1px solid #ececec;
+    border-left: 4px solid #1a3a52;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+
+    .tl-history-item.tl-history-revert {
+        border-left-color: #D4A017;
+    }
+
+    .tl-history-item:last-child {
+        margin-bottom: 0;
+    }
+
+.tl-history-icon {
+    font-size: 16px;
+    color: #1a3a52;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.tl-history-item.tl-history-revert .tl-history-icon {
+    color: #D4A017;
+}
+
+.tl-history-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.tl-history-action {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1a3a52;
+}
+
+.tl-history-route {
+    font-size: 13.5px;
+    color: #333;
+    margin-top: 2px;
+}
+
+.tl-history-meta {
+    font-size: 11.5px;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.6;
+}
+
+.tl-history-remarks {
+    font-size: 12px;
+    color: #555;
+    font-style: italic;
+    margin-top: 3px;
+}
+
+/* =====================================
+   4-step workflow progress bar (Initial Scrutiny -> Verification ->
+   Inspection -> Approval), shown below the Application Details header
+   on the officer's ViewApplication page.
+===================================== */
+.tl-stepper-bar {
+    background: #fff;
+    border-radius: 12px;
+    padding: 22px 30px;
+    margin-top: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,.06);
+}
+
+.tl-stepper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.tl-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 90px;
+}
+
+.tl-step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid #d5dbe0;
+    background: #fff;
+    color: #9aa5ac;
+    transition: all .2s ease;
+}
+
+.tl-step-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9aa5ac;
+    text-align: center;
+    max-width: 100px;
+}
+
+.tl-step-connector {
+    flex: 1;
+    height: 2px;
+    background: #d5dbe0;
+    margin: 17px 4px 0;
+    min-width: 24px;
+}
+
+.tl-step-connector-done {
+    background: #1D6E3E;
+}
+
+/* Completed stage */
+.tl-step-done .tl-step-circle {
+    background: #1D6E3E;
+    border-color: #1D6E3E;
+    color: #fff;
+}
+
+.tl-step-done .tl-step-label {
+    color: #1D6E3E;
+}
+
+/* Current stage — highlighted with the brand gold */
+.tl-step-current .tl-step-circle {
+    background: #D4A017;
+    border-color: #D4A017;
+    color: #fff;
+    box-shadow: 0 0 0 5px rgba(212,160,23,.25);
+}
+
+.tl-step-current .tl-step-label {
+    color: #1a3a52;
+    font-weight: 700;
+}
+
+@media (max-width: 600px) {
+    .tl-step-label {
+        display: none;
+    }
+
+    .tl-step {
+        min-width: 30px;
+    }
+}
+
+/* Clean flex-wrap button group for the officer action buttons (Forward /
+   Approve / Reject / Revert) — replaces relying on .tl-actions' centered
+   inline-block + margin layout, which wrapped unevenly in the narrow
+   left column of the 2-column officer panel. */
+.tl-officer-actions-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+    .tl-officer-actions-group .btn {
+        margin: 0;
+        padding: 9px 16px;
+        font-size: 0.88rem;
+        white-space: nowrap;
+    }
+
+/* Forwarding History — fixed-height scroll box so a long Forward/Revert
+   cycle history doesn't push the whole page down; latest entry renders
+   first (see the reversed @for loop in ViewApplication.cshtml) so the
+   current status is visible without scrolling at all. */
+.tl-history-scroll {
+    max-height: 480px;
+    overflow-y: auto;
+    padding-right: 6px;
+}
+
+    .tl-history-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .tl-history-scroll::-webkit-scrollbar-thumb {
+        background: #d5dbe0;
+        border-radius: 3px;
+    }
+
+        .tl-history-scroll::-webkit-scrollbar-thumb:hover {
+            background: #b8c0c8;
+        }
+
+.tl-history-latest-tag {
+    display: inline-block;
+    background: #D4A017;
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* ---------------- Stage document preview modal (Officer/ViewApplication) ---------------- */
+.tl-stage-preview-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.tl-stage-preview-box {
+    background: #fff;
+    border-radius: 10px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.tl-stage-preview-header {
+    background: #1a3a52;
+    color: #fff;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+}
+
+.tl-stage-preview-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.tl-stage-preview-body {
+    padding: 16px;
+    overflow: auto;
+    flex: 1;
+    text-align: center;
+}
+
+    .tl-stage-preview-body img {
+        max-width: 100%;
+        max-height: 75vh;
+        display: block;
+        margin: 0 auto;
+    }
+
+    .tl-stage-preview-body iframe {
+        width: 100%;
+        height: 75vh;
+        border: none;
+    }
+
+/* =====================================
+   Payment Calculation panel (Inspection stage) — card-style breakdown
+   instead of a bare table, matching the officer panel's navy/gold palette.
+===================================== */
+.tl-payment-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+}
+
+.tl-payment-status-notrequested {
+    background: #E4EFEE;
+    color: #1a3a52;
+}
+
+.tl-payment-status-pending {
+    background: #DCEAFB;
+    color: #1D4E89;
+}
+
+.tl-payment-status-paid {
+    background: #DCF3E4;
+    color: #1D6E3E;
+}
+
+.tl-payment-card {
+    background: #fff;
+    border: 1px solid #e2e8ec;
+    border-radius: 10px;
+    padding: 4px 16px;
+    margin-bottom: 16px;
+}
+
+.tl-payment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+    .tl-payment-row:last-child {
+        border-bottom: none;
+    }
+
+.tl-payment-row-total {
+    margin: 8px -16px -1px;
+    padding: 13px 16px;
+    background: #FFF8E6;
+    border-radius: 0 0 9px 9px;
+    border-bottom: none;
+    font-weight: 700;
+    font-size: 15.5px;
+    color: #1a3a52;
+}
+
+.tl-payment-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.tl-payment-note-paid {
+    color: #1D6E3E;
+    font-weight: 600;
+}
+
+.tl-payment-note-pending {
+    color: #6b6b6b;
+}
+
+/* ---------- Payment Calculation — collapsible header ---------- */
+.tl-payment-legend {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.tl-payment-chevron {
+    transition: transform 0.2s ease;
+}
+
+.tl-payment-legend[aria-expanded="true"] .tl-payment-chevron {
+    transform: rotate(180deg);
+}
+
+.tl-payment-body {
+    display: none;
+}
+
+    .tl-payment-body.tl-payment-body-open {
+        display: block;
+    }
+
+
+
+/* ============================================================
+   REFINEMENTS — richer color, gradients, and depth so the panel
+   doesn't read as flat/plain white. Each section fieldset gets its
+   own accent color (via .tl-card-* classes added in the cshtml) so
+   the panel has visual rhythm instead of one flat white repeated
+   card shape.
+============================================================ */
+
+:root {
+    --tl-navy: #1a3a52;
+    --tl-navy-soft: #2c5674;
+    --tl-gold: #D4A017;
+    --tl-gold-soft: #c9a227;
+    --tl-green: #1D6E3E;
+    --tl-green-soft: #2e8f5a;
+    --tl-red: #B3261E;
+    --tl-blue: #1D4E89;
+    --tl-blue-soft: #2f6bb3;
+    --tl-purple: #6A4C93;
+    --tl-purple-soft: #8863b8;
+    --tl-border: #e6ecef;
+    --tl-bg-soft: #f7fafc;
+}
+
+/* ================= Panel shell — soft gradient, not flat white ================= */
+.tl-officer-panel {
+    background: linear-gradient(160deg, #eef4f8 0%, #f7fafc 45%, #ffffff 100%);
+    border: 1px solid var(--tl-border);
+    border-radius: 18px;
+    padding: 30px 32px;
+    margin-top: 28px;
+    box-shadow: 0 10px 32px rgba(20, 40, 60, .1);
+}
+
+.tl-officer-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--tl-navy);
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid rgba(26,58,82,.12);
+    position: relative;
+}
+
+    .tl-officer-panel-title::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -1px;
+        width: 72px;
+        height: 4px;
+        background: linear-gradient(90deg, var(--tl-gold), var(--tl-gold-soft));
+        border-radius: 4px;
+    }
+
+    .tl-officer-panel-title i {
+        width: 40px;
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, var(--tl-navy), var(--tl-navy-soft));
+        color: #fff;
+        border-radius: 12px;
+        font-size: 17px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(26,58,82,.35);
+    }
+
+.tl-officer-panel .tl-grid-2 {
+    gap: 24px 30px;
+}
+
+/* ================= Section cards — colored top accent + tinted
+   gradient background per section, instead of flat white =================
+   NOTE: uses .tl-section (not fieldset.tl-section) — the Payment card uses
+   a plain <div> instead of <fieldset>/<legend>, because a <legend> with
+   complex flex content (the status pill) triggers a fieldset/legend
+   rendering bug in Chromium that displaces sibling content. Other cards
+   still use real <fieldset>/<legend> and are covered by this same rule. */
+.tl-officer-panel .tl-section {
+    position: relative;
+    background: #fff;
+    border: 1px solid var(--tl-border);
+    border-top: none;
+    border-radius: 14px;
+    padding: 22px 24px 24px;
+    margin-bottom: 22px;
+    box-shadow: 0 4px 16px rgba(20, 40, 60, .07);
+    transition: box-shadow .18s ease, transform .18s ease;
+}
+
+    .tl-officer-panel .tl-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        border-radius: 14px 14px 0 0;
+        background: var(--tl-navy);
+    }
+
+    .tl-officer-panel .tl-section:hover {
+        box-shadow: 0 12px 28px rgba(20, 40, 60, .13);
+        transform: translateY(-2px);
+    }
+
+    .tl-officer-panel .tl-section legend {
+        display: block;
+        width: 100%;
+        background: none;
+        color: var(--tl-navy);
+        padding: 0 0 14px;
+        margin: 0 0 18px;
+        border-radius: 0;
+        border-bottom: 1px solid var(--tl-border);
+        font-weight: 800;
+        font-size: 15px;
+        letter-spacing: .2px;
+    }
+
+        .tl-officer-panel .tl-section legend i:first-child {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            margin-right: 10px;
+            font-size: 13px;
+            color: #fff;
+            background: var(--tl-navy);
+            vertical-align: middle;
+        }
+
+/* Per-section accent colors — top stripe + tinted background wash +
+   matching legend icon chip. */
+.tl-officer-panel .tl-card-blue::before {
+    background: linear-gradient(90deg, var(--tl-blue), var(--tl-blue-soft));
+}
+
+.tl-officer-panel .tl-card-blue {
+    background: linear-gradient(180deg, #f4f8fc 0%, #ffffff 35%);
+}
+
+    .tl-officer-panel .tl-card-blue legend i:first-child {
+        background: linear-gradient(135deg, var(--tl-blue), var(--tl-blue-soft));
+    }
+
+.tl-officer-panel .tl-card-navy::before {
+    background: linear-gradient(90deg, var(--tl-navy), var(--tl-navy-soft));
+}
+
+.tl-officer-panel .tl-card-navy {
+    background: linear-gradient(180deg, #f4f6f8 0%, #ffffff 35%);
+}
+
+    .tl-officer-panel .tl-card-navy legend i:first-child {
+        background: linear-gradient(135deg, var(--tl-navy), var(--tl-navy-soft));
+    }
+
+.tl-officer-panel .tl-card-purple::before {
+    background: linear-gradient(90deg, var(--tl-purple), var(--tl-purple-soft));
+}
+
+.tl-officer-panel .tl-card-purple {
+    background: linear-gradient(180deg, #f8f5fa 0%, #ffffff 35%);
+}
+
+    .tl-officer-panel .tl-card-purple legend i:first-child {
+        background: linear-gradient(135deg, var(--tl-purple), var(--tl-purple-soft));
+    }
+
+.tl-officer-panel .tl-card-green::before {
+    background: linear-gradient(90deg, var(--tl-green), var(--tl-green-soft));
+}
+
+.tl-officer-panel .tl-card-green {
+    background: linear-gradient(180deg, #f3f9f5 0%, #ffffff 35%);
+}
+
+    .tl-officer-panel .tl-card-green legend i:first-child {
+        background: linear-gradient(135deg, var(--tl-green), var(--tl-green-soft));
+    }
+
+.tl-officer-panel .tl-card-gold::before {
+    background: linear-gradient(90deg, var(--tl-gold), var(--tl-gold-soft));
+}
+
+.tl-officer-panel .tl-card-gold {
+    background: linear-gradient(180deg, #fbf6ec 0%, #ffffff 35%);
+}
+
+    .tl-officer-panel .tl-card-gold legend i:first-child {
+        background: linear-gradient(135deg, var(--tl-gold), var(--tl-gold-soft));
+    }
+
+/* Payment header — plain <div role="button">, styled to look identical
+   to the <legend> headers above but fully independent of them, since it
+   no longer relies on the "legend" element selector for its base look. */
+.tl-officer-panel .tl-payment-legend {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    color: var(--tl-navy);
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: .2px;
+    border-radius: 8px;
+    border-bottom: 1px solid var(--tl-border);
+    margin: 0 0 18px;
+    padding: 0 0 14px !important;
+    cursor: pointer;
+    user-select: none;
+    transition: background .12s ease;
+}
+
+    .tl-officer-panel .tl-payment-legend:hover {
+        background: rgba(29,78,137,.06);
+    }
+
+    .tl-officer-panel .tl-payment-legend > span:first-child i:first-child {
+        width: 30px;
+        height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        margin-right: 10px;
+        font-size: 13px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--tl-blue), var(--tl-blue-soft));
+        vertical-align: middle;
+    }
+
+.tl-officer-panel .tl-payment-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.tl-officer-panel .tl-payment-legend .tl-payment-status {
+    margin-bottom: 0;
+    font-size: 0.68rem;
+}
+
+/* ================= Divider between the Application Preview and
+   the Officer Workflow panel ================= */
+.tl-section-divider {
+    position: relative;
+    height: 2px;
+    margin: 34px 0 10px;
+    background: linear-gradient(90deg, transparent, var(--tl-gold-soft) 15%, var(--tl-gold-soft) 85%, transparent);
+}
+
+.tl-section-divider-icon {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--tl-navy), var(--tl-navy-soft));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    box-shadow: 0 4px 14px rgba(26,58,82,.35), 0 0 0 5px #fff;
+}
+
+.tl-officer-panel .tl-payment-card {
+    border: 1px solid rgba(29,78,137,.12);
+    background: #fff;
+    border-radius: 12px;
+    padding: 4px 16px;
+    box-shadow: 0 2px 8px rgba(29,78,137,.06);
+}
+
+.tl-officer-panel .tl-payment-row-total {
+    background: linear-gradient(90deg, #FFF3D6, #FFE9B3);
+}
+
+/* ================= Buttons — richer gradient fills ================= */
+.tl-officer-panel .btn {
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 11px 22px;
+    border: none;
+    box-shadow: 0 3px 10px rgba(0,0,0,.1);
+    transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease, filter .12s ease;
+}
+
+    .tl-officer-panel .btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+        box-shadow: 0 8px 20px rgba(0,0,0,.18);
+    }
+
+    .tl-officer-panel .btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .tl-officer-panel .btn:disabled {
+        opacity: .45;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+        filter: none;
+    }
+
+.tl-officer-panel .btn-primary {
+    background: linear-gradient(135deg, var(--tl-navy), var(--tl-navy-soft));
+    color: #fff;
+}
+
+.tl-officer-panel .btn-success {
+    background: linear-gradient(135deg, var(--tl-green), var(--tl-green-soft));
+    color: #fff;
+}
+
+.tl-officer-panel .btn-danger {
+    background: linear-gradient(135deg, #C0392B, #d9584a);
+    color: #fff;
+}
+
+.tl-officer-panel .btn-warning {
+    background: linear-gradient(135deg, var(--tl-gold), var(--tl-gold-soft));
+    color: #fff;
+}
+
+.tl-officer-panel .btn-secondary {
+    background: linear-gradient(135deg, #6b7684, #8b96a3);
+    color: #fff;
+}
+
+.tl-officer-panel .btn-revert {
+    background: linear-gradient(135deg, var(--tl-gold), var(--tl-gold-soft));
+    border: none;
+    color: #fff;
+}
+
+.tl-officer-panel .tl-officer-actions-group {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed rgba(26,58,82,.15);
+}
+
+/* ================= Form elements ================= */
+.tl-officer-panel .form-group label {
+    font-weight: 700;
+    color: var(--tl-navy);
+    font-size: 13.5px;
+    margin-bottom: 6px;
+}
+
+.tl-officer-panel .form-control,
+.tl-officer-panel .form-select,
+.tl-officer-panel textarea.form-control {
+    border: 1px solid #d7dee3;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    background: #fff;
+    transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+    .tl-officer-panel .form-control:focus,
+    .tl-officer-panel .form-select:focus {
+        border-color: var(--tl-navy);
+        box-shadow: 0 0 0 4px rgba(26,58,82,.14);
+        outline: none;
+    }
+
+/* ================= Forwarding History / Stage Documents — connected
+   timeline with a colored gradient line and richer item cards ================= */
+.tl-officer-panel .tl-history-item {
+    position: relative;
+    display: block;
+    background: linear-gradient(135deg, #fbfdfe, #ffffff);
+    border: 1px solid var(--tl-border);
+    border-left: none;
+    border-radius: 12px;
+    padding: 15px 16px 15px 52px;
+    margin-bottom: 16px;
+    box-shadow: 0 3px 10px rgba(20,40,60,.06);
+}
+
+    .tl-officer-panel .tl-history-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .tl-officer-panel .tl-history-item::after {
+        content: "";
+        position: absolute;
+        left: 25px;
+        top: 42px;
+        bottom: -24px;
+        width: 3px;
+        background: linear-gradient(180deg, var(--tl-gold-soft), var(--tl-border));
+    }
+
+    .tl-officer-panel .tl-history-item:last-child::after {
+        display: none;
+    }
+
+.tl-officer-panel .tl-history-icon {
+    position: absolute;
+    left: 13px;
+    top: 15px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--tl-navy), var(--tl-navy-soft));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    margin: 0;
+    box-shadow: 0 0 0 4px #fff, 0 2px 8px rgba(26,58,82,.35);
+}
+
+.tl-officer-panel .tl-history-item.tl-history-revert .tl-history-icon {
+    background: linear-gradient(135deg, var(--tl-gold), var(--tl-gold-soft));
+    box-shadow: 0 0 0 4px #fff, 0 2px 8px rgba(212,160,23,.4);
+}
+
+.tl-officer-panel .tl-history-action {
+    font-weight: 800;
+    font-size: 13.5px;
+    color: var(--tl-navy);
+}
+
+.tl-officer-panel .tl-history-route {
+    font-size: 13.5px;
+    color: #333;
+    margin-top: 3px;
+    font-weight: 600;
+}
+
+.tl-officer-panel .tl-history-meta {
+    font-size: 11.5px;
+    color: #8a95a0;
+    margin-top: 6px;
+    line-height: 1.7;
+}
+
+.tl-officer-panel .tl-history-remarks {
+    font-size: 12px;
+    color: var(--tl-navy);
+    font-weight: 600;
+    font-style: normal;
+    margin-top: 7px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #FFF3D6, #FFE9B3);
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.tl-officer-panel .tl-history-latest-tag {
+    background: linear-gradient(90deg, var(--tl-gold), var(--tl-gold-soft));
+    box-shadow: 0 2px 6px rgba(212,160,23,.4);
+}
+
+.tl-officer-panel .tl-history-scroll {
+    padding-right: 4px;
+}
+
+/* Bottom action bar */
+.tl-officer-panel .tl-actions {
+    margin-top: 10px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(26,58,82,.12);
+}
+
+/* ================= Stepper bar — richer gradient card ================= */
+.tl-stepper-bar {
+    background: linear-gradient(160deg, #ffffff, #f4f8fb);
+    border: 1px solid var(--tl-border);
+    box-shadow: 0 8px 24px rgba(20,40,60,.08);
+}
+
+.tl-step-circle {
+    width: 42px;
+    height: 42px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.tl-step-done .tl-step-circle {
+    background: linear-gradient(135deg, var(--tl-green), var(--tl-green-soft));
+    border-color: var(--tl-green);
+}
+
+.tl-step-current .tl-step-circle {
+    background: linear-gradient(135deg, var(--tl-gold), var(--tl-gold-soft));
+    border-color: var(--tl-gold);
+    box-shadow: 0 0 0 7px rgba(212,160,23,.2);
+}
+
+@media (max-width: 900px) {
+    .tl-officer-panel {
+        padding: 22px 18px;
+    }
+
+        .tl-officer-panel .tl-grid-2 {
+            grid-template-columns: 1fr;
+        }
+}
+
+/* Keep Approve / Reject / Revert (and Forward / Revert) on a single row —
+   the richer .btn padding above made them wide enough to wrap onto two
+   lines inside the left column; both overrides here are 3 classes deep
+   so they win over the 2-class .tl-officer-panel .btn rule. */
+.tl-officer-panel .tl-officer-actions-group {
+    flex-wrap: nowrap;
+}
+
+    .tl-officer-panel .tl-officer-actions-group .btn {
+        padding: 10px 16px;
+        font-size: 0.88rem;
+    }

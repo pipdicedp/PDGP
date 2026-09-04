@@ -30,6 +30,7 @@ namespace TradeLicence.Data
         public DbSet<ShopFormIXPartB> ShopFormIXPartBs { get; set; } = null!;
         public DbSet<ShopAnnexureDocument> ShopAnnexureDocuments { get; set; } = null!;
         public DbSet<OfficerSupportingDocument> OfficerSupportingDocuments { get; set; } = null!;
+        public DbSet<TradeLicencePayment> TradeLicencePayments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -234,6 +235,26 @@ namespace TradeLicence.Data
                       .WithMany()
                       .HasForeignKey(e => e.AssignedOfficerId)
                       .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<TradeLicencePayment>(entity =>
+            {
+                entity.ToTable("TradeLicencePayments");
+                entity.HasKey(e => e.PaymentId);
+
+                entity.Property(e => e.PaymentAmount).HasColumnType("decimal(12,2)");
+                entity.Property(e => e.ExtraCharge).HasColumnType("decimal(12,2)");
+                entity.Property(e => e.TotalPaymentAmount).HasColumnType("decimal(12,2)");
+
+                // One payment row per application - SendPaymentRequest upserts
+                // onto this, same "one row per key" approach as
+                // OfficerSupportingDocument's (ApplicationId, Stage) index.
+                entity.HasIndex(e => e.ApplicationId).IsUnique();
+
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
         }
