@@ -83,10 +83,6 @@
     margin-top: 2px;
 }
 
-.tl-history-item.tl-history-revert .tl-history-icon {
-    color: #D4A017;
-}
-
 .tl-history-body {
     flex: 1;
     min-width: 0;
@@ -544,9 +540,10 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 5px;
+        height: 4px;
         border-radius: 14px 14px 0 0;
         background: var(--tl-navy);
+        opacity: .55;
     }
 
     .tl-officer-panel .tl-section:hover {
@@ -589,7 +586,7 @@
 }
 
 .tl-officer-panel .tl-card-blue {
-    background: linear-gradient(180deg, #f4f8fc 0%, #ffffff 35%);
+    background: linear-gradient(180deg, #f8fafd 0%, #ffffff 18%);
 }
 
     .tl-officer-panel .tl-card-blue legend i:first-child {
@@ -601,7 +598,7 @@
 }
 
 .tl-officer-panel .tl-card-navy {
-    background: linear-gradient(180deg, #f4f6f8 0%, #ffffff 35%);
+    background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 18%);
 }
 
     .tl-officer-panel .tl-card-navy legend i:first-child {
@@ -613,7 +610,7 @@
 }
 
 .tl-officer-panel .tl-card-purple {
-    background: linear-gradient(180deg, #f8f5fa 0%, #ffffff 35%);
+    background: linear-gradient(180deg, #faf8fb 0%, #ffffff 18%);
 }
 
     .tl-officer-panel .tl-card-purple legend i:first-child {
@@ -625,7 +622,7 @@
 }
 
 .tl-officer-panel .tl-card-green {
-    background: linear-gradient(180deg, #f3f9f5 0%, #ffffff 35%);
+    background: linear-gradient(180deg, #f7fbf8 0%, #ffffff 18%);
 }
 
     .tl-officer-panel .tl-card-green legend i:first-child {
@@ -637,7 +634,7 @@
 }
 
 .tl-officer-panel .tl-card-gold {
-    background: linear-gradient(180deg, #fbf6ec 0%, #ffffff 35%);
+    background: linear-gradient(180deg, #fdfaf3 0%, #ffffff 18%);
 }
 
     .tl-officer-panel .tl-card-gold legend i:first-child {
@@ -798,12 +795,21 @@
 }
 
 /* ================= Form elements ================= */
-.tl-officer-panel .form-group label {
-    font-weight: 700;
-    color: var(--tl-navy);
-    font-size: 13.5px;
-    margin-bottom: 6px;
+.tl-officer-panel .form-group {
+    margin-bottom: 22px;
 }
+
+    .tl-officer-panel .form-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .tl-officer-panel .form-group label {
+        display: block;
+        font-weight: 700;
+        color: var(--tl-navy);
+        font-size: 13.5px;
+        margin-bottom: 8px;
+    }
 
 .tl-officer-panel .form-control,
 .tl-officer-panel .form-select,
@@ -822,6 +828,28 @@
         box-shadow: 0 0 0 4px rgba(26,58,82,.14);
         outline: none;
     }
+
+.tl-officer-panel .form-group .tl-note {
+    display: block;
+    margin-top: 10px;
+    line-height: 1.55;
+    padding: 8px 12px;
+    background: rgba(26,58,82,.05);
+    border-radius: 8px;
+}
+
+/* The Upload Document block reads like a distinct sub-section, not a
+   continuation of the Remarks field right above it. */
+.tl-officer-panel form#forwardOfficerForm + div.form-group,
+.tl-officer-panel div.form-group:has(#stageDocumentUploadForm) {
+    margin-top: 4px;
+    padding-top: 20px;
+    border-top: 1px dashed rgba(26,58,82,.15);
+}
+
+.tl-officer-panel #stageDocumentUploadForm {
+    margin-top: 12px;
+}
 
 /* ================= Forwarding History / Stage Documents — connected
    timeline with a colored gradient line and richer item cards ================= */
@@ -875,6 +903,7 @@
 .tl-officer-panel .tl-history-item.tl-history-revert .tl-history-icon {
     background: linear-gradient(135deg, var(--tl-gold), var(--tl-gold-soft));
     box-shadow: 0 0 0 4px #fff, 0 2px 8px rgba(212,160,23,.4);
+    color: #fff;
 }
 
 .tl-officer-panel .tl-history-action {
@@ -904,7 +933,7 @@
     font-style: normal;
     margin-top: 7px;
     padding: 6px 12px;
-    background: linear-gradient(135deg, #FFF3D6, #FFE9B3);
+    background: #f4f6f8;
     border-radius: 20px;
     display: inline-block;
 }
@@ -971,3 +1000,4 @@
         padding: 10px 16px;
         font-size: 0.88rem;
     }
+     
