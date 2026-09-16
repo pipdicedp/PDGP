@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
+using TradeLicence.Models;
 using WaterConnection.Models.Masters;
 
 namespace WaterConnection.Models
 {
     // Maps to dbo.WaterConnectionApplication
-    public class WaterConnectionApplication
+    public class WaterConnectionApplication : IWorkflowApplication
     {
         [Key]
         public int ApplicationId { get; set; }
@@ -93,6 +94,24 @@ namespace WaterConnection.Models
         [Required]
         [StringLength(30)]
         public string Status { get; set; } = "Draft";
+
+        // ---------------- Officer workflow (added for the shared WorkflowEngineService) ----------------
+        // Same 4-stage pattern as TradeLicenceApplication — see OfficerWorkflow.cs.
+        // Stays "Initial Scrutiny" (unassigned) right after citizen submission.
+        [StringLength(50)]
+        public string CurrentStage { get; set; } = "Initial Scrutiny";
+
+        // Null = not yet picked up by anyone at CurrentStage's designation.
+        public int? AssignedOfficerId { get; set; }
+
+        // "NotRequested" / "Pending" / "Paid" — mirrors TradeLicenceApplication.PaymentStatus.
+        [StringLength(20)]
+        public string PaymentStatus { get; set; } = "NotRequested";
+
+        [StringLength(1000)]
+        public string? OfficerRemarks { get; set; }
+
+        public DateTime? ModifiedDate { get; set; }
 
         public ICollection<ApplicationDocument>? Documents { get; set; }
     }

@@ -7,6 +7,8 @@ using TradeLicence.Data;
 using TradeLicence.Interfaces;
 using TradeLicence.Models;
 using TradeLicence.Services;
+using WaterConnection.Data;
+using WaterConnection.Models;
 
 namespace TradeLicence.Controllers
 {
@@ -16,13 +18,15 @@ namespace TradeLicence.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ITradeLicenceService _service;
         private readonly IFileEncryptionService _encryption;
+        private readonly WaterApplicationDbContext _waterContext;
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
-        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption)
+        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext)
         {
             _context = context;
             _service = service;
             _encryption = encryption;
+            _waterContext = waterContext;
         }
 
         // The officer's own id is set as ClaimTypes.NameIdentifier at login
@@ -43,8 +47,43 @@ namespace TradeLicence.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var currentDesignation = User.FindFirst("Designation")?.Value;
             var currentOfficerId = GetCurrentOfficerId();
+            var officer = await _context.Officers.FindAsync(currentOfficerId);
+            if (officer == null) return Forbid();
+
+            // Every officer lands on THIS action after login now (see
+            // AccountController.OfficerLogin) — Department routes them from
+            // here. TradeLicence's own officers fall through to the
+            // unchanged code below exactly as before; every other
+            // department (Water now, Electricity/Transport/... later) is
+            // handled by the shared-queue branch here, one "else if" per
+            // new service, no new controller or Index view needed.
+            if (officer.Department == "Water")
+            {
+                var waterEngine = new WorkflowEngineService<WaterConnectionApplication>(_waterContext, _context, "Water");
+                var waterApps = await waterEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+                var items = waterApps.Select(a => new OfficerQueueItem
+                {
+                    ApplicationId = a.ApplicationId,
+                    ServiceType = "Water",
+                    DisplayName = a.Name,
+                    Contact = a.PhoneNumber,
+                    CurrentStage = a.CurrentStage,
+                    Status = a.Status,
+                    SubmittedDate = a.ApplicationDate,
+                    ViewUrl = Url.Action("ViewApplication", "WaterOfficer", new { id = a.ApplicationId })!
+                }).ToList();
+
+                ViewBag.Designation = officer.Designation;
+                ViewBag.Department = officer.Department;
+                return View("SharedQueue", items);
+            }
+
+            // else if (officer.Department == "Electricity") { ... same shape ... }
+
+            // ---------------- TradeLicence — unchanged from here down ----------------
+            var currentDesignation = User.FindFirst("Designation")?.Value;
 
             // A Designation can cover more than one stage (e.g. "Manager"
             // covers both Verification and Inspection) — see OfficerWorkflow.cs.

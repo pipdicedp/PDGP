@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace TradeLicence.Models
 {
-    public class TradeLicenceApplication
+    public class TradeLicenceApplication : IWorkflowApplication
     {
         [Key]
         public int ApplicationId { get; set; }

@@ -285,6 +285,8 @@ namespace TradeLicence.Controllers
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
 
+            // Every officer lands here — Index itself routes on by Department
+            // (TradeLicence's own logic, or the shared queue for every other service).
             return RedirectToAction("Index", "Officer");
         }
 

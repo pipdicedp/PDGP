@@ -1,0 +1,214 @@
+﻿@model WaterConnection.Models.WaterConnectionApplication
+@{
+    ViewData["Title"] = "Application Details";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+
+    var purposeLabels = new Dictionary<string, string>
+    {
+        { "NameAddress", "Name & Address Verification" },
+        { "Ownership", "Ownership Verification" },
+        { "Others", "Others" },
+        { "ContractorConsent", "Contractor Consent" },
+    };
+    var docs = (Model.Documents ?? new List<WaterConnection.Models.ApplicationDocument>())
+        .Where(d => d.FileContent != null && d.FileContent.Length > 0)
+        .ToList();
+
+    // Same helper as Acknowledgement.cshtml, so this preview looks identical
+    // to what the applicant saw on their own acknowledgement slip.
+    string Field(string label, string? value) =>
+        $"<div class=\"preview-field\"><span class=\"preview-label\">{System.Net.WebUtility.HtmlEncode(label)}</span><span class=\"preview-value\">{System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(value) ? "-" : value)}</span></div>";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/watercss/wc-preview.css" />
+    <style>
+        /* Copied from Acknowledgement.cshtml so the field/section styling
+           matches the citizen-facing acknowledgement slip exactly. */
+        .preview-section-header { display: flex; justify-content: space-between; align-items: center; }
+        .preview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px 28px; }
+        .preview-field { padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .preview-label { display: block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #8a92a3; margin-bottom: 3px; }
+        .preview-value { display: block; font-size: 0.92rem; color: #1a3a52; font-weight: 600; word-break: break-word; }
+        .preview-doc-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .preview-doc-meta .preview-label { margin-bottom: 0; }
+    </style>
+}
+
+<!-- Document preview modal: same markup as Acknowledgement.cshtml, pointed
+     at OfficerDocument (no ownership check) instead of the citizen action. -->
+<div class="modal fade" id="documentModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content wc-preview-modal">
+            <div class="modal-header wc-preview-header">
+                <h5 class="wc-preview-title" id="documentTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body wc-preview-body"><iframe id="documentFrame" class="wc-preview-frame" title="Document preview"></iframe></div>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-wrapper">
+
+    <div class="status-page-header">
+        Water Connection Application — @Model.ApplicationId
+    </div>
+
+    @{
+        var stages = TradeLicence.Models.OfficerWorkflow.Stages;
+        var currentStageIndex = TradeLicence.Models.OfficerWorkflow.StageIndex((string)ViewBag.CurrentStage);
+    }
+    <div class="tl-stepper-bar">
+        <div class="tl-stepper">
+            @for (int i = 0; i < stages.Length; i++)
+            {
+                var stepClass = i < currentStageIndex ? "tl-step-done"
+                    : i == currentStageIndex ? "tl-step-current"
+                    : "tl-step-upcoming";
+
+                <div class="tl-step @stepClass">
+                    <div class="tl-step-circle">
+                        @if (i < currentStageIndex)
+                        {
+                            <i class="fa-solid fa-check"></i>
+                        }
+                        else
+                        {
+                            @(i + 1)
+                        }
+                    </div>
+                    <div class="tl-step-label">@stages[i]</div>
+                </div>
+                if (i < stages.Length - 1)
+                {
+                    <div class="tl-step-connector @(i < currentStageIndex ? "tl-step-connector-done" : "")"></div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <!-- ================= Application Preview (same Field-grid pattern as Acknowledgement.cshtml) ================= -->
+        <fieldset class="tl-section">
+            <legend class="preview-section-header"><span>Applicant Details</span></legend>
+            <div class="preview-grid">
+                @Html.Raw(Field("Name", Model.Name))
+                @Html.Raw(Field("Father Name", Model.FatherName))
+                @Html.Raw(Field("Spouse Name", Model.SpouseName))
+                @Html.Raw(Field("Power of Attorney", Model.PowerOfAttorney))
+                @Html.Raw(Field("Phone Number", Model.PhoneNumber))
+                @Html.Raw(Field("Email", Model.Email))
+            </div>
+        </fieldset>
+
+        <fieldset class="tl-section">
+            <legend class="preview-section-header"><span>Communication Address</span></legend>
+            <div class="preview-grid">
+                @Html.Raw(Field("Door Number", Model.CommDoorNo))
+                @Html.Raw(Field("Address Line 1", Model.CommAddress1))
+                @Html.Raw(Field("Address Line 2", Model.CommAddress2))
+                @Html.Raw(Field("City", Model.CommCity))
+            </div>
+        </fieldset>
+
+        <fieldset class="tl-section">
+            <legend class="preview-section-header"><span>Connection Address</span></legend>
+            <div class="preview-grid">
+                @Html.Raw(Field("Door Number", Model.ConnDoorNo))
+                @Html.Raw(Field("Address Line 1", Model.ConnAddress1))
+                @Html.Raw(Field("Address Line 2", Model.ConnAddress2))
+                @Html.Raw(Field("City", Model.ConnCity))
+            </div>
+        </fieldset>
+
+        <fieldset class="tl-section">
+            <legend class="preview-section-header"><span>Connection Details</span></legend>
+            <div class="preview-grid">
+                @Html.Raw(Field("Department", Model.Department?.DepartmentName))
+                @Html.Raw(Field("Section", Model.Section?.SectionName))
+                @Html.Raw(Field("Area", Model.Area?.AreaName))
+                @Html.Raw(Field("Purpose", Model.Purpose?.PurposeName))
+                @Html.Raw(Field("Contractor", Model.Contractor?.ContractorName))
+                @Html.Raw(Field("Date of Submission", Model.ApplicationDate.ToString("dd-MM-yyyy, hh:mm tt")))
+                <div class="preview-field">
+                    <span class="preview-label">Current Status</span>
+                    <span class="preview-value"><span class="myapps-status-badge myapps-status-submitted">@Model.Status</span></span>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="tl-section">
+            <legend class="preview-section-header"><span>Documents Submitted</span></legend>
+            @if (docs.Any())
+            {
+                foreach (var doc in docs)
+                {
+                    var label = purposeLabels.TryGetValue(doc.DocumentPurpose, out var friendly) ? friendly : doc.DocumentPurpose;
+                    <div class="preview-doc-row">
+                        <div class="preview-doc-meta">
+                            <span class="preview-label">@label</span>
+                        </div>
+                        <button type="button"
+                                class="btn btn-sm btn-secondary preview-document"
+                                data-file="@Url.Action("OfficerDocument", new { id = doc.DocumentId })"
+                                data-title="@label"
+                                title="Click to preview @label">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted">No documents on file</p>
+            }
+        </fieldset>
+
+        <div class="tl-section-divider">
+            <span class="tl-section-divider-icon"><i class="fa-solid fa-angles-down"></i></span>
+        </div>
+
+        <!-- ================= Shared Officer Workflow panel ================= -->
+        <partial name="_OfficerWorkflowPanel" model="(TradeLicence.Models.IWorkflowApplication)Model" />
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Document preview modal — same pattern as Acknowledgement.cshtml.
+            var modalEl = document.getElementById("documentModal");
+            if (modalEl) {
+                var modal = new bootstrap.Modal(modalEl);
+                document.querySelectorAll(".preview-document").forEach(function(e) {
+                    e.addEventListener("click", function() {
+                        document.getElementById("documentTitle").innerText = this.dataset.title;
+                        document.getElementById("documentFrame").src = this.dataset.file;
+                        modal.show();
+                    });
+                });
+                modalEl.addEventListener("hidden.bs.modal", function() {
+                    document.getElementById("documentFrame").src = "";
+                });
+            }
+        });
+    </script>
+
+    @if (TempData["OfficerActionMessage"] != null)
+    {
+        <script>
+            showOfficerActionAlert(
+                                        @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
+                @Html.Raw(Json.Serialize(TempData["OfficerActionMessage"]))
+            );
+        </script>
+    }
+}

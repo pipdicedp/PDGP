@@ -38,6 +38,34 @@ if (forwardForm) {
         }
         document.getElementById('forwardOfficerId').value = parts[0];
         document.getElementById('forwardTargetStage').value = parts[1];
+
+        // Verification/Inspection stages have a document upload section —
+        // if it's present on this page but no file is on record yet, confirm
+        // before letting the officer forward without one. Stages without an
+        // upload section (stageDocumentUploadForm absent) skip this entirely.
+        var hasUploadSection = !!document.getElementById('stageDocumentUploadForm');
+        var fileNote = document.getElementById('currentStageFileNote');
+        var hasDocument = !!fileNote && fileNote.style.display !== 'none';
+
+        if (hasUploadSection && !hasDocument) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'No Document Uploaded',
+                text: 'Document upload pannama forward panna ok-va?',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, Forward Anyway',
+                cancelButtonText: 'Cancel, Let Me Upload',
+                confirmButtonColor: '#D4A017'
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    // form.submit() bypasses this same 'submit' listener,
+                    // so this doesn't loop back into the confirmation again —
+                    // the hidden fields above are already filled in.
+                    forwardForm.submit();
+                }
+            });
+        }
     });
 }
 
@@ -101,6 +129,31 @@ if (btnRevert) {
             if (result.isConfirmed) {
                 document.getElementById('revertRemarks').value = result.value || '';
                 document.getElementById('revertForm').submit();
+            }
+        });
+    });
+}
+
+var btnReturnToApplicant = document.getElementById('btnReturnToApplicant');
+if (btnReturnToApplicant) {
+    btnReturnToApplicant.addEventListener('click', function () {
+        Swal.fire({
+            title: 'Return to Applicant?',
+            text: 'The applicant will need to correct and resubmit. Please state what needs fixing.',
+            input: 'textarea',
+            inputPlaceholder: 'Remarks (required)...',
+            showCancelButton: true,
+            confirmButtonText: 'Return',
+            confirmButtonColor: '#D4A017',
+            inputValidator: function (value) {
+                if (!value || !value.trim()) {
+                    return 'Please enter what needs to be corrected before returning it.';
+                }
+            }
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                document.getElementById('returnRemarks').value = result.value;
+                document.getElementById('returnForm').submit();
             }
         });
     });
