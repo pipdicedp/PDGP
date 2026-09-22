@@ -283,7 +283,7 @@
         <div id="tl-wizard-message-bottom" aria-live="polite" style="margin-bottom:.75rem"></div>
 
         <div class="tl-actions">
-            <button type="reset" class="btn btn-secondary">Reset</button>
+            <button type="button" id="btnReset" class="btn btn-secondary">Reset</button>
             <button type="submit" id="btnSaveDraft" formaction="@Url.Action("SaveDraft")" class="btn btn-primary">Save Draft</button>
             <button type="button" id="btnNext" class="btn btn-success">Next &raquo;</button>
         </div>
@@ -352,6 +352,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.TradeLicenceApply && typeof window.TradeLicenceApply.init === 'function') {
                 window.TradeLicenceApply.init();
+            }
+        });
+        document.getElementById('btnReset').addEventListener('click', function () {
+            if (confirm('This will discard any unsaved changes on this page. Continue?')) {
+                window.location.reload();
             }
         });
     </script>

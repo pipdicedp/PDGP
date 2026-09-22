@@ -2,6 +2,13 @@
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_UserLayout.cshtml";
     var myApplications = (List<TradeLicence.Models.TradeLicenceApplication>)ViewBag.MyApplications;
+
+    // A user with anything other than Rejected already has a "live"
+    // application (Draft to finish, one pending with an officer, or an
+    // Approved licence) — same rule as the server-side check in
+    // TradeLicenceController.Apply(). All-Rejected or no applications
+    // at all = free to start a fresh one.
+    var hasActiveApplication = myApplications != null && myApplications.Any(a => a.Status != "Rejected");
 }
 @section Styles {
     <link rel="stylesheet"
@@ -72,6 +79,29 @@
                     {
                         <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Correct &amp; Resubmit</a>
                     }
+                    else if (app.Status == "Approved" && app.IsCertificateDownloaded)
+                    {
+                        <span class="myapps-downloaded" style="color:#1a7f4b;font-weight:600;font-size:13px;white-space:nowrap;">
+                            <i class="fas fa-check-circle"></i>
+                            Downloaded on @(app.CertificateDownloadedDate?.ToString("dd-MM-yyyy") ?? "-")
+                        </span>
+                    }
+                    else if (app.Status == "Approved")
+                    {
+                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("DownloadCertificate", "TradeLicence", new { id = app.ApplicationId })">
+                            <i class="fas fa-download"></i> Download Certificate
+                        </a>
+                    }
+                    else if (app.PaymentStatus == "Pending")
+                    {
+                        <form method="post" asp-action="PayNow" asp-controller="TradeLicence" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@app.ApplicationId" />
+                            <button type="button" class="myapps-btn btn-pay-now" style="background:#1D6E3E; border:none; cursor:pointer;">
+                                <i class="fas fa-indian-rupee-sign"></i> Pay Now (Test)
+                            </button>
+                        </form>
+                    }
                     else
                     {
                         <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>
@@ -80,12 +110,21 @@
             }
         </div>
 
-        @* ===== New Application button — below the grid, for a fresh application ===== *@
-        <div class="myapps-new-wrap">
-            <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
-                <i class="fa-solid fa-plus"></i> New Application
-            </a>
-        </div>
+        @* ===== New Application button — only if nothing is currently active ===== *@
+        @if (!hasActiveApplication)
+        {
+            <div class="myapps-new-wrap">
+                <a class="myapps-new-btn" href="@Url.Action("Apply", "TradeLicence")">
+                    <i class="fa-solid fa-plus"></i> New Application
+                </a>
+            </div>
+        }
+        else
+        {
+            <p class="tl-note" style="margin-top:12px;">
+                You already have an application in progress. Finish, correct, or wait for it to be resolved before starting a new one.
+            </p>
+        }
 
         <hr class="myapps-divider" />
     }

@@ -72,8 +72,41 @@ namespace TradeLicence.Controllers
 
                 model = existing;
             }
+            //else
+            //{
+            //    model = new TradeLicenceApplication
+            //    {
+            //        IsApplicationForTradeLicence = true,
+            //        IsRegistrationForShopsEstablishment = true,
+            //        DateOfCommencement = DateTime.Today,
+            //        CurrentStep = 1
+            //    };
+            //}
+
             else
             {
+                var userId = GetCurrentUserId();
+                if (userId.HasValue)
+                {
+                    var active = await GetActiveApplicationAsync(userId.Value);
+                    if (active != null)
+                    {
+                        if (active.Status == "Draft" || active.Status == "ReturnedToApplicant")
+                        {
+                            return RedirectToAction("Apply", new { id = active.ApplicationId });
+                        }
+
+                        if (active.Status == "Approved")
+                        {
+                            TempData["InfoMessage"] = "You already have an approved trade licence. Renewal isn't available yet — please check back soon.";
+                            return RedirectToAction("ViewApplication", new { id = active.ApplicationId });
+                        }
+
+                        TempData["InfoMessage"] = "You already have a pending application. You can apply again once it's resolved.";
+                        return RedirectToAction("ViewApplication", new { id = active.ApplicationId });
+                    }
+                }
+
                 model = new TradeLicenceApplication
                 {
                     IsApplicationForTradeLicence = true,
@@ -230,6 +263,15 @@ namespace TradeLicence.Controllers
         {
             var application = await _service.GetApplicationAsync(id);
             if (application == null) return NotFound();
+
+            // Approved applications get the certificate page instead of the
+            // plain acknowledgement slip — dashboard "View" still points here,
+            // so nothing on the dashboard/link side needs to change.
+            if (application.Status == "Approved")
+            {
+                return View("Certificate", application);
+            }
+
             return View(application);
         }
 
@@ -244,6 +286,68 @@ namespace TradeLicence.Controllers
             var fileName = $"Acknowledgement_{application.ApplicationNumber ?? id.ToString()}.pdf";
 
             return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        // Downloads the trade licence certificate as a PDF — only for Approved applications.
+        [HttpGet]
+        public async Task<IActionResult> DownloadCertificate(int id)
+        {
+            var application = await _service.GetApplicationAsync(id);
+            if (application == null) return NotFound();
+
+            if (application.Status != "Approved")
+                return BadRequest(new { error = "Certificate is available only for approved applications." });
+
+            // Certificate can only be downloaded once — dashboard hides the button
+            // after the first download, but this stops a direct/guessed URL too.
+            if (application.IsCertificateDownloaded)
+                return BadRequest(new { error = "This certificate has already been downloaded and cannot be downloaded again." });
+
+            var pdfBytes = await _service.GenerateCertificatePdfAsync(id);
+            var fileName = $"TradeLicenceCertificate_{application.ApplicationNumber ?? id.ToString()}.pdf";
+
+            await _service.MarkCertificateDownloadedAsync(id);
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        // TEMPORARY — stands in for the real payment gateway until it's
+        // wired up. Lets the applicant simulate paying the Inspection-stage
+        // payment so the Inspection -> Approval flow can be tested end to
+        // end. Whatever replaces this must end the same way: PaymentStatus
+        // set to "Paid" on both TradeLicencePayments and this application.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PayNow(int id)
+        {
+            var userId = GetCurrentUserId();
+
+            var application = await _context.TradeLicenceApplications.FindAsync(id);
+            if (application == null) return NotFound();
+
+            // Only the applicant who owns this application can pay for it.
+            if (application.UserId != userId) return Forbid();
+
+            var payment = await _context.TradeLicencePayments
+                .FirstOrDefaultAsync(p => p.ApplicationId == id);
+
+            if (payment == null || payment.PaymentStatus != "Pending" || application.PaymentStatus != "Pending")
+                return BadRequest(new { error = "There's no pending payment for this application." });
+
+            payment.PaymentStatus = "Paid";
+            payment.PaymentCompletedDate = DateTime.UtcNow;
+
+            // Doesn't touch CurrentStage/AssignedOfficerId — the application
+            // was never taken away from the Inspection officer while payment
+            // was pending, so it's already sitting with them, just with
+            // PaymentStatus now flipped to "Paid" for their Forward button to see.
+            application.PaymentStatus = "Paid";
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            TempData["Message"] = "Payment successful! Your application has been sent back to the Inspection officer for forwarding.";
+            return RedirectToAction(nameof(Index));
         }
 
         // Called by the Confirm tab to fill in the read-only summary
@@ -358,6 +462,14 @@ namespace TradeLicence.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return int.TryParse(userIdClaim, out var id) ? id : (int?)null;
+        }
+
+        private async Task<TradeLicenceApplication?> GetActiveApplicationAsync(int userId)
+        {
+            return await _context.TradeLicenceApplications
+                .Where(a => a.UserId == userId && a.Status != "Rejected")
+                .OrderByDescending(a => a.CreatedDate)
+                .FirstOrDefaultAsync();
         }
 
         private async Task PopulateDropdownsAsync(TradeLicenceApplication? model = null)

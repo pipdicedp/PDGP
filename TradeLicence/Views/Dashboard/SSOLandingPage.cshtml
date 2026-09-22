@@ -1,0 +1,73 @@
+﻿@{
+    ViewData["Title"] = "SSO Landing Page";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/tl_css/sso_landing.css" asp-append-version="true" />
+}
+
+<div class="sso-landing-wrapper">
+
+    @* ===== Hamburger trigger ===== *@
+    <button type="button"
+            id="ssoHamburgerBtn"
+            class="sso-hamburger-btn"
+            aria-label="Open Services menu"
+            aria-expanded="false"
+            aria-controls="ssoServicesSidebar">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    @* ===== Overlay shown behind the sidebar while it's open ===== *@
+    <div id="ssoSidebarOverlay" class="sso-sidebar-overlay"></div>
+
+    @* ===== Left slide-out "Services" sidebar ===== *@
+    <aside id="ssoServicesSidebar" class="sso-services-sidebar" aria-hidden="true" aria-label="Services">
+        <div class="sso-sidebar-header">
+            <h4>Services</h4>
+            <button type="button" id="ssoSidebarClose" class="sso-sidebar-close" aria-label="Close Services menu">&times;</button>
+        </div>
+
+        <ul class="sso-sidebar-menu">
+            <li>
+                <a class="sso-sidebar-link" href="https://eodb.py.gov.in/" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>Eodb website</span>
+                </a>
+            </li>
+            <li>
+                <a class="sso-sidebar-link" asp-controller="Dashboard" asp-action="Index">
+                    <i class="fa-solid fa-table-cells-large"></i>
+                    <span>otherServices</span>
+                </a>
+            </li>
+        </ul>
+
+        <p class="sso-sidebar-footnote">"Eodb website" opens the Ease of Doing Business portal in a new tab. "otherServices" takes you to your dashboard.</p>
+    </aside>
+
+    @* ===== Landing page content ===== *@
+    <div class="sso-landing-body">
+        <div class="sso-landing-hero">
+            <div class="sso-landing-hero-icon">✅</div>
+            <h2>Login Successful</h2>
+            <p>
+                Welcome, <strong>@User.Identity?.Name</strong>. You're signed in to the Puducherry
+                Single Sign-On portal. Use the <strong>Services</strong> menu on the left to continue.
+            </p>
+        </div>
+
+        <div class="sso-landing-hint">
+            <i class="fa-solid fa-bars"></i>
+            <span>Tap the menu icon at the top-left to open <strong>Services</strong>.</span>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/tl_js/sso_landing.js" asp-append-version="true"></script>
+}

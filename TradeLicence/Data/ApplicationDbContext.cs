@@ -29,6 +29,8 @@ namespace TradeLicence.Data
         public DbSet<ShopFormIXPartA> ShopFormIXPartAs { get; set; } = null!;
         public DbSet<ShopFormIXPartB> ShopFormIXPartBs { get; set; } = null!;
         public DbSet<ShopAnnexureDocument> ShopAnnexureDocuments { get; set; } = null!;
+        public DbSet<OfficerSupportingDocument> OfficerSupportingDocuments { get; set; } = null!;
+        public DbSet<TradeLicencePayment> TradeLicencePayments { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -194,6 +196,29 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            modelBuilder.Entity<OfficerSupportingDocument>(entity =>
+            {
+                entity.ToTable("OfficerSupportingDocuments");
+                entity.HasKey(e => e.OfficerSupportingDocumentId);
+
+                // Enforces "one file per stage" at the DB level too, not
+                // just via the upsert logic in OfficerController.
+                entity.HasIndex(e => new { e.ApplicationId, e.Stage }).IsUnique();
+
+                entity.HasOne(e => e.Application)
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Restrict, same reasoning as ApplicationWorkflowHistory —
+                // an officer who's uploaded a file shouldn't be deletable
+                // outright; ToggleOfficerStatus (Inactive) is the fallback.
+                entity.HasOne(e => e.UploadedByOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.UploadedByOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
             modelBuilder.Entity<TradeLicenceApplication>(entity =>
             {
                 // ... your existing config lines stay as they are ...
@@ -210,6 +235,26 @@ namespace TradeLicence.Data
                       .WithMany()
                       .HasForeignKey(e => e.AssignedOfficerId)
                       .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<TradeLicencePayment>(entity =>
+            {
+                entity.ToTable("TradeLicencePayments");
+                entity.HasKey(e => e.PaymentId);
+
+                entity.Property(e => e.PaymentAmount).HasColumnType("decimal(12,2)");
+                entity.Property(e => e.ExtraCharge).HasColumnType("decimal(12,2)");
+                entity.Property(e => e.TotalPaymentAmount).HasColumnType("decimal(12,2)");
+
+                // One payment row per application - SendPaymentRequest upserts
+                // onto this, same "one row per key" approach as
+                // OfficerSupportingDocument's (ApplicationId, Stage) index.
+                entity.HasIndex(e => e.ApplicationId).IsUnique();
+
+                entity.HasOne<TradeLicenceApplication>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ApplicationId)
+                      .OnDelete(DeleteBehavior.Cascade);
             });
 
         }

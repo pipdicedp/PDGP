@@ -17,6 +17,16 @@ namespace TradeLicence.Controllers
             _context = context;
         }
 
+        // GET: /Dashboard/SSOLandingPage
+        // This is what a citizen now sees immediately after a successful login,
+        // in place of the old Application-Status-Tracking landing spot. It hosts
+        // the left-hand "Services" hamburger menu (EODB website + Other Services).
+        [HttpGet]
+        public IActionResult SSOLandingPage()
+        {
+            return View();
+        }
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {

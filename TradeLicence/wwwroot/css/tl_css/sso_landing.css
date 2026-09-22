@@ -1,0 +1,226 @@
+/* =============================================================
+   SSO Landing Page — shown right after a successful citizen login,
+   in place of the old Application Status Tracking page.
+   Colours match this project's existing topbar/dashboard palette
+   (#1a3a52 / #2c5282 / #D4A017) since there is no shared token file.
+   ============================================================= */
+
+.sso-landing-wrapper {
+    position: relative;
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* ---------- Hamburger trigger button ---------- */
+.sso-hamburger-btn {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 50px;
+    height: 50px;
+    margin-bottom: 18px;
+    background: #ffffff;
+    border: 1px solid #d7e0e8;
+    border-radius: 10px;
+    box-shadow: 0 5px 16px rgba(26, 58, 82, .12);
+    cursor: pointer;
+    transition: background .2s ease, transform .15s ease;
+}
+
+.sso-hamburger-btn:hover { background: #eef4f8; }
+.sso-hamburger-btn:active { transform: scale(.96); }
+
+.sso-hamburger-btn span {
+    width: 24px;
+    height: 3px;
+    background: #1a3a52;
+    border-radius: 2px;
+    transition: transform .25s ease, opacity .2s ease;
+}
+
+/* turn the bars into an "X" once the sidebar is open */
+.sso-hamburger-btn[aria-expanded="true"] span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.sso-hamburger-btn[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+.sso-hamburger-btn[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+/* ---------- Dark overlay behind the open sidebar ---------- */
+.sso-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1040;
+    background: rgba(12, 22, 44, .45);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .25s ease, visibility .25s ease;
+}
+
+.sso-sidebar-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ---------- Left slide-out "Services" sidebar ---------- */
+.sso-services-sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    z-index: 1050;
+    width: 300px;
+    max-width: 82vw;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    box-shadow: 0 20px 48px rgba(23, 40, 72, .18);
+    transition: left .28s ease;
+}
+
+.sso-services-sidebar.is-open { left: 0; }
+
+.sso-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 22px;
+    color: #fff;
+    background: linear-gradient(135deg, #1a3a52, #2c5282);
+    border-bottom: 3px solid #D4A017;
+}
+
+.sso-sidebar-header h4 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+}
+
+.sso-sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: #fff;
+    background: rgba(255, 255, 255, .14);
+    border: 0;
+    border-radius: 8px;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease;
+}
+
+.sso-sidebar-close:hover { background: rgba(255, 255, 255, .26); }
+
+.sso-sidebar-menu {
+    margin: 0;
+    padding: 14px 12px;
+    list-style: none;
+}
+
+.sso-sidebar-menu li + li { margin-top: 6px; }
+
+.sso-sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 14px;
+    color: #1a3a52;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background .18s ease, color .18s ease, transform .12s ease;
+}
+
+.sso-sidebar-link:hover {
+    color: #2c5282;
+    background: #eef4f8;
+    transform: translateX(2px);
+}
+
+.sso-sidebar-link i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    color: #2c5282;
+    background: rgba(44, 82, 130, .10);
+    border-radius: 9px;
+    font-size: .95rem;
+}
+
+.sso-sidebar-link span { font-weight: 600; font-size: .96rem; }
+
+.sso-sidebar-link .fa-external-link-alt { font-size: .8rem; }
+
+/* small print under the two options, inside the sidebar */
+.sso-sidebar-footnote {
+    margin-top: auto;
+    padding: 16px 22px;
+    color: #667788;
+    font-size: .78rem;
+    border-top: 1px solid #e2e9ef;
+}
+
+/* ---------- Landing page body ---------- */
+.sso-landing-body {
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 40px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, .08);
+}
+
+.sso-landing-hero {
+    padding: 34px 30px;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(135deg, #1a3a52, #2c5282);
+    border-radius: 16px;
+    box-shadow: 0 10px 26px rgba(26, 58, 82, .18);
+}
+
+.sso-landing-hero-icon {
+    width: 66px;
+    height: 66px;
+    margin: 0 auto 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    background: rgba(255, 255, 255, .16);
+    border-radius: 50%;
+}
+
+.sso-landing-hero h2 {
+    margin: 0 0 8px;
+    font-size: 1.55rem;
+    font-weight: 700;
+}
+
+.sso-landing-hero p {
+    margin: 0 auto;
+    max-width: 640px;
+    color: rgba(255, 255, 255, .88);
+    font-size: .97rem;
+}
+
+.sso-landing-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 26px;
+    color: #556676;
+    font-size: .92rem;
+}
+
+.sso-landing-hint i { color: #2c5282; }
+
+@media (max-width: 640px) {
+    .sso-landing-body { padding: 24px 18px; }
+    .sso-landing-hero { padding: 26px 18px; }
+}

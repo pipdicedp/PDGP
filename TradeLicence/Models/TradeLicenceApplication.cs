@@ -112,9 +112,26 @@ namespace TradeLicence.Models
 
         public DateTime? ModifiedDate { get; set; }
 
+        // Set exactly once, in SubmitApplicationAsync, when Status first
+        // becomes "Submitted". Unlike CreatedDate (set at first Draft save)
+        // this reflects the citizen's actual final-submit moment.
+        public DateTime? SubmittedDate { get; set; }
+
         public string? CreatedByUserId { get; set; }
 
         public int CurrentStep { get; set; } = 1;
+
+        // ---------------- Certificate download tracking ----------------
+        public bool IsCertificateDownloaded { get; set; } = false;
+        public DateTime? CertificateDownloadedDate { get; set; }
+
+        // ---------------- Inspection-stage payment ----------------
+        // Mirrors the latest TradeLicencePayment row's status for this
+        // application ("NotRequested" / "Pending" / "Paid") — the full
+        // breakdown (amount, extra charge, dates) lives in TradeLicencePayments;
+        // this column exists purely so ForwardToOfficer can gate on it
+        // without a join.
+        public string PaymentStatus { get; set; } = "NotRequested";
 
         // Navigation properties
         public virtual ICollection<ApplicationDocument>? ApplicationDocuments { get; set; }

@@ -62,6 +62,12 @@ namespace TradeLicence.Services
         // ---------------- Acknowledgement PDF ----------------
         Task<byte[]> GenerateAcknowledgementPdfAsync(int applicationId);
 
+        // ---------------- Trade Licence Certificate PDF (Approved applications only) ----------------
+        Task<byte[]> GenerateCertificatePdfAsync(int applicationId);
+
+        // ---------------- Certificate download tracking ----------------
+        Task<bool> MarkCertificateDownloadedAsync(int applicationId);
+
         // ---------------- Application Preview (shared by citizen wizard and officer view) ----------------
         Task<ApplicationPreviewViewModel?> GetApplicationPreviewAsync(int applicationId);
     }
