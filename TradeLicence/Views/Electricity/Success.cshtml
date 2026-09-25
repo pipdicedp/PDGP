@@ -1,0 +1,19 @@
+﻿@model TradeLicence.Models.ApplicationViewModel
+
+@{
+    ViewData["Title"] = "Application Submitted";
+    Layout = "_UserLayout";
+}
+
+<div class="container my-5 text-center">
+    <div class="card shadow p-5 border-0 rounded-3">
+        <div class="mb-3">
+            <i class="fa-solid fa-circle-check fa-4x text-success"></i>
+        </div>
+        <h2 class="text-success fw-bold">Application Submitted Successfully!</h2>
+        <p class="fs-5 text-muted mt-3">Thank you, <strong>@Model.ApplicantName</strong>. Your details have been saved to the database.</p>
+        <div class="mt-4">
+            <a href="/" class="btn btn-primary btn-lg px-4">Submit Another Application</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,230 @@
+﻿@model TradeLicence.Models.EBapplication
+@{
+    ViewData["Title"] = "Application Details";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+
+    string Field(string label, string? value) =>
+        $"<div class=\"preview-field\"><span class=\"preview-label\">{System.Net.WebUtility.HtmlEncode(label)}</span><span class=\"preview-value\">{System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(value) ? "-" : value)}</span></div>";
+
+    // Documents are stored as disk paths (a different pattern from Water's
+    // in-DB bytes) — wwwroot/uploads is already served by app.UseStaticFiles(),
+    // so these render as plain links, no special controller action needed.
+    var documents = new (string Label, string? Path)[]
+    {
+        ("Photo", Model.PhotoPath),
+        ("Address Proof" + (string.IsNullOrEmpty(Model.AddressProofType) ? "" : $" ({Model.AddressProofType})"), Model.AddressProofPath),
+        ("Identity Proof" + (string.IsNullOrEmpty(Model.IdentityProofType) ? "" : $" ({Model.IdentityProofType})"), Model.IdentityProofPath),
+        ("Test Report", Model.TestReportPath),
+        ("Sale Deed", Model.SaleDeedPath),
+        ("Power of Attorney", Model.PowerOfAttorneyPath),
+        ("Municipal Tax Receipt", Model.MunicipalTaxPath),
+        ("Allotment Letter", Model.AllotmentLetterPath),
+        ("House Registration", Model.HouseRegistrationPath),
+        ("Lease Document", Model.LeasePath),
+        ("Other Ownership Proof", Model.OtherOwnershipPath),
+        ("Power Agent Photo", Model.PowerAgentPhotoPath),
+        ("Others", Model.OthersPath),
+    };
+    var uploadedDocuments = documents.Where(d => !string.IsNullOrWhiteSpace(d.Path)).ToList();
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+    <style>
+        /* Same field-grid pattern used for Water's officer preview. */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 16px 28px;
+        }
+
+        .preview-field {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: #8a92a3;
+            margin-bottom: 3px;
+        }
+
+        .preview-value {
+            display: block;
+            font-size: 0.92rem;
+            color: #1a3a52;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .preview-doc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="status-page-header">
+        Electricity Connection Application — @Model.ApplicationNumber
+    </div>
+
+    @{
+        var stages = TradeLicence.Models.OfficerWorkflow.Stages;
+        var currentStageIndex = TradeLicence.Models.OfficerWorkflow.StageIndex((string)ViewBag.CurrentStage);
+    }
+    <div class="tl-stepper-bar">
+        <div class="tl-stepper">
+            @for (int i = 0; i < stages.Length; i++)
+            {
+                var stepClass = i < currentStageIndex ? "tl-step-done"
+                    : i == currentStageIndex ? "tl-step-current"
+                    : "tl-step-upcoming";
+
+                <div class="tl-step @stepClass">
+                    <div class="tl-step-circle">
+                        @if (i < currentStageIndex)
+                        {
+                            <i class="fa-solid fa-check"></i>
+                        }
+                        else
+                        {
+                            @(i + 1)
+                        }
+                    </div>
+                    <div class="tl-step-label">@stages[i]</div>
+                </div>
+                if (i < stages.Length - 1)
+                {
+                    <div class="tl-step-connector @(i < currentStageIndex ? "tl-step-connector-done" : "")"></div>
+                }
+            }
+        </div>
+    </div>
+
+    <div class="dashboard-body">
+
+        <!-- ================= Application Preview (Electricity-specific) ================= -->
+        <fieldset class="tl-section">
+            <legend><i class="fa-solid fa-user"></i> Applicant Details</legend>
+            <div class="preview-grid">
+                @Html.Raw(Field("Applicant Name", Model.ApplicantName))
+                @Html.Raw(Field("Gender", Model.Gender))
+                @Html.Raw(Field("Relative Name", Model.RelativeName))
+                @Html.Raw(Field("Mobile Number", Model.MobileNumber))
+                @Html.Raw(Field("Email", Model.Email))
+                @Html.Raw(Field("Service Category", Model.ServiceCategory))
+                @Html.Raw(Field("Ownership Type", Model.OwnershipType))
+                @Html.Raw(Field("Connection Type", Model.ConnectionType))
+                @Html.Raw(Field("Service Type", Model.ServiceType))
+            </div>
+        </fieldset>
+
+        <fieldset class="tl-section">
+            <legend><i class="fa-solid fa-location-dot"></i> Site Address</legend>
+            <div class="preview-grid">
+                @Html.Raw(Field("Door No.", Model.SiteDoorNo))
+                @Html.Raw(Field("Street", Model.SiteStreet))
+                @Html.Raw(Field("Area", Model.SiteArea))
+                @Html.Raw(Field("District", Model.SiteDistrict))
+                @Html.Raw(Field("Pincode", Model.SitePincode))
+                @Html.Raw(Field("Proposed Pincode", Model.ProposedPincode))
+                @Html.Raw(Field("Landmark 1", Model.Landmark1))
+                @Html.Raw(Field("Landmark 2", Model.Landmark2))
+            </div>
+        </fieldset>
+
+        @if (Model.IsSameAddress != true)
+        {
+            <fieldset class="tl-section">
+                <legend><i class="fa-solid fa-envelope"></i> Communication Address</legend>
+                <div class="preview-grid">
+                    @Html.Raw(Field("Door No.", Model.CommDoorNo))
+                    @Html.Raw(Field("Street", Model.CommStreet))
+                    @Html.Raw(Field("Area", Model.CommArea))
+                    @Html.Raw(Field("Region", Model.CommRegion))
+                    @Html.Raw(Field("Pincode", Model.CommPincode))
+                </div>
+            </fieldset>
+        }
+
+        <fieldset class="tl-section">
+            <legend><i class="fa-solid fa-bolt"></i> Connection Details</legend>
+            <div class="preview-grid">
+                @Html.Raw(Field("RS No.", Model.RSNo))
+                @Html.Raw(Field("Plot Area", Model.PlotArea?.ToString("N2")))
+                @Html.Raw(Field("Build Area", Model.BuildArea?.ToString("N2")))
+                @Html.Raw(Field("Supply Category", Model.SupplyCategory))
+                @Html.Raw(Field("Purpose", Model.Purpose))
+                @Html.Raw(Field("Total Load", Model.TotalLoad?.ToString("N2")))
+                @Html.Raw(Field("Type of Supply", Model.TypeOfSupply))
+                @Html.Raw(Field("Own Meter", Model.OwnMeter))
+                @Html.Raw(Field("Supply From", Model.SupplyFromDate?.ToString("dd-MM-yyyy")))
+                @Html.Raw(Field("Supply To", Model.SupplyToDate?.ToString("dd-MM-yyyy")))
+            </div>
+        </fieldset>
+
+        @if (Model.HasExistingSupply == true)
+        {
+            <fieldset class="tl-section">
+                <legend><i class="fa-solid fa-plug"></i> Existing Supply</legend>
+                <div class="preview-grid">
+                    @Html.Raw(Field("Existing Consumer No.", Model.ExistingConsumerNo ?? Model.ExistingConsumerNumber))
+                    @Html.Raw(Field("Existing Due Amount", Model.ExistingDueAmount?.ToString("N2")))
+                    @Html.Raw(Field("Dues in Area", Model.HasDuesInArea == true ? "Yes" : "No"))
+                    @Html.Raw(Field("Dues for Premises", Model.HasDuesForPremises == true ? "Yes" : "No"))
+                    @Html.Raw(Field("Dues (Associated Firm)", Model.HasDuesAssociatedFirm == true ? "Yes" : "No"))
+                </div>
+            </fieldset>
+        }
+
+        @if (uploadedDocuments.Any())
+        {
+            <fieldset class="tl-section">
+                <legend><i class="fa-solid fa-paperclip"></i> Documents Submitted</legend>
+                @foreach (var doc in uploadedDocuments)
+                {
+                    <div class="preview-doc-row">
+                        <span class="preview-label">@doc.Label</span>
+                        <a class="btn btn-sm btn-secondary" href="@doc.Path" target="_blank">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </div>
+                }
+            </fieldset>
+        }
+
+        <div class="tl-section-divider">
+            <span class="tl-section-divider-icon"><i class="fa-solid fa-angles-down"></i></span>
+        </div>
+
+        <!-- ================= Shared Officer Workflow panel ================= -->
+
+        <partial name="_OfficerWorkflowPanel" model="(TradeLicence.Models.IWorkflowApplication)Model" />
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+
+    @if (TempData["OfficerActionMessage"] != null)
+    {
+        <script>
+            showOfficerActionAlert(
+                @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
+                @Html.Raw(Json.Serialize(TempData["OfficerActionMessage"]))
+            );
+        </script>
+    }
+}

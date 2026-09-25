@@ -65,7 +65,7 @@ namespace TradeLicence.Services
                         (a.AssignedOfficerId == null && myStages.Contains(a.CurrentStage))
                         || a.AssignedOfficerId == officerId
                     ))
-                .OrderByDescending(a => a.ApplicationId)
+                .OrderByDescending(a => a.Id)
                 .ToListAsync();
         }
 

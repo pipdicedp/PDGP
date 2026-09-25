@@ -15,6 +15,7 @@ namespace TradeLicence.Models
     /// </summary>
     public interface IWorkflowApplication
     {
+        int Id { get; }
         int ApplicationId { get; }
         int? UserId { get; set; }
 

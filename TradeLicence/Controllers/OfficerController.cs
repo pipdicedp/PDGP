@@ -19,14 +19,16 @@ namespace TradeLicence.Controllers
         private readonly ITradeLicenceService _service;
         private readonly IFileEncryptionService _encryption;
         private readonly WaterApplicationDbContext _waterContext;
+        private readonly ElectricityApplicationDbContext _electricityContext;
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
-        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext)
+        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext)
         {
             _context = context;
             _service = service;
             _encryption = encryption;
             _waterContext = waterContext;
+            _electricityContext = electricityContext;
         }
 
         // The officer's own id is set as ClaimTypes.NameIdentifier at login
@@ -81,6 +83,27 @@ namespace TradeLicence.Controllers
             }
 
             // else if (officer.Department == "Electricity") { ... same shape ... }
+            if (officer.Department == "Electricity")
+            {
+                var electricityEngine = new WorkflowEngineService<EBapplication>(_electricityContext, _context, "Electricity");
+                var electricityApps = await electricityEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+                var electricityItems = electricityApps.Select(a => new OfficerQueueItem
+                {
+                    ApplicationId = a.ApplicationId,
+                    ServiceType = "Electricity",
+                    DisplayName = a.ApplicantName ?? "-",
+                    Contact = a.MobileNumber ?? "-",
+                    CurrentStage = a.CurrentStage,
+                    Status = a.Status,
+                    SubmittedDate = a.CreatedDate ?? DateTime.UtcNow,
+                    ViewUrl = Url.Action("ViewApplication", "ElectricityOfficer", new { id = a.ApplicationId })!
+                }).ToList();
+
+                ViewBag.Designation = officer.Designation;
+                ViewBag.Department = officer.Department;
+                return View("SharedQueue", electricityItems);
+            }
 
             // ---------------- TradeLicence — unchanged from here down ----------------
             var currentDesignation = User.FindFirst("Designation")?.Value;
@@ -686,5 +709,4 @@ namespace TradeLicence.Controllers
             return RedirectToAction("ExistingOfficers");
         }
     }
-
 }

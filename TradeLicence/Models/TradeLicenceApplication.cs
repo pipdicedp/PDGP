@@ -7,7 +7,7 @@ namespace TradeLicence.Models
     {
         [Key]
         public int ApplicationId { get; set; }
-
+        public int Id => ApplicationId;
         public int? UserId { get; set; }
         public string? ApplicationNumber { get; set; }
 

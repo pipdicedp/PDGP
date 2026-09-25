@@ -1,0 +1,792 @@
+﻿@model TradeLicence.Models.ApplicationViewModel
+
+@{
+    ViewData["Title"] = "Electricity Connection Application";
+    Layout = "_UserLayout";
+}
+
+<div class="tl-container">
+    <div class="tl-header">
+        <h2>APPLICATION FOR</h2>
+        <h3>NEW ELECTRICITY CONNECTION (Electricity Department, Government of Puducherry)</h3>
+    </div>
+
+    <div class="tl-toplinks">
+        <span class="tl-step-badge">Step @Model.CurrentStep of 4</span>
+    </div>
+    <div class="tl-wizard-links">
+        <a href="#" class="tl-wizard-tab @(Model.CurrentStep == 1 ? "active" : "")">Personal Info</a>
+        <span class="tl-wizard-sep"> / </span>
+        <a href="#" class="tl-wizard-tab @(Model.CurrentStep == 2 ? "active" : "")">Address</a>
+        <span class="tl-wizard-sep"> / </span>
+        <a href="#" class="tl-wizard-tab @(Model.CurrentStep == 3 ? "active" : "")">Technical</a>
+        <span class="tl-wizard-sep"> / </span>
+        <a href="#" class="tl-wizard-tab @(Model.CurrentStep == 4 ? "active" : "")">Documents</a>
+    </div>
+
+    <form asp-action="Index" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="CurrentStep" />
+        <input type="hidden" asp-for="ApplicationNumber" />
+
+        <!-- ================= STEP 1: Applicant Info ================= -->
+        <!-- ================= STEP 1: Applicant Info ================= -->
+        @if (Model.CurrentStep == 1)
+        {
+            <fieldset class="tl-section">
+                <legend>Applicant Details</legend>
+                <div class="tl-grid-2">
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Service Category <span class="req">*</span></label>
+                        <select asp-for="ServiceCategory" class="form-select shadow-sm">
+                            <option value="">Select Service Category</option>
+                            @foreach (var item in (List<string>)ViewBag.ServiceCategoryList)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                        <span asp-validation-for="ServiceCategory" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Type of Ownership <span class="req">*</span></label>
+                        <select asp-for="OwnershipType" class="form-select shadow-sm">
+                            <option value="">Select Type Ownership</option>
+                            @foreach (var item in (List<string>)ViewBag.OwnershipTypeList)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                        <span asp-validation-for="OwnershipType" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Connection Type (LT only) -->
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Select Connection Type <span class="req">*</span></label>
+                        <select asp-for="ConnectionType" class="form-select shadow-sm">
+                            <option value="LT">LT</option>
+                        </select>
+                        <span asp-validation-for="ConnectionType" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Service Type Dropdown -->
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Select Service Type <span class="req">*</span></label>
+                        <select asp-for="ServiceType" id="serviceTypeSelect" class="form-select shadow-sm">
+                            <option value="Individual">Individual</option>
+                            <option value="Organization">Organization</option>
+                        </select>
+                        <span asp-validation-for="ServiceType" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Dynamic Name Field -->
+                    <div class="form-group">
+                        <label class="form-label fw-semibold" id="lblApplicantName">Name of Applicant <span class="req">*</span></label>
+                        <input asp-for="ApplicantName" id="txtApplicantName" class="form-control shadow-sm" placeholder="Enter Full Name" />
+                        <span asp-validation-for="ApplicantName" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Gender Field (Hidden for Organization) -->
+                    <div class="form-group" id="genderContainer">
+                        <label class="form-label fw-semibold">Gender Of Applicant <span class="req">*</span></label><br />
+                        <div class="form-check form-check-inline mt-2">
+                            <input class="form-check-input" type="radio" asp-for="Gender" value="Male" id="gMale" />
+                            <label class="form-check-label" for="gMale">Male</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Gender" value="Female" id="gFemale" />
+                            <label class="form-check-label" for="gFemale">Female</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" asp-for="Gender" value="Transgender" id="gTrans" />
+                            <label class="form-check-label" for="gTrans">Transgender</label>
+                        </div>
+                        <span asp-validation-for="Gender" class="text-danger small d-block"></span>
+                    </div>
+
+                    <!-- Dynamic Relative / Director Name Field -->
+                    <div class="form-group">
+                        <label class="form-label fw-semibold" id="lblRelativeName">Father / Husband Name <span class="req">*</span></label>
+                        <input asp-for="RelativeName" id="txtRelativeName" class="form-control shadow-sm" placeholder="Enter Relative Name" />
+                        <span asp-validation-for="RelativeName" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Pincode -->
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Proposed Site Pincode <span class="req">*</span></label>
+                        <input asp-for="ProposedPincode" class="form-control shadow-sm" placeholder="6-digit Pincode" />
+                        <span asp-validation-for="ProposedPincode" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Mobile Number -->
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Mobile No <span class="req">*</span></label>
+                        <input asp-for="MobileNumber" class="form-control shadow-sm" placeholder="10-digit Mobile Number" />
+                        <span asp-validation-for="MobileNumber" class="text-danger small"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="d-flex justify-content-end mt-4">
+                <button type="submit" name="actionButton" value="next" class="btn btn-primary btn-lg px-4 shadow-sm">
+                    Save &amp; Next &rarr;
+                </button>
+            </div>
+        }
+
+        <!-- ================= STEP 2: Address Details ================= -->
+        @if (Model.CurrentStep == 2)
+        {
+            <input type="hidden" asp-for="ServiceCategory" />
+            <input type="hidden" asp-for="OwnershipType" />
+            <input type="hidden" asp-for="ConnectionType" />
+            <input type="hidden" asp-for="ServiceType" />
+            <input type="hidden" asp-for="ApplicantName" />
+            <input type="hidden" asp-for="Gender" />
+            <input type="hidden" asp-for="RelativeName" />
+            <input type="hidden" asp-for="ProposedPincode" />
+            <input type="hidden" asp-for="MobileNumber" />
+
+            <fieldset class="tl-section">
+                <legend>Address Details</legend>
+                <div class="tl-grid-2">
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Door/Plot No. <span class="req">*</span></label>
+                        <input asp-for="SiteDoorNo" id="SiteDoorNo" class="form-control shadow-sm" placeholder="Door or Plot Number" />
+                        <span asp-validation-for="SiteDoorNo" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Street Name <span class="req">*</span></label>
+                        <input asp-for="SiteStreet" id="SiteStreet" class="form-control shadow-sm" placeholder="Street Name" />
+                        <span asp-validation-for="SiteStreet" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Area <span class="req">*</span></label>
+                        <input asp-for="SiteArea" id="SiteArea" class="form-control shadow-sm" placeholder="Area / Locality" />
+                        <span asp-validation-for="SiteArea" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">District/Region <span class="req">*</span></label>
+                        <select asp-for="SiteDistrict" id="SiteDistrict" class="form-select shadow-sm">
+                            <option value="">Select Region</option>
+                            <option value="Pondicherry">Pondicherry</option>
+                            <option value="Karaikal">Karaikal</option>
+                            <option value="Mahe">Mahe</option>
+                            <option value="Yanam">Yanam</option>
+                        </select>
+                        <span asp-validation-for="SiteDistrict" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Pincode <span class="req">*</span></label>
+                        <input asp-for="SitePincode" id="SitePincode" class="form-control shadow-sm" placeholder="Pincode" />
+                        <span asp-validation-for="SitePincode" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Email Address <span class="req">*</span></label>
+                        <input asp-for="Email" type="email" class="form-control shadow-sm" placeholder="example@domain.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Landmark 1 <span class="req">*</span></label>
+                        <input asp-for="Landmark1" class="form-control shadow-sm" placeholder="Nearby Landmark" />
+                        <span asp-validation-for="Landmark1" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Landmark 2 <span class="req">*</span></label>
+                        <input asp-for="Landmark2" class="form-control shadow-sm" placeholder="Secondary Landmark" />
+                        <span asp-validation-for="Landmark2" class="text-danger small"></span>
+                    </div>
+
+                    <div class="tl-col-full mt-3 p-3 bg-light rounded-3 border">
+                        <label class="form-label fw-semibold me-3 mb-0">Communication address same as site address? <span class="req">*</span></label>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" asp-for="IsSameAddress" value="true" class="form-check-input" id="sameYes" />
+                            <label for="sameYes" class="form-check-label">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" asp-for="IsSameAddress" value="false" class="form-check-input" id="sameNo" />
+                            <label for="sameNo" class="form-check-label">No</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Communication Door No.</label>
+                        <input asp-for="CommDoorNo" id="CommDoorNo" class="form-control shadow-sm" placeholder="Door No." />
+                        <span asp-validation-for="CommDoorNo" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Communication Street Name</label>
+                        <input asp-for="CommStreet" id="CommStreet" class="form-control shadow-sm" placeholder="Street Name" />
+                        <span asp-validation-for="CommStreet" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Communication Area</label>
+                        <input asp-for="CommArea" id="CommArea" class="form-control shadow-sm" placeholder="Area Name" />
+                        <span asp-validation-for="CommArea" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Communication Region</label>
+                        <select asp-for="CommRegion" id="CommRegion" class="form-select shadow-sm">
+                            <option value="">Select Region</option>
+                            <option value="Pondicherry">Pondicherry</option>
+                            <option value="Karaikal">Karaikal</option>
+                            <option value="Mahe">Mahe</option>
+                            <option value="Yanam">Yanam</option>
+                        </select>
+                        <span asp-validation-for="CommRegion" class="text-danger small"></span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Communication Pincode</label>
+                        <input asp-for="CommPincode" id="CommPincode" class="form-control shadow-sm" placeholder="Pincode" />
+                        <span asp-validation-for="CommPincode" class="text-danger small"></span>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" name="actionButton" value="prev" class="btn btn-outline-secondary px-4">&larr; Previous</button>
+                <button type="submit" name="actionButton" value="next" class="btn btn-primary px-4 shadow-sm">Save &amp; Next &rarr;</button>
+            </div>
+        }
+
+        <!-- ================= STEP 3: Technical Details ================= -->
+        @if (Model.CurrentStep == 3)
+        {
+            <input type="hidden" asp-for="ServiceCategory" />
+            <input type="hidden" asp-for="OwnershipType" />
+            <input type="hidden" asp-for="ConnectionType" />
+            <input type="hidden" asp-for="ServiceType" />
+            <input type="hidden" asp-for="ApplicantName" />
+            <input type="hidden" asp-for="Gender" />
+            <input type="hidden" asp-for="RelativeName" />
+            <input type="hidden" asp-for="ProposedPincode" />
+            <input type="hidden" asp-for="MobileNumber" />
+            <input type="hidden" asp-for="SiteDoorNo" />
+            <input type="hidden" asp-for="SiteStreet" />
+            <input type="hidden" asp-for="SiteArea" />
+            <input type="hidden" asp-for="SiteDistrict" />
+            <input type="hidden" asp-for="SitePincode" />
+            <input type="hidden" asp-for="Email" />
+            <input type="hidden" asp-for="Landmark1" />
+            <input type="hidden" asp-for="Landmark2" />
+            <input type="hidden" asp-for="IsSameAddress" />
+            <input type="hidden" asp-for="CommDoorNo" />
+            <input type="hidden" asp-for="CommStreet" />
+            <input type="hidden" asp-for="CommArea" />
+            <input type="hidden" asp-for="CommRegion" />
+            <input type="hidden" asp-for="CommPincode" />
+
+            <fieldset class="tl-section">
+                <legend>Plot & Load Specifications (@Model.ConnectionType)</legend>
+                <div class="tl-grid-2">
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">RS No. <span class="req">*</span></label>
+                        <input asp-for="RSNo" type="text" maxlength="50" class="form-control shadow-sm" placeholder="e.g. 123/4A" />
+                        <span asp-validation-for="RSNo" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Plot Area <span class="req">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <input asp-for="PlotArea" type="number" step="0.01" min="0.01" class="form-control" placeholder="e.g. 1500.50" />
+                            <span class="input-group-text bg-light">Sq. ft</span>
+                        </div>
+                        <span asp-validation-for="PlotArea" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Build Area <span class="req">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <input asp-for="BuildArea" type="number" step="0.01" min="0.01" class="form-control" placeholder="e.g. 950.25" />
+                            <span class="input-group-text bg-light">Sq. ft</span>
+                        </div>
+                        <span asp-validation-for="BuildArea" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Supply Category <span class="req">*</span></label>
+                        <select asp-for="SupplyCategory" class="form-select shadow-sm">
+                            <option value="">-- Select Supply Category --</option>
+                            @foreach (var item in (List<string>)ViewBag.SupplyCategoryList)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                        <span asp-validation-for="SupplyCategory" class="text-danger small d-block"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Purpose <span class="req">*</span></label>
+                        <input asp-for="Purpose" class="form-control shadow-sm" placeholder="e.g. Residential / Commercial / Industrial" />
+                        <span asp-validation-for="Purpose" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Total Load Applied For (Watt) <span class="req">*</span></label>
+                        <div class="input-group shadow-sm">
+                            <input asp-for="TotalLoad" type="number" step="0.01" min="0.01" class="form-control"
+                                   placeholder="@(Model.ConnectionType == "HT" ? "Min 50000 Watt" : "Expected TotalLoad in Watt")" />
+                            <span class="input-group-text bg-light">Watt</span>
+                        </div>
+                        @if (Model.ConnectionType == "HT")
+                        {
+                            <small class="text-muted">Minimum load required for HT Service is 50,000 Watts (50 kW / 63 kVA).</small>
+                        }
+                        <span asp-validation-for="TotalLoad" class="text-danger small d-block"></span>
+                    </div>
+
+                    <!-- 🔌 Type of Supply -->
+                    <div class="form-group">
+                        <label class="form-label fw-semibold">Type of Supply <span class="req">*</span></label>
+                        <select asp-for="TypeOfSupply" class="form-select shadow-sm">
+                            <option value="">Select Type of Supply</option>
+                            @foreach (var item in (List<string>)ViewBag.TypeOfSupplyList)
+                            {
+                                <option value="@item">@item</option>
+                            }
+                        </select>
+                        <span asp-validation-for="TypeOfSupply" class="text-danger small"></span>
+                    </div>
+
+                    <!-- 📅 Temporary Supply Duration (Shown only when Temporary is selected) -->
+                    <div class="tl-col-full d-none" id="temporaryDateContainer">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h6 class="fw-bold text-primary mb-3">Temporary Supply Duration</h6>
+                            <div class="tl-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Supply From Date <span class="req">*</span></label>
+                                    <input asp-for="SupplyFromDate" type="date" class="form-control shadow-sm" />
+                                    <span asp-validation-for="SupplyFromDate" class="text-danger small"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Supply To Date <span class="req">*</span></label>
+                                    <input asp-for="SupplyToDate" type="date" class="form-control shadow-sm" />
+                                    <span asp-validation-for="SupplyToDate" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tl-col-full mt-3 p-3 bg-light rounded-3 border">
+                        <label class="form-label fw-semibold me-3 mb-0">Willing to install own meter? <span class="req">*</span></label>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" asp-for="OwnMeter" value="true" class="form-check-input" id="meterYes" />
+                            <label for="meterYes" class="form-check-label">Yes</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" asp-for="OwnMeter" value="false" class="form-check-input" id="meterNo" />
+                            <label for="meterNo" class="form-check-label">No</label>
+                        </div>
+                        <span asp-validation-for="OwnMeter" class="text-danger small d-block"></span>
+                        <small class="text-danger d-block mt-1"><strong>Note:</strong> Subject to availability of meters in the department store.</small>
+                    </div>
+
+                    <!-- ⚡ Existing Power Supply Question -->
+                    <div class="tl-col-full mt-3 p-3 bg-light rounded-3 border">
+                        <label class="form-label fw-semibold me-3 mb-2">
+                            Any Power Supply exist in the Proposed site (Same House or Plot) ? <span class="req">*</span>
+                        </label>
+                        <div class="mb-2">
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasExistingSupply" value="true" class="form-check-input" id="supplyYes" />
+                                <label for="supplyYes" class="form-check-label">Yes</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasExistingSupply" value="false" class="form-check-input" id="supplyNo" checked />
+                                <label for="supplyNo" class="form-check-label">No</label>
+                            </div>
+                            <span asp-validation-for="HasExistingSupply" class="text-danger small d-block"></span>
+                        </div>
+
+                        <!-- 📦 4 Segmented Input Boxes (Hidden by default, shown when 'Yes') -->
+                        <div id="existingSupplyBox" class="mt-3 d-none">
+                            <label class="form-label fw-semibold">If Yes Consumer No <span class="req">*</span></label>
+
+                            <div class="d-flex gap-2 mb-3" style="max-width: 450px;">
+                                <input asp-for="ExistingConsumerPart1" class="form-control text-center shadow-sm consumer-segment" maxlength="4" placeholder="" />
+                                <input asp-for="ExistingConsumerPart2" class="form-control text-center shadow-sm consumer-segment" maxlength="4" placeholder="" />
+                                <input asp-for="ExistingConsumerPart3" class="form-control text-center shadow-sm consumer-segment" maxlength="4" placeholder="" />
+                                <input asp-for="ExistingConsumerPart4" class="form-control text-center shadow-sm consumer-segment" maxlength="4" placeholder="" />
+                            </div>
+
+                            <button type="button" id="btnAddConsumerItem" class="btn btn-secondary px-4">
+                                Add Item
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tl-col-full mt-2 p-3 bg-light rounded-3 border">
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold me-3 mb-0">Any outstanding dues in licensee's area of operation in consumer Name ? <span class="req">*</span></label>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasDuesInArea" value="true" class="form-check-input" id="duesAreaYes" />
+                                <label for="duesAreaYes" class="form-check-label">Yes</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasDuesInArea" value="false" class="form-check-input" id="duesAreaNo" checked />
+                                <label for="duesAreaNo" class="form-check-label">No</label>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold me-3 mb-0">Any outstanding dues for the premises for which connection applied for ? <span class="req">*</span></label>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasDuesForPremises" value="true" class="form-check-input" id="duesPremisesYes" />
+                                <label for="duesPremisesYes" class="form-check-label">Yes</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasDuesForPremises" value="false" class="form-check-input" id="duesPremisesNo" checked />
+                                <label for="duesPremisesNo" class="form-check-label">No</label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="form-label fw-semibold me-3 mb-0">Any outstanding dues with the Licensee against any firm with which associated as an Owner/Partner/Director/MD ? <span class="req">*</span></label>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasDuesAssociatedFirm" value="true" class="form-check-input" id="duesFirmYes" />
+                                <label for="duesFirmYes" class="form-check-label">Yes</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" asp-for="HasDuesAssociatedFirm" value="false" class="form-check-input" id="duesFirmNo" checked />
+                                <label for="duesFirmNo" class="form-check-label">No</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" name="actionButton" value="prev" class="btn btn-outline-secondary px-4">&larr; Previous</button>
+                <button type="submit" name="actionButton" value="next" class="btn btn-primary px-4 shadow-sm">Save &amp; Next &rarr;</button>
+            </div>
+        }
+
+        <!-- ================= STEP 4: Document Uploads ================= -->
+        @if (Model.CurrentStep == 4)
+        {
+            <input type="hidden" asp-for="ServiceCategory" />
+            <input type="hidden" asp-for="OwnershipType" />
+            <input type="hidden" asp-for="ConnectionType" />
+            <input type="hidden" asp-for="ServiceType" />
+            <input type="hidden" asp-for="ApplicantName" />
+            <input type="hidden" asp-for="Gender" />
+            <input type="hidden" asp-for="RelativeName" />
+            <input type="hidden" asp-for="ProposedPincode" />
+            <input type="hidden" asp-for="MobileNumber" />
+            <input type="hidden" asp-for="SiteDoorNo" />
+            <input type="hidden" asp-for="SiteStreet" />
+            <input type="hidden" asp-for="SiteArea" />
+            <input type="hidden" asp-for="SiteDistrict" />
+            <input type="hidden" asp-for="SitePincode" />
+            <input type="hidden" asp-for="Email" />
+            <input type="hidden" asp-for="Landmark1" />
+            <input type="hidden" asp-for="Landmark2" />
+            <input type="hidden" asp-for="IsSameAddress" />
+            <input type="hidden" asp-for="CommDoorNo" />
+            <input type="hidden" asp-for="CommStreet" />
+            <input type="hidden" asp-for="CommArea" />
+            <input type="hidden" asp-for="CommRegion" />
+            <input type="hidden" asp-for="CommPincode" />
+            <input type="hidden" asp-for="RSNo" />
+            <input type="hidden" asp-for="PlotArea" />
+            <input type="hidden" asp-for="BuildArea" />
+            <input type="hidden" asp-for="SupplyCategory" />
+            <input type="hidden" asp-for="Purpose" />
+            <input type="hidden" asp-for="TotalLoad" />
+            <input type="hidden" asp-for="TypeOfSupply" />
+            <input type="hidden" asp-for="OwnMeter" />
+            <input type="hidden" asp-for="HasExistingSupply" />
+            <input type="hidden" asp-for="HasDuesInArea" />
+            <input type="hidden" asp-for="HasDuesForPremises" />
+            <input type="hidden" asp-for="HasDuesAssociatedFirm" />
+            <input type="hidden" asp-for="SupplyFromDate" />
+            <input type="hidden" asp-for="SupplyToDate" />
+            <input type="hidden" asp-for="PhotoPath" />
+            <input type="hidden" asp-for="AddressProofPath" />
+            <input type="hidden" asp-for="IdentityProofPath" />
+            <input type="hidden" asp-for="TestReportPath" />
+            <input type="hidden" asp-for="ExistingConsumerPart1" />
+            <input type="hidden" asp-for="ExistingConsumerPart2" />
+            <input type="hidden" asp-for="ExistingConsumerPart3" />
+            <input type="hidden" asp-for="ExistingConsumerPart4" />
+            <fieldset class="tl-section">
+                <legend>Document Checklist</legend>
+
+                <div class="mb-3">
+                    <h6 class="text-danger fw-bold mb-1">Note :</h6>
+                    <ul class="text-dark small mb-0 ps-3">
+                        <li class="fw-semibold">.pdf - Max size 1024 kb and .jpg .jpeg - Max size 50 kb</li>
+                    </ul>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 50px;" class="text-center">Sno</th>
+                                <th style="width: 70px;" class="text-center">Select</th>
+                                <th>Document Name</th>
+                                <th style="width: 380px;">Upload/View</th>
+                                <th style="width: 100px;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 1. Photograph -->
+                            <tr>
+                                <td class="text-center">1.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input" checked disabled />
+                                </td>
+                                <td>
+                                    Photograph <span class="text-danger">*</span>(.jpg .jpeg)(Max Size 50KB)
+                                </td>
+                                <td>
+                                    <input type="file" asp-for="PhotoFile" class="form-control form-control-sm shadow-sm" accept=".jpg,.jpeg" />
+                                    <span asp-validation-for="PhotoFile" class="text-danger small d-block mt-1"></span>
+                                    @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                                    {
+                                        <span class="text-success small d-block mt-1">✓ File uploaded previously</span>
+                                    }
+                                </td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 2. Address Proof -->
+                            <tr>
+                                <td class="text-center">2.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input" checked disabled />
+                                </td>
+                                <td>
+                                    <div class="mb-1">Address Proof <span class="text-danger">*</span>(.pdf)</div>
+                                    <select asp-for="AddressProofType" class="form-select form-select-sm shadow-sm">
+                                        <option value="">-- Select Proof of Current / Communication Address --</option>
+                                        @foreach (var item in (List<string>)ViewBag.AddressProofTypeList)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="AddressProofType" class="text-danger small d-block mt-1"></span>
+                                </td>
+                                <td>
+                                    <input type="file" asp-for="AddressProofFile" class="form-control form-control-sm shadow-sm" accept=".pdf" />
+                                    <span asp-validation-for="AddressProofFile" class="text-danger small d-block mt-1"></span>
+                                    @if (!string.IsNullOrEmpty(Model.AddressProofPath))
+                                    {
+                                        <span class="text-success small d-block mt-1">✓ File uploaded previously</span>
+                                    }
+                                </td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 3. Identity Proof -->
+                            <tr>
+                                <td class="text-center">3.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" class="form-check-input" checked disabled />
+                                </td>
+                                <td>
+                                    <div class="mb-1">Identity Proof <span class="text-danger">*</span>(.pdf)</div>
+                                    <select asp-for="IdentityProofType" class="form-select form-select-sm shadow-sm">
+                                        <option value="">-- Select Identity Proof --</option>
+                                        @foreach (var item in (List<string>)ViewBag.IdentityProofTypeList)
+                                        {
+                                            <option value="@item">@item</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="IdentityProofType" class="text-danger small d-block mt-1"></span>
+                                </td>
+                                <td>
+                                    <input type="file" asp-for="IdentityProofFile" class="form-control form-control-sm shadow-sm" accept=".pdf" />
+                                    <span asp-validation-for="IdentityProofFile" class="text-danger small d-block mt-1"></span>
+                                    @if (!string.IsNullOrEmpty(Model.IdentityProofPath))
+                                    {
+                                        <span class="text-success small d-block mt-1">✓ File uploaded previously</span>
+                                    }
+                                </td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 4. Test Report -->
+                            <!-- 4. Test Report (Optional) -->
+                            <!-- 4. Test Report (now optional) -->
+                            <tr>
+                                <td class="text-center">4.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedTestReport" class="form-check-input doc-toggle" data-target="fileTestReport" />
+                                </td>
+                                <td>
+                                    Test Report by third party contractor (.pdf) <span class="text-muted small">(optional)</span>
+                                </td>
+                                <td>
+                                    <input type="file" asp-for="TestReportFile" id="fileTestReport" class="form-control form-control-sm shadow-sm" accept=".pdf" disabled />
+                                    <span asp-validation-for="TestReportFile" class="text-danger small d-block mt-1"></span>
+                                </td>
+                                <td></td>
+                            </tr>
+
+                            <!-- Instruction Row -->
+                            <tr class="table-light">
+                                <td colspan="5" class="py-2">
+                                    <small class="text-danger">
+                                        <strong>Note:</strong>
+                                        The hard copy of the application along with test report, mandatory documents
+                                        and one of the below mentioned document should be submitted to AE office.
+                                        <span class="text-danger">*</span>
+                                    </small>
+                                </td>
+                            </tr>
+
+                            <!-- 5. Sale Deed (checkbox controls the file box, tick pannina mattum file kettum) -->
+                            <tr>
+                                <td class="text-center">5.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedSaleDeed" class="form-check-input doc-toggle" data-target="fileSaleDeed" />
+                                </td>
+                                <td>Copy Of SaleDeed (.pdf) (Max Size 10MB)</td>
+                                <td>
+                                    <input type="file" asp-for="SaleDeedFile" id="fileSaleDeed" class="form-control form-control-sm shadow-sm" accept=".pdf" disabled />
+                                    <span asp-validation-for="SaleDeedFile" class="text-danger small d-block mt-1"></span>
+                                </td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 7. Power Of Attorney (checkbox only - physical submission, no digital upload) -->
+                            <tr>
+                                <td class="text-center">7.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedPowerOfAttorney" class="form-check-input" />
+                                </td>
+                                <td>Registered Power Of Attorney (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 8. Municipal Tax -->
+                            <tr>
+                                <td class="text-center">8.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedMunicipalTax" class="form-check-input" />
+                                </td>
+                                <td>Municipal Tax (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 9. Letter Of Allotment -->
+                            <tr>
+                                <td class="text-center">9.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedAllotmentLetter" class="form-check-input" />
+                                </td>
+                                <td>Letter Of Allotment (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 10. House Registration -->
+                            <tr>
+                                <td class="text-center">10.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedHouseRegistration" class="form-check-input" />
+                                </td>
+                                <td>Copy Of House Registration (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 11. Lease -->
+                            <tr>
+                                <td class="text-center">11.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedLease" class="form-check-input" />
+                                </td>
+                                <td>Lease (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 12. Other Ownership Document -->
+                            <tr>
+                                <td class="text-center">12.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedOtherOwnership" class="form-check-input" />
+                                </td>
+                                <td>Other Ownership Document (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 13. PowerAgent Photo -->
+                            <tr>
+                                <td class="text-center">13.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedPowerAgentPhoto" class="form-check-input" />
+                                </td>
+                                <td>PowerAgent Photo (if any) (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                            <!-- 14. Others -->
+                            <tr>
+                                <td class="text-center">14.</td>
+                                <td class="text-center">
+                                    <input type="checkbox" asp-for="SelectedOthers" class="form-check-input" />
+                                </td>
+                                <td>Others (if any) (.pdf)</td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </fieldset>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="submit" name="actionButton" value="prev" class="btn btn-outline-secondary px-4">&larr; Previous</button>
+                <button type="submit" name="actionButton" value="submit" class="btn btn-success btn-lg px-5 shadow">
+                    Submit Application ✔️
+                </button>
+            </div>
+        }
+    </form>
+</div>
+
+<!-- ================= Success Modal with PDF Download ================= -->
+@if (TempData["ShowSuccessModal"] is true)
+{
+    <div class="modal fade show d-block" id="successModal" tabindex="-1" style="background-color: rgba(0,0,0,0.6);" data-redirect-url="@Url.Action("Index", "Electricity")">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content text-center p-4 border-0 shadow-lg rounded-4">
+                <div class="modal-body">
+                    <h3 class="fw-bold text-success mb-2">Application Submitted!</h3>
+                    <p class="text-muted">Your application has been successfully saved to the database.</p>
+                    <div class="bg-light p-3 rounded-3 mb-4 border">
+                        <small class="text-secondary d-block">Application Reference Number</small>
+                        <span class="fw-bold fs-4 text-primary">@TempData["AppNumber"]</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Preview", "Electricity", new { appNum = TempData["AppNumber"] })" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
+                            👁️ View Application Preview
+                        </a>
+
+                        <a href="@Url.Action("DownloadAcknowledgement", "Electricity", new { appNum = TempData["AppNumber"] })" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm">
+                            📥 Download Acknowledgement (PDF)
+                        </a>
+
+                        <button type="button" class="btn btn-outline-secondary rounded-pill mt-2" onclick="closeSuccessModal()">
+                            Close &amp; Return Home
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/electricityjs/address-copy.js"></script>
+    <script src="~/js/electricityjs/Electricity.js" asp-append-version="true"></script>
+}

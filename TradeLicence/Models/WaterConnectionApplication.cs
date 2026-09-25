@@ -10,6 +10,8 @@ namespace WaterConnection.Models
         [Key]
         public int ApplicationId { get; set; }
 
+        public int Id => ApplicationId;
+
         // Owning user (Users.UserId). Nullable because older/legacy rows may not
         // have one, but every new application (draft or submitted) always sets it
         // from the logged-in user's claim -- see WaterConnectionController.
