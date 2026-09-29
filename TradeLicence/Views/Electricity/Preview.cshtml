@@ -1,0 +1,202 @@
+﻿@model TradeLicence.Models.ApplicationViewModel
+
+@{
+    ViewData["Title"] = "Acknowledgement Receipt";
+    Layout = "_UserLayout";
+}
+<link rel="stylesheet" href="~/css/EB_css/preview.css" asp-append-version="true" />
+<!-- Action Buttons: Hidden when printing or saving as PDF -->
+<div class="container my-3 d-print-none text-end">
+    <a href="@Url.Action("DownloadAcknowledgement", "Electricity", new { appNum = Model.ApplicationNumber })" class="btn btn-success fw-bold me-2">
+        📥 Download PDF Acknowledgement
+    </a>
+    <button onclick="window.print()" class="btn btn-primary fw-bold me-2">
+        🖨️ Print / Save as PDF
+    </button>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        Back to Home
+    </a>
+</div>
+
+<!-- Printable Document Container -->
+<div class="container acknowledgement-container border p-4 bg-white">
+    <!-- Header with Photo & Title -->
+    <div class="row align-items-center mb-3">
+        <div class="col-3 text-center">
+            @if (!string.IsNullOrEmpty(Model.PhotoPath))
+            {
+                <img src="@Url.Action("ViewDocument", "Electricity", new { documentId = Model.PhotoPath })" alt="Applicant Photo" class="passport-photo border" />
+            }
+            else
+            {
+                <div class="passport-placeholder border d-flex align-items-center justify-content-center">
+                    <span class="text-muted small">Photo</span>
+                </div>
+            }
+        </div>
+        <div class="col-9">
+            <h4 class="fw-bold mb-1 text-uppercase text-primary">ELECTRICITY DEPARTMENT</h4>
+            <h5 class="text-secondary fw-semibold mb-2">NEW SERVICE CONNECTION ACKNOWLEDGEMENT</h5>
+            <div class="small">
+                <strong>Application No:</strong> @Model.ApplicationNumber<br />
+                <strong>Applicant Name:</strong> @Model.ApplicantName<br />
+                <strong>Mobile Number:</strong> @Model.MobileNumber<br />
+                <strong>Service Category:</strong> @Model.ServiceCategory<br />
+                <strong>Submission Date:</strong> @DateTime.Now.ToString("dd-MM-yyyy hh:mm tt")
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Applicant & Service Details -->
+    <div class="section-title">1. APPLICANT & SERVICE DETAILS</div>
+    <table class="table table-bordered table-sm mb-3">
+        <tbody>
+            <tr>
+                <th style="width: 25%;">Service Category</th>
+                <td style="width: 25%;">@Model.ServiceCategory</td>
+                <th style="width: 25%;">Ownership Type</th>
+                <td style="width: 25%;">@Model.OwnershipType</td>
+            </tr>
+            <tr>
+                <th>Connection Type</th>
+                <td>@Model.ConnectionType</td>
+                <th>Service Type</th>
+                <td>@Model.ServiceType</td>
+            </tr>
+            <tr>
+                <th>Applicant Name</th>
+                <td>@Model.ApplicantName</td>
+                <th>Gender</th>
+                <td>@Model.Gender</td>
+            </tr>
+            <tr>
+                <th>Father/Husband Name</th>
+                <td>@Model.RelativeName</td>
+                <th>Mobile Number</th>
+                <td>@Model.MobileNumber</td>
+            </tr>
+            <tr>
+                <th>Proposed Pincode</th>
+                <td>@Model.ProposedPincode</td>
+                <th>Email Address</th>
+                <td>@Model.Email</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Section 2: Address Details -->
+    <div class="section-title">2. ADDRESS DETAILS</div>
+    <table class="table table-bordered table-sm mb-3">
+        <tbody>
+            <tr>
+                <th style="width: 25%;">Site Door/Plot No</th>
+                <td style="width: 25%;">@Model.SiteDoorNo</td>
+                <th style="width: 25%;">Site Street Name</th>
+                <td style="width: 25%;">@Model.SiteStreet</td>
+            </tr>
+            <tr>
+                <th>Site Area</th>
+                <td>@Model.SiteArea</td>
+                <th>District/Region</th>
+                <td>@Model.SiteDistrict</td>
+            </tr>
+            <tr>
+                <th>Site Pincode</th>
+                <td>@Model.SitePincode</td>
+                <th>Landmark 1</th>
+                <td>@Model.Landmark1</td>
+            </tr>
+            <tr>
+                <th>Landmark 2</th>
+                <td>@Model.Landmark2</td>
+                <th>Comm. Same as Site?</th>
+                <td>@(Model.IsSameAddress ? "Yes" : "No")</td>
+            </tr>
+            @if (!Model.IsSameAddress)
+            {
+                <tr>
+                    <th>Comm. Door No</th>
+                    <td>@Model.CommDoorNo</td>
+                    <th>Comm. Street</th>
+                    <td>@Model.CommStreet</td>
+                </tr>
+                <tr>
+                    <th>Comm. Area</th>
+                    <td>@Model.CommArea</td>
+                    <th>Comm. Region</th>
+                    <td>@Model.CommRegion</td>
+                </tr>
+                <tr>
+                    <th>Comm. Pincode</th>
+                    <td>@Model.CommPincode</td>
+                    <th>-</th>
+                    <td>-</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Section 3: Plot & Technical Specifications -->
+    <div class="section-title">3. PLOT & TECHNICAL SPECIFICATIONS</div>
+    <table class="table table-bordered table-sm mb-3">
+        <tbody>
+            <tr>
+                <th style="width: 25%;">RS No.</th>
+                <td style="width: 25%;">@Model.RSNo</td>
+                <th style="width: 25%;">Plot Area (Sq.ft)</th>
+                <td style="width: 25%;">@Model.PlotArea</td>
+            </tr>
+            <tr>
+                <th>Build Area (Sq.ft)</th>
+                <td>@Model.BuildArea</td>
+                <th>Supply Category</th>
+                <td>@Model.SupplyCategory</td>
+            </tr>
+            <tr>
+                <th>Purpose</th>
+                <td>@Model.Purpose</td>
+                <th>Applied Load (Watts)</th>
+                <td>@Model.TotalLoad</td>
+            </tr>
+            <tr>
+                <th>Type of Supply</th>
+                <td>@Model.TypeOfSupply</td>
+                <th>Own Meter Preference</th>
+                <td>@(Model.OwnMeter == "true" ? "Yes" : "No")</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Section 4: Submitted Documents Checklist -->
+    <div class="section-title">4. SUBMITTED DOCUMENTS CHECKLIST</div>
+    <table class="table table-bordered table-sm mb-3">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 30%;">Document Type</th>
+                <th style="width: 40%;">Selected Proof Type</th>
+                <th style="width: 30%;">Upload Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Photograph</td>
+                <td>Passport Size Photo (.jpg)</td>
+                <td><span class="badge bg-success">Uploaded ✔️</span></td>
+            </tr>
+            <tr>
+                <td>Address Proof</td>
+                <td>@(Model.AddressProofType ?? "Address Proof")</td>
+                <td><span class="badge bg-success">Uploaded ✔️</span></td>
+            </tr>
+            <tr>
+                <td>Identity Proof</td>
+                <td>@(Model.IdentityProofType ?? "Identity Proof")</td>
+                <td><span class="badge bg-success">Uploaded ✔️</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="text-center mt-3 pt-2 border-top text-muted small">
+        <em>Note: This is an official computer-generated acknowledgement receipt.</em>
+    </div>
+</div>

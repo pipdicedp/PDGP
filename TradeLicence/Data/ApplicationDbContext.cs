@@ -32,6 +32,11 @@ namespace TradeLicence.Data
         public DbSet<OfficerSupportingDocument> OfficerSupportingDocuments { get; set; } = null!;
         public DbSet<TradeLicencePayment> TradeLicencePayments { get; set; } = null!;
 
+        // ---------------- Shared Workflow Engine (every service except TradeLicence) ----------------
+        public DbSet<WorkflowHistory> WorkflowHistories { get; set; } = null!;
+        public DbSet<WorkflowSupportingDocument> WorkflowSupportingDocuments { get; set; } = null!;
+        public DbSet<WorkflowPayment> WorkflowPayments { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -255,6 +260,63 @@ namespace TradeLicence.Data
                       .WithMany()
                       .HasForeignKey(e => e.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // ---------------- Shared Workflow Engine tables ----------------
+            // ApplicationId is a SOFT reference here (no FK) — it points at a
+            // different physical table depending on ServiceType (Water,
+            // Electricity, ...), so a single FK constraint isn't possible.
+            // ServiceType + ApplicationId together identify the application.
+            modelBuilder.Entity<WorkflowHistory>(entity =>
+            {
+                entity.ToTable("WorkflowHistories");
+                entity.HasKey(e => e.HistoryId);
+
+                entity.HasIndex(e => new { e.ServiceType, e.ApplicationId });
+
+                // Officers IS genuinely shared across every service, so this
+                // FK is real (same reasoning as ApplicationWorkflowHistory —
+                // Restrict, not Cascade/SetNull: an officer with history rows
+                // can't be deleted outright; Officer.IsLocked is the fallback).
+                entity.HasOne(e => e.FromOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.FromOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.ToOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.ToOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WorkflowSupportingDocument>(entity =>
+            {
+                entity.ToTable("WorkflowSupportingDocuments");
+                entity.HasKey(e => e.WorkflowSupportingDocumentId);
+
+                // One file per (ServiceType, ApplicationId, Stage) — same
+                // "one row per key" idea as OfficerSupportingDocument's
+                // (ApplicationId, Stage) index, with ServiceType added since
+                // this table is shared across services.
+                entity.HasIndex(e => new { e.ServiceType, e.ApplicationId, e.Stage }).IsUnique();
+
+                entity.HasOne(e => e.UploadedByOfficer)
+                      .WithMany()
+                      .HasForeignKey(e => e.UploadedByOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity<WorkflowPayment>(entity =>
+            {
+                entity.ToTable("WorkflowPayments");
+                entity.HasKey(e => e.WorkflowPaymentId);
+
+                entity.Property(e => e.PaymentAmount).HasColumnType("decimal(12,2)");
+                entity.Property(e => e.ExtraCharge).HasColumnType("decimal(12,2)");
+                entity.Property(e => e.TotalPaymentAmount).HasColumnType("decimal(12,2)");
+
+                // One payment row per (ServiceType, ApplicationId).
+                entity.HasIndex(e => new { e.ServiceType, e.ApplicationId }).IsUnique();
             });
 
         }

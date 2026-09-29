@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using TradeLicence.Data;
+using TradeLicence.Services;
 using WaterConnection.Data;
 using WaterConnection.Models;
 
@@ -11,10 +13,12 @@ namespace WaterConnection.Controllers
     public class WaterConnectionController : Controller
     {
         private readonly WaterApplicationDbContext _context;
+        private readonly WorkflowEngineService<WaterConnectionApplication> _engine;
 
-        public WaterConnectionController(WaterApplicationDbContext context)
+        public WaterConnectionController(WaterApplicationDbContext context, ApplicationDbContext sharedContext)
         {
             _context = context;
+            _engine = new WorkflowEngineService<WaterConnectionApplication>(context, sharedContext, "Water");
         }
 
         // Landing page for the Water Connection module: choose to apply or check status.
@@ -221,6 +225,22 @@ namespace WaterConnection.Controllers
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return int.TryParse(claim, out var id) ? id : null;
+        }
+
+        // TEMPORARY — stands in for the real payment gateway until it's
+        // wired up. Same pattern as TradeLicenceController.PayNow.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PayNow(int id)
+        {
+            var userId = GetCurrentUserId();
+            var result = await _engine.PayNowAsync(id, userId);
+
+            if (!result.Success)
+                return BadRequest(new { error = result.Error });
+
+            TempData["Message"] = result.Message;
+            return RedirectToAction(nameof(MyApplications));
         }
 
         // Copies every posted field from the form's view model onto the EF entity.

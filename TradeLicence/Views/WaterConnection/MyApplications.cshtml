@@ -57,7 +57,17 @@
                                 <td>@item.ApplicationDate.ToString("dd-MM-yyyy")</td>
                                 <td><span class="myapps-status-badge @statusClass">@item.Status</span></td>
                                 <td>
-                                    @if (isSubmitted)
+                                    @if (item.PaymentStatus == "Pending")
+                                    {
+                                        <form method="post" asp-action="PayNow" asp-controller="WaterConnection" style="display:inline;">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.ApplicationId" />
+                                            <button type="button" class="myapps-btn btn-pay-now" style="background:#1D6E3E; border:none; cursor:pointer;">
+                                                <i class="fas fa-indian-rupee-sign"></i> Pay Now (Test)
+                                            </button>
+                                        </form>
+                                    }
+                                    else if (isSubmitted)
                                     {
                                         <a class="myapps-btn myapps-btn-view" asp-action="Acknowledgement" asp-route-id="@item.ApplicationId">View</a>
                                     }

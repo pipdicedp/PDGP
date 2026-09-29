@@ -4,7 +4,7 @@ using WaterConnection.Models.Masters;
 
 namespace WaterConnection.Data
 {
-    public class WaterApplicationDbContext: DbContext
+    public class WaterApplicationDbContext : DbContext
     {
         public WaterApplicationDbContext(DbContextOptions<WaterApplicationDbContext> options)
             : base(options)
@@ -138,6 +138,17 @@ namespace WaterConnection.Data
                 entity.Property(e => e.ApplicationDate).HasColumnName("Application_Date");
                 entity.Property(e => e.Status).HasColumnName("Status");
 
+                // ---------------- Officer workflow (shared engine) ----------------
+                entity.Property(e => e.CurrentStage).HasColumnName("Current_Stage");
+                entity.Property(e => e.AssignedOfficerId).HasColumnName("Assigned_Officer_Id");
+                entity.Property(e => e.PaymentStatus).HasColumnName("Payment_Status");
+                entity.Property(e => e.OfficerRemarks).HasColumnName("Officer_Remarks");
+                entity.Property(e => e.ModifiedDate).HasColumnName("Modified_Date");
+
+                // No FK to Officers here on purpose — Officers lives in the
+                // separate ApplicationDbContext (TradeLicence.Data). Kept as
+                // a plain nullable int, resolved manually via WorkflowEngineService.
+
                 entity.HasOne(e => e.Purpose)
                     .WithMany()
                     .HasForeignKey(e => e.PurposeCode)
@@ -189,7 +200,7 @@ namespace WaterConnection.Data
                 entity.Property(e => e.ApplicationId).HasColumnName("Application_Id");
                 entity.Property(e => e.DocumentPurpose).HasColumnName("Document_Purpose");
                 entity.Property(e => e.DocumentOption).HasColumnName("Document_Option");
-                
+
                 entity.Property(e => e.FileContent).HasColumnName("File_Path").HasColumnType("varbinary(max)");
                 entity.Property(e => e.UploadedOn).HasColumnName("Uploaded_On");
 
