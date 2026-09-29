@@ -113,7 +113,7 @@ namespace TradeLicence.Controllers
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
 
-            return RedirectToAction("SSOLandingPage", "Dashboard");
+            return RedirectToAction("Index", "Dashboard");
         }
 
         /// <summary>
@@ -287,6 +287,120 @@ namespace TradeLicence.Controllers
 
             return RedirectToAction("Index", "Officer");
         }
+
+        // ---------------- Profile popover (user-circle icon in the nav bar) ----------------
+        //
+        // Both endpoints are read-only JSON, called by wwwroot/js/user-profile.js
+        // when the user-circle icon is clicked. They return ONLY the logged-in
+        // person's own row (id comes from the auth cookie, never from the
+        // request), and PasswordHash is deliberately NOT selected.
+
+        /// <summary>Citizen profile — dbo.Users.</summary>
+        [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> UserProfile()
+        {
+            // Citizens and officers share the same cookie scheme and both put
+            // their own table's primary key in ClaimTypes.NameIdentifier. Without
+            // this check an officer with OfficerId = 1 would be shown the details
+            // of the citizen with UserId = 1.
+            if (User.IsInRole("Officer"))
+                return StatusCode(StatusCodes.Status403Forbidden);
+
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
+                return Unauthorized();
+
+            var profile = await _context.Users
+                .AsNoTracking()
+                .Where(u => u.UserId == userId)
+                .Select(u => new
+                {
+                    u.UserId,
+                    u.Username,
+                    u.FullName,
+                    u.Email,
+                    u.MobileNumber,
+                    u.PANNumber,
+                    u.Address,
+                    u.DateOfBirth,
+                    u.IsLocked,
+                    u.FailedLoginAttempts,
+                    u.LastLoginDate,
+                    u.CreatedDate
+                })
+                .FirstOrDefaultAsync();
+
+            if (profile == null) return NotFound();
+
+            return Json(new
+            {
+                profile.UserId,
+                profile.Username,
+                profile.FullName,
+                profile.Email,
+                profile.MobileNumber,
+                profile.PANNumber,
+                profile.Address,
+                // Date-only value: sent as plain yyyy-MM-dd so the browser can't
+                // shift it by a timezone.
+                DateOfBirth = profile.DateOfBirth?.ToString("yyyy-MM-dd"),
+                profile.IsLocked,
+                profile.FailedLoginAttempts,
+                LastLoginDate = AsUtc(profile.LastLoginDate),
+                CreatedDate = AsUtc(profile.CreatedDate)
+            });
+        }
+
+        /// <summary>Officer profile — dbo.Officers.</summary>
+        [Authorize(Roles = "Officer")]
+        [HttpGet]
+        public async Task<IActionResult> OfficerProfile()
+        {
+            if (!int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var officerId))
+                return Unauthorized();
+
+            var profile = await _context.Officers
+                .AsNoTracking()
+                .Where(o => o.OfficerId == officerId)
+                .Select(o => new
+                {
+                    o.OfficerId,
+                    o.Username,
+                    o.FullName,
+                    o.Department,
+                    o.Designation,
+                    o.Email,
+                    o.IsLocked,
+                    o.FailedLoginAttempts,
+                    o.LastLoginDate,
+                    o.CreatedDate,
+                    o.CreatedBy
+                })
+                .FirstOrDefaultAsync();
+
+            if (profile == null) return NotFound();
+
+            return Json(new
+            {
+                profile.OfficerId,
+                profile.Username,
+                profile.FullName,
+                profile.Department,
+                profile.Designation,
+                profile.Email,
+                profile.IsLocked,
+                profile.FailedLoginAttempts,
+                LastLoginDate = AsUtc(profile.LastLoginDate),
+                CreatedDate = AsUtc(profile.CreatedDate),
+                profile.CreatedBy
+            });
+        }
+
+        // Login writes DateTime.UtcNow, but SQL Server hands the value back with
+        // Kind = Unspecified. Tagging it as UTC makes it serialise with a "Z", so
+        // the browser shows it in the viewer's local time instead of raw UTC.
+        private static DateTime? AsUtc(DateTime? value) =>
+            value.HasValue ? DateTime.SpecifyKind(value.Value, DateTimeKind.Utc) : null;
 
         [Authorize]
         [HttpPost]

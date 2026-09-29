@@ -1,0 +1,140 @@
+/* Profile popover (user-circle icon in the top nav bar) - shared by
+   _UserLayout and _OfficerLayout; behaviour is in js/user-profile.js.
+
+   Kept in its OWN file (linked with asp-append-version) rather than in
+   site.css so a browser holding an older cached site.css can never end up
+   without these rules. */
+
+/* =====================================
+   PROFILE POPOVER (user-circle icon)
+   Shared by _UserLayout and _OfficerLayout.
+   Behaviour lives in wwwroot/js/user-profile.js
+===================================== */
+
+.profile-toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: #fff;
+    font-size: inherit;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+    .profile-toggle-btn:hover,
+    .profile-toggle-btn[aria-expanded="true"] {
+        color: #ffd43b;
+    }
+
+    .profile-toggle-btn:focus-visible {
+        outline: 2px solid #ffd43b;
+        outline-offset: 3px;
+        border-radius: 50%;
+    }
+
+.profile-card {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 1050;
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    border: 1px solid #d9e2ec;
+    /* .user-menu sets white + nowrap; undo both for the box */
+    color: #333;
+    white-space: normal;
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.4;
+    cursor: default;
+}
+
+    .profile-card[hidden] {
+        display: none;
+    }
+
+.profile-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #1a3a52;
+    color: #fff;
+    border-radius: 8px 8px 0 0;
+}
+
+.profile-avatar {
+    font-size: 38px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.profile-name {
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.profile-username {
+    font-size: 12px;
+    opacity: 0.8;
+    overflow-wrap: anywhere;
+}
+
+.profile-list {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 14px;
+    row-gap: 8px;
+    margin: 0;
+    padding: 14px 16px;
+}
+
+    .profile-list dt {
+        font-weight: 600;
+        color: #5a6b7b;
+        white-space: nowrap;
+    }
+
+    .profile-list dd {
+        margin: 0;
+        color: #1f2d3a;
+        overflow-wrap: anywhere;
+    }
+
+.profile-pill {
+    display: inline-block;
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.profile-pill-active {
+    background: #e3f6e8;
+    color: #1e7a3c;
+}
+
+.profile-pill-locked {
+    background: #fde8e8;
+    color: #b42318;
+}
+
+.profile-msg {
+    padding: 18px 16px;
+    color: #5a6b7b;
+    text-align: center;
+}
+
+.profile-msg-error {
+    color: #b42318;
+}

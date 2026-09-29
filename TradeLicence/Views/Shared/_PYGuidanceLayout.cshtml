@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Fonts used throughout this page (Sora / Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/next-fonts.css" />
+
+    <!-- Utility classes this page's markup relies on -->
+    <link rel="stylesheet" href="~/css/tailwind-generated.css" />
+
+    <!-- Marquee animation (@@keyframes rfm-scroll) and the opacity-0 fade
+         transition used by the mount/scroll animations below both live
+         here - without this the partner-logo strip won't scroll and the
+         fade-ins will pop instead of transitioning. -->
+    <link rel="stylesheet" href="~/css/site.css" />
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    @RenderBody()
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+
+    <!-- Drives the [data-app-navbar] entrance/scroll animation, the
+         fade-in mount animations, dropdown menus, marquee duplication,
+         the animated visitor counter and the hero video fallback. This
+         page has no functioning navbar or animations without it. -->
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

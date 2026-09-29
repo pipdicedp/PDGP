@@ -1,0 +1,60 @@
+/*
+  Small hand-written additions on top of tailwind-generated.css.
+  The original page used Lenis (smooth scroll), Framer Motion (entrance /
+  scroll animations) and react-fast-marquee (the partner-logo strip).
+  None of those JS libraries are bundled here; this file plus site.js
+  reimplement just enough of their visual effect with plain CSS/JS.
+*/
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* react-fast-marquee renders two duplicated tracks side by side and
+   scrolls the wrapper with a CSS custom property driven animation -
+   the original per-marquee --duration / --direction custom properties
+   captured in the saved page are reused here. */
+.rfm-marquee-container {
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: var(--width, 100%);
+}
+
+.rfm-marquee {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: var(--min-width, 100%);
+  animation: rfm-scroll var(--duration, 20s) linear infinite;
+  animation-play-state: var(--play, running);
+  animation-direction: var(--direction, normal);
+}
+
+.rfm-marquee-container:hover .rfm-marquee {
+  animation-play-state: var(--pause-on-hover, running);
+}
+
+@keyframes rfm-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.rfm-initial-child-container {
+  display: flex;
+  flex-direction: row;
+  flex: 0 0 auto;
+  min-width: var(--min-width, 100%);
+  justify-content: space-around;
+  align-items: center;
+}
+
+/* Elements that carried a Framer-Motion "opacity-0" mount state in the
+   saved markup get faded in by site.js; give that fade a transition so
+   it isn't an abrupt pop. Elements intentionally hidden (dropdown
+   panels etc.) are excluded in site.js and are unaffected. */
+.opacity-0 {
+  transition: opacity .6s ease, transform .6s ease;
+}
