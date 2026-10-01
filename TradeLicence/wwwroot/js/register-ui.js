@@ -87,6 +87,10 @@
 
     /* ---- typing filters (stop wrong characters early) ---- */
     name.addEventListener('input', () => { name.value = name.value.replace(/[^A-Za-z .'-]/g, ''); });
+    // PAN: CSS uppercase is only visual, so make the real value uppercase too
+    pan.addEventListener('input', () => { pan.value = pan.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+    // Mobile: digits only
+    mobile.addEventListener('input', () => { mobile.value = mobile.value.replace(/\D/g, ''); });
     user.addEventListener('input', () => { user.value = user.value.replace(/[^A-Za-z0-9._]/g, ''); });
 
     /* ---- live validation (after the user leaves a field, then on every key) ---- */

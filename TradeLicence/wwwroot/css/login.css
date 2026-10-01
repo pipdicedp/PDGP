@@ -798,3 +798,13 @@
 		padding: 24px 20px;
 	}
 }
+
+/* ---------- Fix: registration popup must scroll on small screens ---------- */
+#registerModal.modal {
+	overflow-y: auto;
+}
+
+#registerModal .modal-dialog {
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
