@@ -22,13 +22,16 @@
                     <div id="verifyState" hidden
                          data-pan="@(ViewBag.PanVerified == true ? "1" : "0")"
                          data-mobile="@(ViewBag.MobileVerified == true ? "1" : "0")"
+                         data-email="@(ViewBag.EmailVerified == true ? "1" : "0")"
+                         data-send-email-url="@Url.Action("SendEmailOtp", "Account")"
+                         data-verify-email-url="@Url.Action("VerifyEmailOtp", "Account")"
                          data-pan-url="@Url.Action("VerifyPan", "Account")"
                          data-send-url="@Url.Action("SendOtp", "Account")"
                          data-verify-url="@Url.Action("VerifyOtp", "Account")"></div>
 
                     <div class="reg-note">
                         <i class="fas fa-circle-info"></i>
-                        Enter your <b>name and date of birth exactly as printed on your PAN card</b>. Both PAN and mobile number must be verified before you can register.
+                        Enter your <b>name and date of birth exactly as printed on your PAN card</b>. PAN, mobile number and email must all be verified before you can register.
                     </div>
 
                     @* ===== Section 1 : Identity as per PAN ===== *@
@@ -102,7 +105,16 @@
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                                 <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" autocomplete="off" />
+                                <button type="button" id="btnSendEmailOtp" class="btn btn-verify">Send OTP</button>
                             </div>
+                            <div id="emailOtpBox" class="otp-box d-none">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="emailOtpInput" class="form-control" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit email OTP" autocomplete="off" />
+                                    <button type="button" id="btnVerifyEmailOtp" class="btn btn-verify">Verify OTP</button>
+                                </div>
+                                <small class="text-muted">Resend available in <span id="emailOtpTimer">0</span>s</small>
+                            </div>
+                            <div id="emailStatus" class="verify-status"></div>
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
                     </div>
