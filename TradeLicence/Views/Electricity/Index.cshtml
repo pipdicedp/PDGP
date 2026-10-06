@@ -27,6 +27,7 @@
     <form asp-action="Index" method="post" enctype="multipart/form-data">
         <input type="hidden" asp-for="CurrentStep" />
         <input type="hidden" asp-for="ApplicationNumber" />
+        <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
 
         <!-- ================= STEP 1: Applicant Info ================= -->
         <!-- ================= STEP 1: Applicant Info ================= -->
@@ -746,47 +747,14 @@
             <div class="d-flex justify-content-between mt-4">
                 <button type="submit" name="actionButton" value="prev" class="btn btn-outline-secondary px-4">&larr; Previous</button>
                 <button type="submit" name="actionButton" value="submit" class="btn btn-success btn-lg px-5 shadow">
-                    Submit Application ✔️
+                    Save &amp; Preview 👁️
                 </button>
             </div>
         }
     </form>
 </div>
 
-<!-- ================= Success Modal with PDF Download ================= -->
-@if (TempData["ShowSuccessModal"] is true)
-{
-    <div class="modal fade show d-block" id="successModal" tabindex="-1" style="background-color: rgba(0,0,0,0.6);" data-redirect-url="@Url.Action("Index", "Electricity")">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content text-center p-4 border-0 shadow-lg rounded-4">
-                <div class="modal-body">
-                    <h3 class="fw-bold text-success mb-2">Application Submitted!</h3>
-                    <p class="text-muted">Your application has been successfully saved to the database.</p>
-                    <div class="bg-light p-3 rounded-3 mb-4 border">
-                        <small class="text-secondary d-block">Application Reference Number</small>
-                        <span class="fw-bold fs-4 text-primary">@TempData["AppNumber"]</span>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <a href="@Url.Action("Preview", "Electricity", new { appNum = TempData["AppNumber"] })" class="btn btn-primary btn-lg w-100 rounded-pill shadow-sm">
-                            👁️ View Application Preview
-                        </a>
-
-                        <a href="@Url.Action("DownloadAcknowledgement", "Electricity", new { appNum = TempData["AppNumber"] })" class="btn btn-success btn-lg w-100 rounded-pill shadow-sm">
-                            📥 Download Acknowledgement (PDF)
-                        </a>
-
-                        <button type="button" class="btn btn-outline-secondary rounded-pill mt-2" onclick="closeSuccessModal()">
-                            Close &amp; Return Home
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
 @section Scripts {
-    <script src="~/js/electricityjs/address-copy.js"></script>
-    <script src="~/js/electricityjs/Electricity.js" asp-append-version="true"></script>
+    <script src="~/js/EB_js/address-copy.js"></script>
+    <script src="~/js/EB_js/Electricity.js" asp-append-version="true"></script>
 }

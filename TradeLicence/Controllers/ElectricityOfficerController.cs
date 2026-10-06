@@ -168,7 +168,7 @@ namespace TradeLicence.Controllers
             var officer = await GetCurrentElectricityOfficerAsync();
             if (officer == null) return Forbid();
 
-            var result = await _engine.ReturnToApplicantAsync(id, remarks);
+            var result = await _engine.ReturnToApplicantAsync(id, remarks, officer.OfficerId);
             if (!result.Success) return BadRequest(new { error = result.Error });
 
             TempData["OfficerActionMessage"] = result.Message;
@@ -260,6 +260,30 @@ namespace TradeLicence.Controllers
 
             var bytes = encryption.Decrypt(doc.FileData, doc.FileIV);
             return File(bytes, doc.ContentType ?? "application/octet-stream", doc.FileName ?? "document");
+        }
+
+        // ---------------- Citizen-uploaded documents (encrypted in the database) ----------------
+        // Officers aren't the application's owner, so this deliberately skips the
+        // owner check ElectricityController.ViewDocument does — but still requires
+        // an Electricity-department officer.
+        [HttpGet]
+        public async Task<IActionResult> OfficerDocument(int id, [FromServices] IFileEncryptionService encryption, bool download = false)
+        {
+            var officer = await GetCurrentElectricityOfficerAsync();
+            if (officer == null) return Forbid();
+
+            var doc = await _electricityContext.EBApplicationDocuments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.DocumentId == id);
+            if (doc == null || doc.FileData.Length == 0) return NotFound();
+
+            var bytes = encryption.Decrypt(doc.FileData, doc.FileIV);
+
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            Response.Headers.Append("Content-Disposition",
+                $"{(download ? "attachment" : "inline")}; filename=\"{EBDocumentHelper.SafeFileName(doc)}\"");
+
+            return File(bytes, doc.ContentType ?? "application/octet-stream");
         }
     }
 }

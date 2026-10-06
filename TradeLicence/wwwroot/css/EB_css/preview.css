@@ -1,52 +1,451 @@
-/* wwwroot/css/preview.css */
-.acknowledgement-container {
-	max-width: 800px;
-	margin: auto;
-	font-family: Arial, Helvetica, sans-serif;
+/* wwwroot/css/EB_css/preview.css
+   Electricity application preview / acknowledgement page.
+   Built on the portal palette (navy #1a3a52 / #2c5282, gold #D4A017,
+   mint #E4EFEE) and works together with tl_css/dashboard.css (banner,
+   myapps-* buttons + badges) and wc-preview.css (document modal).
+   No Bootstrap tables here, so nothing overflows on a phone. */
+
+.eb-preview-body {
+	padding: 32px;
 }
 
-.passport-photo, .passport-placeholder {
+/* ---------- Action buttons ---------- */
+.eb-preview-actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: 10px;
+	margin-bottom: 22px;
+}
+
+.myapps-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+}
+
+.eb-btn-reset {
+	border: none;
+	cursor: pointer;
+	font-family: inherit;
+}
+
+.myapps-btn-success {
+	background: #1D6E3E;
+}
+
+	.myapps-btn-success:hover {
+		background: #14532d;
+		color: #fff;
+	}
+
+/* ---------- Returned / payment-requested notice ---------- */
+.eb-alert {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+	border-radius: 12px;
+	padding: 14px 18px;
+	margin-bottom: 18px;
+	font-size: 0.9rem;
+}
+
+.eb-alert-danger {
+	background: #FBEAE8;
+	border: 1px solid #F0C7C2;
+	border-left: 4px solid #B3261E;
+	color: #7A241D;
+}
+
+.eb-alert-warning {
+	background: #FCF3D9;
+	border: 1px solid #EBD79A;
+	border-left: 4px solid #D4A017;
+	color: #6B4E00;
+}
+
+.eb-alert-info {
+	background: #E4EFEE;
+	border: 1px solid #BFD8D4;
+	border-left: 4px solid #1a3a52;
+	color: #1a3a52;
+}
+
+/* the Submit form is just a wrapper — let its button sit in the actions row */
+.eb-inline-form {
+	display: contents;
+}
+
+/* ---------- Printable acknowledgement ---------- */
+.acknowledgement-container {
+	max-width: 860px;
+	margin: 0 auto;
+	padding: 30px;
+	background: #fff;
+	font-family: Arial, Helvetica, sans-serif;
+	border: 1px solid #DCD7CB;
+	border-top: 5px solid #D4A017;
+	border-radius: 14px;
+	box-shadow: 0 8px 24px rgba(26,58,82,.08);
+}
+
+/* Hero */
+.eb-ack-hero {
+	display: flex;
+	gap: 24px;
+	align-items: flex-start;
+	padding-bottom: 22px;
+	margin-bottom: 22px;
+	border-bottom: 2px solid #E4EFEE;
+}
+
+.eb-ack-photo-wrap {
+	flex-shrink: 0;
+}
+
+.passport-photo,
+.passport-placeholder {
 	width: 120px;
 	height: 140px;
 	object-fit: cover;
+	border-radius: 10px;
+	border: 3px solid #E4EFEE;
+	box-shadow: 0 4px 12px rgba(26,58,82,.12);
+	background: #f5f9fa;
+	display: block;
 }
 
-.section-title {
-	font-weight: bold;
-	background-color: #f1f3f5;
-	padding: 4px 8px;
-	margin-bottom: 6px;
-	border-left: 4px solid #0d6efd;
-	font-size: 0.95rem;
+.passport-placeholder {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #9CA3AF;
+	font-size: 0.8rem;
 }
 
-table th {
-	background-color: #fcfcfc;
+.eb-ack-hero-main {
+	flex: 1;
+	min-width: 0;
+}
+
+.eb-ack-dept {
+	margin: 0 0 4px;
+	font-size: 1.45rem;
+	font-weight: 800;
+	letter-spacing: 0.4px;
+	color: #1a3a52;
+}
+
+.eb-ack-subtitle {
+	margin: 0 0 16px;
+	font-size: 0.92rem;
 	font-weight: 600;
-	font-size: 0.85rem;
+	letter-spacing: 0.3px;
+	color: #6B7280;
 }
 
-table td {
-	font-size: 0.85rem;
+/* ---------- Key/value grid (replaces tables) ---------- */
+.eb-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	column-gap: 28px;
 }
 
-/* Sharp high-contrast printing rules 🖨️ */
+.eb-field {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 9px 0;
+	border-bottom: 1px dashed #E5E7EB;
+	min-width: 0;
+}
+
+.eb-label {
+	font-size: 0.7rem;
+	font-weight: 700;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	color: #6B7280;
+}
+
+.eb-value {
+	font-size: 0.93rem;
+	font-weight: 600;
+	color: #1C2321;
+	overflow-wrap: anywhere;
+}
+
+.eb-ack-facts .eb-field {
+	padding: 6px 0;
+}
+
+/* ---------- Section cards ---------- */
+.eb-card {
+	border: 1px solid #E5E7EB;
+	border-radius: 12px;
+	margin-bottom: 18px;
+	overflow: hidden;
+	background: #fff;
+}
+
+.eb-card-head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 11px 16px;
+	background: linear-gradient(135deg, #1a3a52, #2c5282);
+}
+
+	.eb-card-head h4 {
+		margin: 0;
+		font-size: 0.92rem;
+		font-weight: 700;
+		letter-spacing: 0.3px;
+		color: #fff;
+	}
+
+.eb-card-icon {
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1rem;
+	background: rgba(255,255,255,.15);
+}
+
+.eb-card > .eb-grid {
+	padding: 6px 18px 10px;
+}
+
+/* ---------- Documents ---------- */
+.eb-docs {
+	list-style: none;
+	margin: 0;
+	padding: 4px 18px 8px;
+}
+
+.eb-doc {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 11px 0;
+	border-bottom: 1px dashed #E5E7EB;
+}
+
+	.eb-doc:last-child {
+		border-bottom: none;
+	}
+
+.eb-doc-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.eb-doc-name {
+	font-size: 0.92rem;
+	font-weight: 600;
+	color: #1C2321;
+}
+
+.eb-doc-type {
+	font-size: 0.78rem;
+	color: #6B7280;
+}
+
+.eb-chip {
+	font-size: 0.72rem;
+	font-weight: 700;
+	padding: 4px 10px;
+	border-radius: 12px;
+	white-space: nowrap;
+}
+
+.eb-chip-ok {
+	background: #DCF3E4;
+	color: #1D6E3E;
+}
+
+.eb-chip-missing {
+	background: #FBEAE8;
+	color: #7A241D;
+}
+
+.eb-ack-note {
+	text-align: center;
+	margin-top: 22px;
+	padding-top: 14px;
+	border-top: 1px solid #E5E7EB;
+	font-size: 0.8rem;
+	color: #6B7280;
+}
+
+/* ---------- Phones ---------- */
+@media (max-width: 640px) {
+	.eb-preview-body {
+		padding: 16px;
+	}
+
+	.eb-preview-actions {
+		flex-direction: column;
+	}
+
+		.eb-preview-actions .myapps-btn {
+			width: 100%;
+		}
+
+	.eb-alert .myapps-btn {
+		width: 100%;
+	}
+
+	.acknowledgement-container {
+		padding: 18px;
+	}
+
+	.eb-ack-hero {
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+	}
+
+	.eb-ack-hero-main {
+		width: 100%;
+	}
+
+	.eb-ack-facts {
+		text-align: left;
+	}
+
+	.eb-ack-dept {
+		font-size: 1.2rem;
+	}
+
+	.eb-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.eb-doc {
+		flex-wrap: wrap;
+	}
+}
+
+/* ---------- Document preview modal ----------
+   Same look as Water's wc-preview.css, copied in here so this page does not
+   depend on that file being deployed. Scoped under #docPreviewModal. */
+#docPreviewModal .wc-preview-modal {
+	border: none;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+#docPreviewModal .wc-preview-header {
+	background: #1a3a52;
+	border-bottom: none;
+	padding: 14px 20px;
+}
+
+#docPreviewModal .wc-preview-title {
+	color: #ffffff;
+	font-size: 15px;
+	font-weight: 650;
+	margin: 0;
+}
+
+#docPreviewModal .wc-preview-header .btn-close {
+	filter: invert(1) grayscale(100%) brightness(200%);
+	opacity: 0.75;
+	transition: opacity 0.15s ease;
+}
+
+	#docPreviewModal .wc-preview-header .btn-close:hover {
+		opacity: 1;
+	}
+
+#docPreviewModal .wc-preview-body {
+	padding: 0;
+	background: #525659;
+}
+
+#docPreviewModal .wc-preview-frame {
+	width: 100%;
+	height: 75vh;
+	border: none;
+	display: block;
+	background: #ffffff;
+}
+
+@media (max-width: 640px) {
+	#docPreviewModal .wc-preview-frame {
+		height: 60vh;
+	}
+}
+
+/* ---------- Sharp high-contrast printing rules 🖨️ ---------- */
 @media print {
 	body {
-		background-color: #fff !important;
+		background: #fff !important;
 	}
 
 	.d-print-none {
 		display: none !important;
 	}
 
-	.acknowledgement-container {
-		border: 1px solid #000 !important;
-		max-width: 100% !important;
+	.eb-preview-body {
+		margin: 0 !important;
 		padding: 0 !important;
+		box-shadow: none !important;
+		background: transparent !important;
 	}
 
-	table, th, td {
-		border-color: #000 !important;
+	.acknowledgement-container {
+		border: 1px solid #000 !important;
+		border-top: 4px solid #000 !important;
+		border-radius: 0 !important;
+		box-shadow: none !important;
+		max-width: 100% !important;
+		padding: 12px !important;
+	}
+
+	.eb-card {
+		border: 1px solid #000 !important;
+		border-radius: 0 !important;
+		break-inside: avoid;
+	}
+
+	.eb-card-head {
+		background: #e9ecef !important;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+	}
+
+		.eb-card-head h4 {
+			color: #000 !important;
+		}
+
+	.eb-card-icon {
+		display: none !important;
+	}
+
+	.eb-ack-dept,
+	.eb-value {
+		color: #000 !important;
+	}
+
+	.eb-chip {
+		border: 1px solid #000;
+		background: #fff !important;
+		color: #000 !important;
+	}
+
+	.eb-field,
+	.eb-doc {
+		border-bottom-color: #999 !important;
 	}
 }
