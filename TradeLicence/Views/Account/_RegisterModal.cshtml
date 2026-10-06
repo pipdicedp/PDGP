@@ -1,39 +1,58 @@
 ﻿@model TradeLicence.Models.RegisterViewModel
 
-<div class="modal fade" id="registerModal" tabindex="-1">
-
+<div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-
         <div class="modal-content register-modal">
 
-            <form asp-controller="Account" asp-action="Register" method="post">
+            <form asp-controller="Account" asp-action="Register" method="post" novalidate>
                 @Html.AntiForgeryToken()
 
                 <div class="modal-header">
-                    <h4>
-                        <i class="fas fa-user-plus"></i>
-                        User Registration
-                    </h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <div class="reg-head">
+                        <span class="reg-head-icon"><i class="fas fa-user-plus"></i></span>
+                        <div>
+                            <h4>User Registration</h4>
+                            <small>Investor Portal &middot; Government of Puducherry</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body">
+                    <div id="verifyState" hidden
+                         data-pan="@(ViewBag.PanVerified == true ? "1" : "0")"
+                         data-mobile="@(ViewBag.MobileVerified == true ? "1" : "0")"
+                         data-email="@(ViewBag.EmailVerified == true ? "1" : "0")"
+                         data-send-email-url="@Url.Action("SendEmailOtp", "Account")"
+                         data-verify-email-url="@Url.Action("VerifyEmailOtp", "Account")"
+                         data-pan-url="@Url.Action("VerifyPan", "Account")"
+                         data-send-url="@Url.Action("SendOtp", "Account")"
+                         data-verify-url="@Url.Action("VerifyOtp", "Account")"></div>
+
+                    <div class="reg-note">
+                        <i class="fas fa-circle-info"></i>
+                        Enter your <b>name and date of birth exactly as printed on your PAN card</b>. PAN, mobile number and email must all be verified before you can register.
+                    </div>
+
+                    @* ===== Section 1 : Identity as per PAN ===== *@
+                    <div class="reg-section"><span>1</span> Identity (as per PAN)</div>
                     <div class="row">
 
                         <div class="col-md-6 mb-3">
                             <label asp-for="FullName"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input asp-for="FullName" class="form-control" />
+                                <input asp-for="FullName" class="form-control" placeholder="Full name as on PAN card" maxlength="100" autocomplete="off" />
                             </div>
                             <span asp-validation-for="FullName" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label asp-for="DateOfBirth"></label>
+                            <label asp-for="DateOfBirth">Date of Birth (as per PAN)</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-calendar"></i></span>
-                                <input asp-for="DateOfBirth" type="date" class="form-control" />
+                                <input asp-for="DateOfBirth" type="date" class="form-control"
+                                       value="@(Model.DateOfBirth.Year < 1900 ? "" : Model.DateOfBirth.ToString("yyyy-MM-dd"))" />
                             </div>
                             <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                         </div>
@@ -42,43 +61,73 @@
                             <label asp-for="PANNumber"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                                <input asp-for="PANNumber" class="form-control" maxlength="10" style="text-transform:uppercase" />
+                                <input asp-for="PANNumber" class="form-control" maxlength="10" placeholder="ABCDE1234F" style="text-transform:uppercase" autocomplete="off" />
+                                <button type="button" id="btnVerifyPan" class="btn btn-verify">Verify</button>
                             </div>
+                            <div id="panStatus" class="verify-status"></div>
                             <span asp-validation-for="PANNumber" class="text-danger"></span>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label asp-for="MobileNumber"></label>
                             <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                <input asp-for="MobileNumber" class="form-control" maxlength="10" />
+                                <span class="input-group-text">+91</span>
+                                <input asp-for="MobileNumber" class="form-control" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number" autocomplete="off" />
+                                <button type="button" id="btnSendOtp" class="btn btn-verify">Send OTP</button>
                             </div>
+                            <div id="otpBox" class="otp-box d-none">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="otpInput" class="form-control" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit OTP" autocomplete="off" />
+                                    <button type="button" id="btnVerifyOtp" class="btn btn-verify">Verify OTP</button>
+                                </div>
+                                <small class="text-muted">Resend available in <span id="otpTimer">0</span>s</small>
+                            </div>
+                            <div id="mobileStatus" class="verify-status"></div>
                             <span asp-validation-for="MobileNumber" class="text-danger"></span>
                         </div>
+                    </div>
+
+                    @* ===== Section 2 : Contact ===== *@
+                    <div class="reg-section"><span>2</span> Contact details</div>
+                    <div class="row">
 
                         <div class="col-12 mb-3">
                             <label asp-for="Address"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-location-dot"></i></span>
-                                <textarea asp-for="Address" class="form-control" rows="3"></textarea>
+                                <textarea asp-for="Address" class="form-control" rows="2" placeholder="House / street / area / city / PIN"></textarea>
                             </div>
                             <span asp-validation-for="Address" class="text-danger"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label asp-for="Email"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                <input asp-for="Email" type="email" class="form-control" />
+                                <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" autocomplete="off" />
+                                <button type="button" id="btnSendEmailOtp" class="btn btn-verify">Send OTP</button>
                             </div>
+                            <div id="emailOtpBox" class="otp-box d-none">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" id="emailOtpInput" class="form-control" maxlength="6" inputmode="numeric" placeholder="Enter 6-digit email OTP" autocomplete="off" />
+                                    <button type="button" id="btnVerifyEmailOtp" class="btn btn-verify">Verify OTP</button>
+                                </div>
+                                <small class="text-muted">Resend available in <span id="emailOtpTimer">0</span>s</small>
+                            </div>
+                            <div id="emailStatus" class="verify-status"></div>
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
+                    </div>
 
-                        <div class="col-md-6 mb-3">
+                    @* ===== Section 3 : Account ===== *@
+                    <div class="reg-section"><span>3</span> Create your login</div>
+                    <div class="row">
+
+                        <div class="col-md-12 mb-3">
                             <label asp-for="Username"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-user-circle"></i></span>
-                                <input asp-for="Username" class="form-control" maxlength="15" />
+                                <input asp-for="Username" class="form-control" maxlength="15" placeholder="Choose a user name" autocomplete="off" />
                             </div>
                             <span asp-validation-for="Username" class="text-danger"></span>
                         </div>
@@ -87,17 +136,22 @@
                             <label asp-for="Password"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input asp-for="Password" type="password" class="form-control" maxlength="15" />
+                                <input asp-for="Password" type="password" class="form-control" maxlength="15" placeholder="6 to 15 characters" autocomplete="new-password" />
+                                <button type="button" class="btn btn-eye" data-toggle-pass="Password" aria-label="Show password"><i class="fas fa-eye"></i></button>
                             </div>
-                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <div class="pw-meter"><div id="pwBar"></div></div>
+                            <small id="pwText" class="text-muted">Use 6-15 characters. Mix letters, numbers &amp; symbols.</small>
+                            <span asp-validation-for="Password" class="text-danger d-block"></span>
                         </div>
 
                         <div class="col-md-6 mb-3">
                             <label asp-for="ConfirmPassword"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-shield-alt"></i></span>
-                                <input asp-for="ConfirmPassword" type="password" class="form-control" maxlength="15" />
+                                <input asp-for="ConfirmPassword" type="password" class="form-control" maxlength="15" placeholder="Re-enter password" autocomplete="new-password" />
+                                <button type="button" class="btn btn-eye" data-toggle-pass="ConfirmPassword" aria-label="Show password"><i class="fas fa-eye"></i></button>
                             </div>
+                            <small id="cpText" class="d-block"></small>
                             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
 
@@ -106,11 +160,10 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-register">Register</button>
+                    <button type="submit" class="btn btn-register"><i class="fas fa-check-circle"></i> Register</button>
                 </div>
 
             </form>
-
         </div>
     </div>
 </div>

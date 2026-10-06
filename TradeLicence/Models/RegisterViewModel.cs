@@ -14,12 +14,12 @@ namespace TradeLicence.Models
         public DateTime DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "PAN number is required")]
-        [RegularExpression(@"^[A-Za-z]{5}\d{4}[A-Za-z]{1}$", ErrorMessage = "Enter a valid PAN number")]
+        [RegularExpression(@"^[A-Za-z]{3}[ABCFGHLJPTabcfghljpt][A-Za-z]\d{4}[A-Za-z]$", ErrorMessage = "Enter a valid PAN number (e.g. ABCDE1234F)")]
         [Display(Name = "PAN No")]
         public string PANNumber { get; set; } = null!;
 
         [Required(ErrorMessage = "Mobile number is required")]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Mobile number must be 10 digits")]
+        [RegularExpression(@"^[6-9]\d{9}$", ErrorMessage = "Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9")]
         [Display(Name = "Mobile Number")]
         public string MobileNumber { get; set; } = null!;
 

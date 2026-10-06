@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 using TradeLicence.Data;
 using TradeLicence.Models;
 using TradeLicence.Services;
@@ -15,16 +16,31 @@ namespace TradeLicence.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly CaptchaService _captchaService;
+        private readonly IPanVerificationService _panService;
+        private readonly OtpService _otpService;
+        private readonly EmailOtpService _emailOtpService;
         private readonly PasswordHasher<ApplicationUser> _passwordHasher = new();
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
         private const int MaxFailedAttempts = 5;
+        private const string PanPattern = @"^[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]$";
 
-        public AccountController(ApplicationDbContext context, CaptchaService captchaService)
+        public AccountController(ApplicationDbContext context, CaptchaService captchaService,
+                                 IPanVerificationService panService, OtpService otpService,
+                                 EmailOtpService emailOtpService)
         {
             _context = context;
             _captchaService = captchaService;
+            _panService = panService;
+            _otpService = otpService;
+            _emailOtpService = emailOtpService;
         }
+
+        // PAN is "verified" only for this exact PAN + name + DOB combination.
+        private static string PanKey(string? pan, string? name, DateTime dob)
+            => $"{(pan ?? "").Trim().ToUpperInvariant()}|" +
+               $"{string.Join(' ', (name ?? "").Trim().ToUpperInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries))}|" +
+               $"{dob:yyyyMMdd}";
 
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
@@ -143,6 +159,27 @@ namespace TradeLicence.Controllers
                 ModelState.AddModelError(nameof(model.Email), "This email is already registered.");
             }
 
+            var panUpper = model.PANNumber.ToUpperInvariant();
+            if (await _context.Users.AnyAsync(u => u.PANNumber == panUpper))
+            {
+                ModelState.AddModelError(nameof(model.PANNumber), "This PAN is already registered.");
+            }
+
+            if (HttpContext.Session.GetString("Pan_Verified") != PanKey(model.PANNumber, model.FullName, model.DateOfBirth))
+            {
+                ModelState.AddModelError(nameof(model.PANNumber), "Please verify your PAN number (name, DOB and PAN must match).");
+            }
+
+            if (!_otpService.IsVerified(HttpContext.Session, model.MobileNumber))
+            {
+                ModelState.AddModelError(nameof(model.MobileNumber), "Please verify your mobile number with OTP.");
+            }
+
+            if (!_emailOtpService.IsVerified(HttpContext.Session, model.Email))
+            {
+                ModelState.AddModelError(nameof(model.Email), "Please verify your email address with OTP.");
+            }
+
             if (!ModelState.IsValid)
             {
                 return await RedisplayLoginWithRegisterErrors(model);
@@ -167,9 +204,96 @@ namespace TradeLicence.Controllers
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
+            HttpContext.Session.Remove("Pan_Verified");
+            _otpService.ClearVerified(HttpContext.Session);
+            _emailOtpService.ClearVerified(HttpContext.Session);
+
             TempData["RegisterSuccess"] = $"Welcome, {newUser.Username}! Your account has been created successfully. Please login to continue.";
 
             return RedirectToAction("Login");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> VerifyPan([FromBody] VerifyPanRequest req)
+        {
+            var pan = (req.PanNumber ?? "").Trim().ToUpperInvariant();
+
+            if (!Regex.IsMatch(pan, PanPattern))
+                return Json(new { success = false, message = "Enter a valid PAN number (e.g. ABCDE1234F)." });
+            if (string.IsNullOrWhiteSpace(req.FullName))
+                return Json(new { success = false, message = "Enter your name as per PAN." });
+            if (req.DateOfBirth.Year < 1900 || req.DateOfBirth.Date >= DateTime.Today)
+                return Json(new { success = false, message = "Enter a valid date of birth." });
+            if (await _context.Users.AnyAsync(u => u.PANNumber == pan))
+                return Json(new { success = false, message = "This PAN is already registered." });
+
+            var result = await _panService.VerifyAsync(pan, req.FullName.Trim(), req.DateOfBirth);
+            if (!result.Verified)
+            {
+                HttpContext.Session.Remove("Pan_Verified");
+                return Json(new { success = false, message = result.Message });
+            }
+
+            HttpContext.Session.SetString("Pan_Verified", PanKey(pan, req.FullName, req.DateOfBirth));
+            return Json(new { success = true, message = result.Message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest req)
+        {
+            var mobile = (req.MobileNumber ?? "").Trim();
+            if (!Regex.IsMatch(mobile, @"^[6-9]\d{9}$"))
+                return Json(new { success = false, message = "Enter a valid 10-digit mobile number starting with 6, 7, 8 or 9." });
+
+            // Remove this check if one mobile number may be used for more than one account.
+            if (await _context.Users.AnyAsync(u => u.MobileNumber == mobile))
+                return Json(new { success = false, message = "This mobile number is already registered." });
+
+            var (ok, message) = await _otpService.SendAsync(HttpContext.Session, mobile);
+            return Json(new { success = ok, message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult VerifyOtp([FromBody] VerifyOtpRequest req)
+        {
+            var mobile = (req.MobileNumber ?? "").Trim();
+            var otp = (req.Otp ?? "").Trim();
+            if (!Regex.IsMatch(otp, @"^\d{6}$"))
+                return Json(new { success = false, message = "Enter the 6-digit OTP." });
+
+            var (ok, message) = _otpService.Verify(HttpContext.Session, mobile, otp);
+            return Json(new { success = ok, message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendEmailOtp([FromBody] SendEmailOtpRequest req)
+        {
+            var email = (req.Email ?? "").Trim();
+            if (email.Length > 150 || !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+                return Json(new { success = false, message = "Enter a valid email address." });
+
+            if (await _context.Users.AnyAsync(u => u.Email == email))
+                return Json(new { success = false, message = "This email is already registered." });
+
+            var (ok, message) = await _emailOtpService.SendAsync(HttpContext.Session, email);
+            return Json(new { success = ok, message });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult VerifyEmailOtp([FromBody] VerifyEmailOtpRequest req)
+        {
+            var email = (req.Email ?? "").Trim();
+            var otp = (req.Otp ?? "").Trim();
+            if (!Regex.IsMatch(otp, @"^\d{6}$"))
+                return Json(new { success = false, message = "Enter the 6-digit OTP." });
+
+            var (ok, message) = _emailOtpService.Verify(HttpContext.Session, email, otp);
+            return Json(new { success = ok, message });
         }
 
         private Task<IActionResult> RedisplayLoginWithRegisterErrors(RegisterViewModel model)
@@ -180,6 +304,9 @@ namespace TradeLicence.Controllers
             ModelState.Remove(nameof(model.ConfirmPassword));
 
             ViewBag.RegisterModel = model;
+            ViewBag.PanVerified = HttpContext.Session.GetString("Pan_Verified") == PanKey(model.PANNumber, model.FullName, model.DateOfBirth);
+            ViewBag.MobileVerified = _otpService.IsVerified(HttpContext.Session, model.MobileNumber);
+            ViewBag.EmailVerified = _emailOtpService.IsVerified(HttpContext.Session, model.Email);
             ViewBag.ShowRegisterModal = true;
             return Task.FromResult<IActionResult>(View("Login", new LoginViewModel()));
         }
