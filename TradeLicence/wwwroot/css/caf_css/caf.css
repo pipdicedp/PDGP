@@ -1,0 +1,197 @@
+/* ============================================================
+   Common Application Form (CAF) — citizen-facing 5-step wizard.
+   Loaded only on Views/CommonApplicationForm/Step.cshtml.
+   Reuses the same navy (#1a3a52) / gold (#D4A017) palette as the
+   rest of the citizen site (see wwwroot/css/tl_css/site.css) so this
+   page doesn't look like a bolted-on feature.
+============================================================ */
+
+.caf-wrapper {
+    max-width: 1200px;
+    margin: 20px auto 40px;
+    padding: 0 16px;
+}
+
+.caf-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+    .caf-header h2 {
+        color: #1a3a52;
+        font-weight: 800;
+        margin-bottom: 4px;
+    }
+
+    .caf-header p {
+        color: #666;
+        font-size: 14px;
+        margin: 0;
+    }
+
+.caf-alert {
+    margin-bottom: 18px;
+}
+
+/* ---------------- Stepper ---------------- */
+.caf-stepper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .06);
+}
+
+.caf-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    min-width: 96px;
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: background-color .15s ease;
+}
+
+    .caf-step:hover {
+        background: rgba(26, 58, 82, .06);
+    }
+
+.caf-step-circle {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid #d5dbe0;
+    background: #fff;
+    color: #9aa5ac;
+}
+
+.caf-step-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #9aa5ac;
+    text-align: center;
+}
+
+.caf-step-done .caf-step-circle {
+    background: #1D6E3E;
+    border-color: #1D6E3E;
+    color: #fff;
+}
+
+.caf-step-done .caf-step-label {
+    color: #1D6E3E;
+}
+
+.caf-step-current .caf-step-circle {
+    background: #D4A017;
+    border-color: #D4A017;
+    color: #fff;
+    box-shadow: 0 0 0 5px rgba(212, 160, 23, .25);
+}
+
+.caf-step-current .caf-step-label {
+    color: #1a3a52;
+    font-weight: 800;
+}
+
+.caf-step-locked {
+    opacity: .55;
+    pointer-events: none;
+}
+
+/* ---------------- Sub-table "Add row" mini-form ---------------- */
+.caf-subtable-addrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: flex-end;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed #d7dee3;
+}
+
+.caf-subtable-field {
+    flex: 1 1 160px;
+    margin-bottom: 0 !important;
+}
+
+.caf-subtable-addbtn {
+    flex: 0 0 auto;
+    margin-bottom: 0 !important;
+}
+
+    .caf-subtable-addbtn .btn {
+        white-space: nowrap;
+    }
+
+.caf-subtable-scroll {
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+.caf-subtable-table {
+    margin-bottom: 8px;
+    font-size: 13.5px;
+}
+
+    .caf-subtable-table thead th {
+        background: #1a3a52;
+        color: #fff;
+        font-weight: 600;
+        font-size: 12.5px;
+        white-space: nowrap;
+    }
+
+.caf-col-action {
+    width: 90px;
+    text-align: center;
+}
+
+.caf-subtable-empty {
+    text-align: center;
+    color: #888;
+    font-size: 13px;
+    margin: 10px 0 0;
+}
+
+/* ---------------- Bottom nav ---------------- */
+.caf-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+    padding-top: 20px;
+}
+
+    .caf-actions .btn {
+        padding: 10px 22px;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+@media (max-width: 700px) {
+    .caf-stepper {
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .caf-subtable-field {
+        flex: 1 1 100%;
+    }
+
+    .caf-actions {
+        justify-content: stretch;
+        flex-direction: column;
+    }
+}

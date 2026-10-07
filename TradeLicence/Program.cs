@@ -27,6 +27,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(optio
 builder.Services.AddScoped<ITradeLicenceRepository, TradeLicenceRepository>();
 builder.Services.AddScoped<ITradeLicenceService, TradeLicenceService>();
 builder.Services.AddScoped<IFileEncryptionService, FileEncryptionService>();
+builder.Services.AddScoped<TradeLicence.Interfaces.ICafFormService, TradeLicence.Services.CafFormService>();
 builder.Services.AddScoped<TradeLicence.Repositories.ApplicationRepository>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

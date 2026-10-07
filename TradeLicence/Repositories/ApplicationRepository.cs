@@ -65,8 +65,33 @@ namespace TradeLicence.Repositories
             return true;
         }
 
+        // 📨 Final submit — flips a Draft to "Submitted" so the shared officer
+        // queue (WorkflowEngineService.GetOfficerQueueAsync filters on
+        // Status == "Submitted") can see it, and stamps the owner's UserId so
+        // PayNow / Resubmit ownership checks work. Only acts on a Draft: a
+        // returned application is re-submitted via WorkflowEngineService.ResubmitAsync,
+        // which must NOT reset CurrentStage / AssignedOfficerId.
+        public bool MarkSubmitted(string appNumber, int? userId)
+        {
+            if (string.IsNullOrWhiteSpace(appNumber)) return false;
+
+            var application = _context.EBapplications.FirstOrDefault(a => a.ApplicationNumber == appNumber);
+            if (application == null) return false;
+
+            if (application.Status != "Draft") return true;
+
+            application.Status = "Submitted";
+            application.UserId = userId;
+            application.ModifiedDate = DateTime.UtcNow;
+            _context.SaveChanges();
+            return true;
+        }
+
         // 💾 Step-by-Step Save
-        public void SaveOrUpdateStep(ApplicationViewModel model, int currentStep)
+        // userId is optional so old call sites still compile; when given it is
+        // stamped on the row (new OR existing-without-owner) so Draft rows belong
+        // to their citizen from step 1 -- needed for My Applications / Continue.
+        public void SaveOrUpdateStep(ApplicationViewModel model, int currentStep, int? userId = null)
         {
             if (string.IsNullOrWhiteSpace(model.ApplicationNumber)) return;
 
@@ -79,10 +104,13 @@ namespace TradeLicence.Repositories
                 {
                     ApplicationNumber = model.ApplicationNumber,
                     CreatedDate = DateTime.Now,
-                    ApplicationStatus = "Pending"
+                    ApplicationStatus = "Pending",
+                    UserId = userId
                 };
                 _context.EBapplications.Add(entity);
             }
+
+            if (entity.UserId == null && userId.HasValue) entity.UserId = userId;
 
             // Step 1
             entity.ServiceCategory = model.ServiceCategory;

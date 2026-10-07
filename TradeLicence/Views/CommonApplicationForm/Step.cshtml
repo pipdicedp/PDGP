@@ -1,0 +1,400 @@
+@model TradeLicence.Models.Caf.CafStepViewModel
+@using System.Linq
+@using TradeLicence.Models.Caf
+@using TradeLicence.Helpers
+
+@{
+    ViewData["Title"] = "Common Application Form - " + Model.Current.Title;
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    // Fields of the current step, grouped into fieldsets by Section,
+    // in the order each Section first appears in CafFormMetadata.
+    var sections = Model.Current.Fields
+        .GroupBy(f => f.Section)
+        .ToList();
+
+    string Val(string name) =>
+        Model.Values.TryGetValue(name, out var v) ? (v ?? "") : "";
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/caf_css/caf.css"
+          asp-append-version="true" />
+}
+
+<div class="caf-wrapper">
+
+    <div class="caf-header">
+        <h2>Common Application Form</h2>
+        <p>Government of Puducherry — Department of Industries and Commerce</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success caf-alert">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger caf-alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    <!-- Stepper -->
+    <div class="caf-stepper">
+        @foreach (var s in Model.AllSteps)
+        {
+            var state = s.Number == Model.Current.Number
+                ? "caf-step-current"
+                : (s.Number < Model.Current.Number || Model.BasicDetailsExist
+                    ? "caf-step-done"
+                    : "caf-step-locked");
+
+            <a class="caf-step @state"
+               href="@(Url.Action("Step", new { step = s.Number }))">
+
+                <span class="caf-step-circle">
+                    @s.Number
+                </span>
+
+                <span class="caf-step-label">
+                    @s.Title
+                </span>
+            </a>
+        }
+    </div>
+
+    <form method="post"
+          action="@(Url.Action("SaveStep", new { step = Model.Current.Number }))"
+          id="cafStepForm">
+
+        @Html.AntiForgeryToken()
+
+        @foreach (var section in sections)
+        {
+            <fieldset class="tl-section">
+
+                <legend>
+                    @(section.Key)
+                </legend>
+
+                <div class="tl-grid-2">
+
+                    @foreach (var f in section)
+                    {
+                        <div class="form-group">
+
+                            <label for="caf_@f.Name">
+                                @f.Label
+                            </label>
+
+                            @switch (f.Type)
+                            {
+                                case CafFieldType.TextArea:
+
+                                    <textarea id="caf_@f.Name"
+                                              name="@f.Name"
+                                              class="form-control"
+                                              rows="2"
+                                              maxlength="@f.MaxLength">@Val(f.Name)</textarea>
+
+                                    break;
+
+                                case CafFieldType.Number:
+
+                                    <input id="caf_@f.Name"
+                                           name="@f.Name"
+                                           type="number"
+                                           step="1"
+                                           class="form-control"
+                                           value="@Val(f.Name)" />
+
+                                    break;
+
+                                case CafFieldType.Decimal:
+
+                                    <input id="caf_@f.Name"
+                                           name="@f.Name"
+                                           type="number"
+                                           step="@f.DecimalStep"
+                                           class="form-control"
+                                           value="@Val(f.Name)" />
+
+                                    break;
+
+                                case CafFieldType.Date:
+
+                                    <input id="caf_@f.Name"
+                                           name="@f.Name"
+                                           type="date"
+                                           class="form-control"
+                                           value="@Val(f.Name)" />
+
+                                    break;
+
+                                case CafFieldType.Email:
+
+                                    <input id="caf_@f.Name"
+                                           name="@f.Name"
+                                           type="email"
+                                           maxlength="@f.MaxLength"
+                                           class="form-control"
+                                           value="@Val(f.Name)" />
+
+                                    break;
+
+                                case CafFieldType.Select:
+                                case CafFieldType.YesNo:
+
+                                    var current = Val(f.Name);
+
+                                    <select id="caf_@f.Name"
+                                            name="@f.Name"
+                                            class="form-control">
+
+                                        <option value="">
+                                            -- Please Select --
+                                        </option>
+
+                                        @foreach (var opt in f.Options ?? Array.Empty<string>())
+                                        {
+                                            var pipe = opt.IndexOf('|');
+
+                                            var optValue = pipe >= 0
+                                                ? opt[..pipe]
+                                                : opt;
+
+                                            var optLabel = pipe >= 0
+                                                ? opt[(pipe + 1)..]
+                                                : opt;
+
+                                            if (optValue == current)
+                                            {
+                                                <option value="@optValue" selected>
+                                                    @optLabel
+                                                </option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@optValue">
+                                                    @optLabel
+                                                </option>
+                                            }
+                                        }
+
+                                    </select>
+
+                                    break;
+
+                                default:
+
+                                    <input id="caf_@f.Name"
+                                           name="@f.Name"
+                                           type="text"
+                                           class="form-control"
+                                           maxlength="@f.MaxLength"
+                                           value="@Val(f.Name)" />
+
+                                    break;
+                            }
+
+                        </div>
+                    }
+
+                </div>
+
+            </fieldset>
+        }
+
+        @foreach (var sub in Model.SubTables)
+        {
+            <fieldset class="tl-section caf-subtable"
+                      data-step="@Model.Current.Number"
+                      data-subkey="@sub.Def.Key">
+
+                <legend>
+                    @sub.Def.DisplayName
+                </legend>
+
+                <div class="caf-subtable-addrow">
+
+                    @foreach (var f in sub.Def.Fields)
+                    {
+                        <div class="form-group caf-subtable-field">
+
+                            <label>
+                                @f.Label
+                            </label>
+
+                            @if (f.Type == CafFieldType.Select ||
+                                 f.Type == CafFieldType.YesNo)
+                            {
+                                <select class="form-control caf-sub-input"
+                                        data-field="@f.Name">
+
+                                    <option value="">
+                                        -- Select --
+                                    </option>
+
+                                    @foreach (var opt in f.Options ?? Array.Empty<string>())
+                                    {
+                                        var pipe = opt.IndexOf('|');
+
+                                        var optValue = pipe >= 0
+                                            ? opt[..pipe]
+                                            : opt;
+
+                                        var optLabel = pipe >= 0
+                                            ? opt[(pipe + 1)..]
+                                            : opt;
+
+                                        <option value="@optValue">
+                                            @optLabel
+                                        </option>
+                                    }
+
+                                </select>
+                            }
+                            else if (f.Type == CafFieldType.Number)
+                            {
+                                <input type="number"
+                                       step="1"
+                                       class="form-control caf-sub-input"
+                                       data-field="@f.Name" />
+                            }
+                            else if (f.Type == CafFieldType.Decimal)
+                            {
+                                <input type="number"
+                                       step="@f.DecimalStep"
+                                       class="form-control caf-sub-input"
+                                       data-field="@f.Name" />
+                            }
+                            else
+                            {
+                                <input type="text"
+                                       class="form-control caf-sub-input"
+                                       maxlength="@f.MaxLength"
+                                       data-field="@f.Name" />
+                            }
+
+                        </div>
+                    }
+
+                    <div class="form-group caf-subtable-addbtn">
+
+                        <label>
+                            &nbsp;
+                        </label>
+
+                        <button type="button"
+                                class="btn btn-primary caf-add-row">
+                            + Add
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="caf-subtable-scroll">
+
+                    <table class="table table-bordered caf-subtable-table">
+
+                        <thead>
+                            <tr>
+
+                                @foreach (var f in sub.Def.Fields)
+                                {
+                                    <th>
+                                        @f.Label
+                                    </th>
+                                }
+
+                                <th class="caf-col-action">
+                                    Action
+                                </th>
+
+                            </tr>
+                        </thead>
+
+                        <tbody class="caf-subtable-body">
+
+                            @foreach (var row in sub.Rows)
+                            {
+                                <tr data-id="@row.Id">
+
+                                    @foreach (var f in sub.Def.Fields)
+                                    {
+                                        <td>
+                                            @(row.Values.TryGetValue(
+                                                f.Name,
+                                                out var rv)
+                                                ? rv
+                                                : "")
+                                        </td>
+                                    }
+
+                                    <td class="caf-col-action">
+
+                                        <button type="button"
+                                                class="btn btn-danger btn-sm caf-delete-row">
+                                            Delete
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                    <p class="caf-subtable-empty tl-note"
+                       style="@(sub.Rows.Any() ? "display:none;" : "")">
+
+                        No rows added yet.
+
+                    </p>
+
+                </div>
+
+            </fieldset>
+        }
+
+        <div class="caf-actions">
+
+            @if (Model.Current.Number > CafFormMetadata.MinStep)
+            {
+                <a class="btn btn-secondary"
+                   href="@(Url.Action("Step",
+                       new { step = Model.Current.Number - 1 }))">
+                    Back
+                </a>
+            }
+
+            <button type="submit"
+                    class="btn btn-success">
+
+                @(Model.Current.Number == CafFormMetadata.MaxStep
+                    ? "Save & Submit Application"
+                    : "Save & Next")
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="~/js/caf_js/caf.js"
+            asp-append-version="true"></script>
+}
