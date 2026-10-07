@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
 using TradeLicence.Interfaces;
@@ -56,6 +56,31 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     });
 
 builder.Services.AddScoped<CaptchaService>();
+
+// ---- Registration: PAN verification + mobile OTP ----
+// Defaults to TEST MODE when the settings are missing from appsettings.json.
+// Set "PanApi:UseMock" / "Sms:UseConsole" to false to use real providers.
+builder.Services.AddScoped<OtpService>();
+
+if (builder.Configuration.GetValue<bool>("PanApi:UseMock", true))
+    builder.Services.AddScoped<IPanVerificationService, MockPanVerificationService>();
+else
+    builder.Services.AddHttpClient<IPanVerificationService, ApiPanVerificationService>();
+
+if (builder.Configuration.GetValue<bool>("Sms:UseConsole", true))
+    builder.Services.AddScoped<ISmsSender, ConsoleSmsSender>();
+else
+    builder.Services.AddHttpClient<ISmsSender, HttpSmsSender>();
+
+// ---- Registration: EMAIL OTP ----
+// Defaults to TEST MODE (OTP is printed in Visual Studio, no email is sent).
+// Set "Email:UseConsole" to false and fill the "Email" settings to send real emails.
+builder.Services.AddScoped<EmailOtpService>();
+
+if (builder.Configuration.GetValue<bool>("Email:UseConsole", true))
+    builder.Services.AddScoped<IOtpEmailSender, ConsoleOtpEmailSender>();
+else
+    builder.Services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
 
 var app = builder.Build();
 

@@ -6,9 +6,18 @@
     string Field(string label, string? value) =>
         $"<div class=\"preview-field\"><span class=\"preview-label\">{System.Net.WebUtility.HtmlEncode(label)}</span><span class=\"preview-value\">{System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(value) ? "-" : value)}</span></div>";
 
-    // Documents are stored as disk paths (a different pattern from Water's
-    // in-DB bytes) — wwwroot/uploads is already served by app.UseStaticFiles(),
-    // so these render as plain links, no special controller action needed.
+    // Citizen documents are encrypted in the database (EBApplicationDocuments); the
+    // *Path columns hold the document id and are opened through
+    // ElectricityOfficerController.OfficerDocument. Applications submitted before the
+    // switch still hold a disk path under wwwroot/uploads, served as a plain link.
+    string DocHref(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return "#";
+        return TradeLicence.Services.EBDocumentHelper.TryGetDocumentId(path, out var docId)
+            ? Url.Action("OfficerDocument", "ElectricityOfficer", new { id = docId })!
+            : Url.Content("~/" + path.TrimStart('/'));
+    }
+
     var documents = new (string Label, string? Path)[]
     {
         ("Photo", Model.PhotoPath),
@@ -194,7 +203,7 @@
                 {
                     <div class="preview-doc-row">
                         <span class="preview-label">@doc.Label</span>
-                        <a class="btn btn-sm btn-secondary" href="@doc.Path" target="_blank">
+                        <a class="btn btn-sm btn-secondary" href="@DocHref(doc.Path)" target="_blank">
                             <i class="fas fa-eye"></i> View
                         </a>
                     </div>
@@ -222,7 +231,7 @@
     {
         <script>
             showOfficerActionAlert(
-                @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
+                            @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
                 @Html.Raw(Json.Serialize(TempData["OfficerActionMessage"]))
             );
         </script>
