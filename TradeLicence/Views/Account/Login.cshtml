@@ -151,6 +151,19 @@
                                             });
                 </text>
         }
+  
+
+            @if (TempData["ResetSuccess"] != null)
+            {
+                <text>
+                        Swal.fire({
+                            icon: 'success',
+                        title: 'Password Updated',
+                        text: @Html.Raw(Json.Serialize(TempData["ResetSuccess"])),
+                        confirmButtonColor: '#1a3a52'
+                                });
+                </text>
+        }
 
             @if (ViewBag.ShowRegisterModal == true)
             {

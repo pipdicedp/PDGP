@@ -312,6 +312,178 @@ namespace TradeLicence.Controllers
             var (ok, message) = _emailOtpService.Verify(HttpContext.Session, email, otp);
             return Json(new { success = ok, message });
         }
+        //  FORGOT PASSWORD
+        //  Step 1 : user enters User Name + Mobile + Email + Captcha.
+        //           We check all three match ONE registered account, then send an OTP
+        //           to the registered mobile AND the registered email.
+        //  Step 2 : user enters both OTPs + new password + confirm password.
+        //           We verify the OTPs and save the new (hashed) password.
+        // =====================================================================
+        private const string FpUserKey = "Fp_User";
+        private const string FpMobileKey = "Fp_Mobile";
+        private const string FpEmailKey = "Fp_Email";
+
+        private void ClearForgotSession()
+        {
+            HttpContext.Session.Remove(FpUserKey);
+            HttpContext.Session.Remove(FpMobileKey);
+            HttpContext.Session.Remove(FpEmailKey);
+            _otpService.ClearVerified(HttpContext.Session);
+            _emailOtpService.ClearVerified(HttpContext.Session);
+        }
+
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            ClearForgotSession();
+            ViewBag.FpStage = 1;
+            return View(new ForgotPasswordViewModel());
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPasswordSend(ForgotPasswordViewModel model)
+        {
+            ClearForgotSession();            // every new attempt starts fresh
+            ViewBag.FpStage = 1;
+
+            // ---- 1. CAPTCHA first (single use) ----
+            var expectedCode = HttpContext.Session.GetString("CaptchaCode");
+            HttpContext.Session.Remove("CaptchaCode");
+            bool captchaValid = !string.IsNullOrEmpty(expectedCode) &&
+                string.Equals(model.CaptchaInput?.Trim(), expectedCode, StringComparison.OrdinalIgnoreCase);
+            model.CaptchaInput = string.Empty;
+            ModelState.Remove(nameof(model.CaptchaInput));
+
+            var username = (model.Username ?? "").Trim();
+            var mobile = (model.MobileNumber ?? "").Trim();
+            var email = (model.Email ?? "").Trim();
+
+            // ---- 2. Basic checks on what was typed ----
+            if (username.Length == 0)
+                ModelState.AddModelError(nameof(model.Username), "User name is required.");
+            if (!Regex.IsMatch(mobile, @"^[6-9]\d{9}$"))
+                ModelState.AddModelError(nameof(model.MobileNumber), "Enter the 10-digit registered mobile number.");
+            if (email.Length == 0 || email.Length > 150 ||
+                !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email))
+                ModelState.AddModelError(nameof(model.Email), "Enter the registered email address.");
+            if (!captchaValid)
+                ModelState.AddModelError(nameof(model.CaptchaInput), "The code entered does not match the image. Please try again.");
+
+            if (!ModelState.IsValid) return View("ForgotPassword", model);
+
+            // ---- 3. All three details must belong to the SAME account ----
+            var user = await _context.Users.FirstOrDefaultAsync(u =>
+                u.Username == username && u.MobileNumber == mobile && u.Email == email);
+
+            if (user == null)
+            {
+                ModelState.AddModelError(string.Empty, "The details you entered do not match any registered account.");
+                return View("ForgotPassword", model);
+            }
+
+            // ---- 4. Send OTP to the registered mobile and email ----
+            var sms = await _otpService.SendAsync(HttpContext.Session, mobile);
+            if (!sms.ok)
+            {
+                ModelState.AddModelError(string.Empty, sms.message);
+                return View("ForgotPassword", model);
+            }
+
+            var mail = await _emailOtpService.SendAsync(HttpContext.Session, email);
+            if (!mail.ok)
+            {
+                ModelState.AddModelError(string.Empty, mail.message);
+                return View("ForgotPassword", model);
+            }
+
+            HttpContext.Session.SetString(FpUserKey, user.Username);
+            HttpContext.Session.SetString(FpMobileKey, mobile);
+            HttpContext.Session.SetString(FpEmailKey, email);
+
+            model.Username = user.Username;
+            model.MobileNumber = mobile;
+            model.Email = email;
+            ViewBag.FpStage = 2;
+            ViewBag.FpInfo = sms.message + " " + mail.message;
+            return View("ForgotPassword", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPasswordReset(ForgotPasswordViewModel model)
+        {
+            var username = HttpContext.Session.GetString(FpUserKey);
+            var mobile = HttpContext.Session.GetString(FpMobileKey);
+            var email = HttpContext.Session.GetString(FpEmailKey);
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(mobile) || string.IsNullOrEmpty(email))
+            {
+                TempData["FpExpired"] = "Your session expired. Please start again.";
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            if (user == null)
+            {
+                ClearForgotSession();
+                return RedirectToAction(nameof(ForgotPassword));
+            }
+
+            // Show the same (read-only) details again if we have to redisplay the page
+            model.Username = user.Username;
+            model.MobileNumber = mobile;
+            model.Email = email;
+            ViewBag.FpStage = 2;
+
+            var mobileOtp = (model.MobileOtp ?? "").Trim();
+            var emailOtp = (model.EmailOtp ?? "").Trim();
+            var newPassword = model.NewPassword ?? "";
+            var confirmPassword = model.ConfirmPassword ?? "";
+
+            // never send typed passwords / OTPs back to the browser
+            model.MobileOtp = string.Empty; model.EmailOtp = string.Empty;
+            model.NewPassword = string.Empty; model.ConfirmPassword = string.Empty;
+            ModelState.Remove(nameof(model.MobileOtp)); ModelState.Remove(nameof(model.EmailOtp));
+            ModelState.Remove(nameof(model.NewPassword)); ModelState.Remove(nameof(model.ConfirmPassword));
+
+            bool mobileDone = _otpService.IsVerified(HttpContext.Session, mobile);
+            bool emailDone = _emailOtpService.IsVerified(HttpContext.Session, email);
+
+            if (!mobileDone && !Regex.IsMatch(mobileOtp, @"^\d{6}$"))
+                ModelState.AddModelError(nameof(model.MobileOtp), "Enter the 6-digit mobile OTP.");
+            if (!emailDone && !Regex.IsMatch(emailOtp, @"^\d{6}$"))
+                ModelState.AddModelError(nameof(model.EmailOtp), "Enter the 6-digit email OTP.");
+            if (newPassword.Length < 6 || newPassword.Length > 15)
+                ModelState.AddModelError(nameof(model.NewPassword), "Password must be 6-15 characters.");
+            if (newPassword != confirmPassword)
+                ModelState.AddModelError(nameof(model.ConfirmPassword), "Passwords do not match.");
+
+            if (!ModelState.IsValid) return View("ForgotPassword", model);
+
+            // ---- check the OTPs (a code already verified earlier is not asked again) ----
+            if (!mobileDone)
+            {
+                var r = _otpService.Verify(HttpContext.Session, mobile, mobileOtp);
+                if (!r.ok) ModelState.AddModelError(nameof(model.MobileOtp), r.message);
+            }
+            if (!emailDone)
+            {
+                var r = _emailOtpService.Verify(HttpContext.Session, email, emailOtp);
+                if (!r.ok) ModelState.AddModelError(nameof(model.EmailOtp), r.message);
+            }
+            if (!ModelState.IsValid) return View("ForgotPassword", model);
+
+            // ---- save the new password (hashed, never plain text) and unlock the account ----
+            user.PasswordHash = _passwordHasher.HashPassword(user, newPassword);
+            user.FailedLoginAttempts = 0;
+            user.IsLocked = false;
+            await _context.SaveChangesAsync();
+
+            ClearForgotSession();
+            TempData["ResetSuccess"] = "Your password has been updated. Please login with your new password.";
+            return RedirectToAction(nameof(Login));
+        }
 
         private Task<IActionResult> RedisplayLoginWithRegisterErrors(RegisterViewModel model)
         {
