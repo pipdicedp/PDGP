@@ -184,20 +184,7 @@ namespace TradeLicence.Controllers
                 ModelState.AddModelError(nameof(model.PANNumber), "This PAN is already registered.");
             }
 
-            if (HttpContext.Session.GetString("Pan_Verified") != PanKey(model.PANNumber, model.FullName, model.DateOfBirth))
-            {
-                ModelState.AddModelError(nameof(model.PANNumber), "Please verify your PAN number (name, DOB and PAN must match).");
-            }
-
-            if (!_otpService.IsVerified(HttpContext.Session, model.MobileNumber))
-            {
-                ModelState.AddModelError(nameof(model.MobileNumber), "Please verify your mobile number with OTP.");
-            }
-
-            if (!_emailOtpService.IsVerified(HttpContext.Session, model.Email))
-            {
-                ModelState.AddModelError(nameof(model.Email), "Please verify your email address with OTP.");
-            }
+       
 
             if (!ModelState.IsValid)
             {

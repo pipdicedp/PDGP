@@ -1736,3 +1736,52 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-services-list {
 		transform: translateY(0);
 	}
 }
+
+.tl-lx-otp-row {
+	display: flex;
+	gap: 8px;
+	align-items: stretch;
+}
+
+	.tl-lx-otp-row .tl-lx-inputwrap {
+		flex: 1;
+		min-width: 0;
+	}
+
+.tl-lx-otp-btn {
+	flex-shrink: 0;
+	border: none;
+	border-radius: 8px;
+	padding: 0 14px;
+	background: #D4A017;
+	color: #1a2a38;
+	font-weight: 700;
+	font-size: 0.78rem;
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background .15s ease;
+}
+
+	.tl-lx-otp-btn:hover:not(:disabled) {
+		background: #b88a12;
+	}
+
+	.tl-lx-otp-btn:disabled {
+		opacity: .65;
+		cursor: not-allowed;
+	}
+
+.tl-lx-otp-status {
+	display: block;
+	margin-top: 5px;
+	font-size: 0.76rem;
+	min-height: 1em;
+}
+
+	.tl-lx-otp-status.ok {
+		color: #1B7F3B;
+	}
+
+	.tl-lx-otp-status.err {
+		color: #B3261E;
+	}
