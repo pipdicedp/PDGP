@@ -57,8 +57,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddScoped<CaptchaService>();
 
 // ---- Registration: PAN verification + mobile OTP ----
-// Defaults to TEST MODE when the settings are missing from appsettings.json.
-// Set "PanApi:UseMock" / "Sms:UseConsole" to false to use real providers.
 builder.Services.AddScoped<OtpService>();
 
 if (builder.Configuration.GetValue<bool>("PanApi:UseMock", true))
@@ -72,27 +70,20 @@ else
     builder.Services.AddHttpClient<ISmsSender, HttpSmsSender>();
 
 // ---- Registration: EMAIL OTP ----
-// Defaults to TEST MODE (OTP is printed in Visual Studio, no email is sent).
-// Set "Email:UseConsole" to false and fill the "Email" settings to send real emails.
+// Always send real emails through SMTP
 builder.Services.AddScoped<EmailOtpService>();
-
-if (builder.Configuration.GetValue<bool>("Email:UseConsole", true))
-    builder.Services.AddScoped<IOtpEmailSender, ConsoleOtpEmailSender>();
-else
-    builder.Services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
+builder.Services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Detailed error page while developing/debugging locally.
     app.UseDeveloperExceptionPage();
 }
 else
 {
     app.UseExceptionHandler("/Error/Index");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -102,7 +93,6 @@ app.UseStatusCodePagesWithReExecute("/Error/StatusCode/{0}");
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 app.UseHttpsRedirection();
-// Serve static files from wwwroot (js, css, images)
 app.UseStaticFiles();
 app.UseRouting();
 
@@ -116,6 +106,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=PYGuidancehome}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

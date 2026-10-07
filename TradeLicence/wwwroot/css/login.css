@@ -1,208 +1,150 @@
 /* =====================================
-   Login page styles (redesign) — every rule is scoped under a
-   .tl-login-* / .tl-service-* class, nothing touches body, html or *.
-   The register-modal styles at the bottom are unchanged.
+   Login page styles — fully scoped under .tl-login-wrap.
+   Deliberately does NOT touch body, html, or * — this file loads
+   alongside site.css (both are active on every page now that Login
+   uses the shared _Layout), so anything unscoped here would leak into
+   every other page again, exactly like the earlier bug.
 ===================================== */
 
-.tl-login-page-grid {
-	max-width: 1160px;
-	margin: 24px auto;
-	padding: 0 16px;
-}
-
-/* ---------- Hero stage with photo background ---------- */
-.tl-login-stage {
-	position: relative;
-	display: grid;
-	grid-template-columns: 1.15fr 0.85fr;
-	gap: 40px;
-	align-items: center;
-	padding: 44px 44px;
-	border-radius: 18px;
-	overflow: hidden;
-	background-color: #0f2438;
-	background-image: linear-gradient(115deg, rgba(10,28,46,0.93) 0%, rgba(20,52,78,0.82) 55%, rgba(26,58,82,0.55) 100%), url('../Images/Matrimandir_Auroville.jpg');
-	background-size: cover;
-	background-position: center;
-	box-shadow: 0 18px 50px rgba(15,36,56,0.28);
-	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
-}
-
-	.tl-login-stage::before {
-		content: "";
-		position: absolute;
-		top: 0; left: 0; right: 0;
-		height: 4px;
-		background: linear-gradient(90deg, #D4A017 0%, #D4A017 33%, #fff 33%, #fff 67%, #1a3a52 67%);
-	}
-
-	.tl-login-stage * {
-		box-sizing: border-box;
-	}
-
-/* ---------- Left: intro + services ---------- */
-.tl-login-intro {
-	position: relative;
-	z-index: 1;
-	color: #fff;
-}
-
-.tl-login-eyebrow {
-	display: inline-flex;
-	align-items: center;
-	gap: 8px;
-	padding: 6px 14px;
-	border-radius: 999px;
-	background: rgba(212,160,23,0.18);
-	border: 1px solid rgba(212,160,23,0.55);
-	color: #F3D27A;
-	font-size: 0.74rem;
-	font-weight: 700;
-	letter-spacing: 0.08em;
-	text-transform: uppercase;
-}
-
-.tl-login-hero-title {
-	font-family: 'Source Serif 4', serif;
-	font-weight: 700;
-	font-size: 2.4rem;
-	line-height: 1.15;
-	margin: 16px 0 10px;
-	color: #fff;
-}
-
-	.tl-login-hero-title span {
-		color: #D4A017;
-	}
-
-.tl-login-hero-text {
-	font-size: 0.95rem;
-	line-height: 1.6;
-	color: #C9DAE6;
-	max-width: 520px;
-	margin: 0 0 24px;
-}
-
-.tl-login-services {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 12px;
-}
-
-.tl-service-card {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	gap: 10px;
-	padding: 14px 14px 16px;
-	border-radius: 12px;
-	background: rgba(255,255,255,0.09);
-	border: 1px solid rgba(255,255,255,0.16);
-	backdrop-filter: blur(6px);
-	-webkit-backdrop-filter: blur(6px);
-	color: #fff;
-	text-decoration: none;
-	cursor: pointer;
-	transition: transform .18s ease, background .18s ease, border-color .18s ease;
-}
-
-	.tl-service-card:hover {
-		transform: translateY(-3px);
-		background: rgba(255,255,255,0.17);
-		border-color: #D4A017;
-		color: #fff;
-	}
-
-.tl-service-icon {
-	width: 36px;
-	height: 36px;
-	border-radius: 10px;
-	background: linear-gradient(135deg, #E8B923, #C28F0C);
-	color: #12304a;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 0.95rem;
-	flex-shrink: 0;
-}
-
-.tl-service-title {
-	font-size: 0.78rem;
-	font-weight: 600;
-	line-height: 1.35;
-}
-
-/* ---------- Right: login card ---------- */
 .tl-login-wrap {
-	position: relative;
-	z-index: 1;
+	display: grid;
+	grid-template-columns: 38% 62%;
 	width: 100%;
-	max-width: 420px;
-	justify-self: end;
-	background: #fff;
-	border-radius: 16px;
+	max-width: 900px;
+	height: auto;
+	margin: 10px auto;
+	border-radius: 12px;
 	overflow: hidden;
-	box-shadow: 0 24px 60px rgba(0,0,0,0.35);
-	border-top: 4px solid #D4A017;
+	box-shadow: 0 10px 30px rgba(26,58,82,0.12);
 }
 
 	.tl-login-wrap * {
 		box-sizing: border-box;
 	}
 
-.tl-login-formpanel {
-	background: #fff;
-	padding: 30px 32px 28px;
+/* ---------- Left: brand panel ---------- */
+.tl-login-brandpanel {
+	background-color: #1a3a52;
+	background-image: url('/images/Mahatma_Gandhi_Statue.jpg');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	color: #E4EFEE;
+	padding: 28px 30px;
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	overflow: hidden;
 	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
-	color: #1C2321;
 }
 
-.tl-login-form-inner {
-	width: 100%;
+	.tl-login-brandpanel::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(180deg, rgba(26,58,82,0.15) 0%, rgba(15,45,56,0.05) 40%, rgba(15,45,56,0.55) 100%);
+		pointer-events: none;
+	}
+
+.tl-login-brand-top, .tl-login-tagline {
+	position: relative;
+	z-index: 1;
+}
+
+.tl-login-brandpanel::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3px;
+	background: linear-gradient(90deg, #D4A017 0%, #D4A017 33%, #fff 33%, #fff 67%, #1a3a52 67%);
 }
 
 .tl-login-brand-top {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	padding-bottom: 16px;
-	margin-bottom: 18px;
-	border-bottom: 1px solid #ECE8DD;
+	gap: 10px;
+	margin-bottom: 6px;
 }
 
 .tl-login-logo-img {
-	height: 42px;
+	height: 34px;
 	width: auto;
-	border-radius: 8px;
+	border-radius: 6px;
+	background: #fff;
+	padding: 2px;
 	flex-shrink: 0;
 }
 
 .tl-login-brand-title {
 	font-family: 'Source Serif 4', serif;
 	font-weight: 700;
-	font-size: 1.1rem;
-	line-height: 1.2;
-	color: #1a3a52;
+	font-size: 1.05rem;
+	line-height: 1.25;
 }
 
 .tl-login-brand-sub {
-	font-size: 0.76rem;
-	color: #6B7280;
+	font-size: 0.78rem;
+	color: #A9C4C0;
 	margin-top: 2px;
 }
+
+.tl-login-tagline {
+	font-size: 0.85rem;
+	color: #C7DAD7;
+	line-height: 1.55;
+	max-width: 280px;
+	margin-top: auto;
+}
+
+/* ---------- Right: form panel ---------- */
+.tl-login-formpanel {
+	background: #FFFFFF;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 28px 36px;
+	overflow-y: auto;
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+	color: #1C2321;
+}
+
+.tl-login-form-inner {
+	width: 100%;
+	max-width: 360px;
+}
+
+.tl-login-topline {
+	display: flex;
+	justify-content: flex-end;
+	margin-bottom: 22px;
+}
+
+.tl-login-register-link {
+	color: #1a3a52;
+	font-weight: 600;
+	font-size: 0.85rem;
+	text-decoration: none;
+	border-bottom: 1px solid transparent;
+}
+
+	.tl-login-register-link:hover {
+		border-bottom-color: #1a3a52;
+	}
 
 .tl-login-heading {
 	font-family: 'Source Serif 4', serif;
 	font-weight: 700;
-	font-size: 1.6rem;
+	font-size: 1.65rem;
 	color: #1a3a52;
-	margin: 0 0 4px;
+	margin: 0 0 5px;
 }
 
 .tl-login-subheading {
 	color: #6B7280;
-	font-size: 0.84rem;
-	margin: 0 0 20px;
+	font-size: 0.86rem;
+	margin: 0 0 22px;
 }
 
 .tl-login-alert {
@@ -216,48 +158,33 @@
 }
 
 .tl-login-field {
-	margin-bottom: 15px;
+	margin-bottom: 16px;
 }
 
 	.tl-login-field label {
 		display: block;
 		font-weight: 600;
-		font-size: 0.78rem;
+		font-size: 0.8rem;
 		color: #3B4441;
 		margin-bottom: 5px;
 	}
 
-.tl-login-inputwrap {
-	position: relative;
-}
-
-.tl-login-inputicon {
-	position: absolute;
-	left: 14px;
-	top: 50%;
-	transform: translateY(-50%);
-	color: #8A99A6;
-	font-size: 0.85rem;
-	pointer-events: none;
-}
-
 .tl-login-wrap .tl-login-input {
 	width: 100%;
 	font-family: 'Public Sans', sans-serif;
-	border: 1px solid #D5DBE1;
-	border-radius: 8px;
-	padding: 11px 40px 11px 38px;
+	border: 1px solid #DCD7CB;
+	border-radius: 6px;
+	padding: 10px 13px;
 	font-size: 0.9rem;
-	background: #F7F9FB;
+	background: #FFFFFF;
 	color: #1C2321;
-	transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+	transition: border-color .15s ease, box-shadow .15s ease;
 }
 
 	.tl-login-wrap .tl-login-input:focus {
 		outline: none;
-		background: #fff;
 		border-color: #1a3a52;
-		box-shadow: 0 0 0 3px rgba(26,58,82,0.15);
+		box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.15);
 	}
 
 .tl-login-fielderror {
@@ -265,6 +192,10 @@
 	font-size: 0.76rem;
 	display: block;
 	margin-top: 4px;
+}
+
+.tl-login-password-wrap {
+	position: relative;
 }
 
 .tl-login-eye {
@@ -288,47 +219,44 @@
 }
 
 .tl-login-captcha-img {
-	border: 1px solid #D5DBE1;
-	border-radius: 8px;
+	border: 1px solid #DCD7CB;
+	border-radius: 6px;
 	display: block;
 	height: 42px;
 }
 
 .tl-login-captcha-refresh {
-	background: #EAF0F5;
-	border: 1px solid #D5DBE1;
-	border-radius: 8px;
-	width: 38px;
-	height: 38px;
-	font-size: 1rem;
+	background: #E4EFEE;
+	border: 1px solid #DCD7CB;
+	border-radius: 6px;
+	width: 34px;
+	height: 34px;
+	font-size: 0.95rem;
 	color: #1a3a52;
 	cursor: pointer;
 	flex-shrink: 0;
-	transition: background .15s ease;
 }
 
 	.tl-login-captcha-refresh:hover {
-		background: #d9e5ee;
+		background: #d5e6e4;
 	}
 
 .tl-login-wrap .tl-login-submit {
 	width: 100%;
-	background: linear-gradient(135deg, #1f4a6b, #12304a);
+	background: #1a3a52;
 	color: #fff;
 	border: none;
-	border-radius: 8px;
-	padding: 12px;
+	border-radius: 6px;
+	padding: 11px;
 	font-weight: 700;
-	font-size: 0.95rem;
+	font-size: 0.92rem;
 	cursor: pointer;
 	margin-top: 4px;
-	box-shadow: 0 6px 16px rgba(18,48,74,0.28);
-	transition: transform .15s ease, box-shadow .15s ease;
+	transition: background .15s ease;
 }
 
 	.tl-login-wrap .tl-login-submit:hover {
-		transform: translateY(-1px);
-		box-shadow: 0 10px 22px rgba(18,48,74,0.36);
+		background: #0f2438;
 	}
 
 .tl-login-forgot {
@@ -347,68 +275,146 @@
 			text-decoration: underline;
 		}
 
-.tl-login-divider {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin: 16px 0 12px;
-	color: #9AA5AF;
-	font-size: 0.74rem;
-}
-
-	.tl-login-divider::before,
-	.tl-login-divider::after {
-		content: "";
-		flex: 1;
-		height: 1px;
-		background: #E5E9ED;
+/* ---------- Responsive ---------- */
+@media (max-width: 760px) {
+	.tl-login-wrap {
+		grid-template-columns: 1fr;
+		height: auto;
+		max-width: 380px;
 	}
 
-.tl-login-register-btn {
+	.tl-login-brandpanel {
+		padding: 18px;
+		min-height: 140px;
+	}
+
+	.tl-login-tagline {
+		display: none;
+	}
+
+	.tl-login-formpanel {
+		padding: 24px;
+	}
+}
+
+/* =====================================
+   Page grid — places the Services list to the LEFT of the existing
+   login panel (.tl-login-wrap, untouched above). Scoped classes only,
+   nothing here touches body/html/* so it's safe alongside site.css.
+===================================== */
+
+.tl-login-page-grid {
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	gap: 24px;
+	max-width: 1160px;
+	margin: 10px auto;
+	padding: 0 16px;
+	flex-wrap: wrap;
+}
+
+.tl-login-wrap {
+	/* now sits inside the flex grid instead of being centered alone */
+	margin: 0;
+	flex: 1 1 480px;
+}
+
+/* ---------- Services Enrolled list ---------- */
+.tl-login-services {
+	flex: 1 1 300px;
+	max-width: 340px;
+	display: flex;
+	flex-direction: column;
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 6px 20px rgba(26,58,82,0.10);
+	background: #fff;
+}
+
+.tl-service-card {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 18px;
+	color: #fff;
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+	font-weight: 600;
+	font-size: 0.86rem;
+	line-height: 1.3;
+	border-bottom: 1px solid rgba(255,255,255,0.12);
+	text-decoration: none;
+	cursor: pointer;
+	transition: filter 0.15s ease;
+	flex: 1 1 0;
+}
+
+	.tl-service-card:hover {
+		filter: brightness(1.15);
+	}
+
+	.tl-service-card:last-child {
+		border-bottom: none;
+	}
+
+.tl-service-icon {
+	font-size: 0.78rem;
+	flex-shrink: 0;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	background: #D4A017;
+	color: #1a3a52;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: 8px;
-	padding: 10px;
-	border: 1.5px solid #1a3a52;
-	border-radius: 8px;
-	color: #1a3a52;
-	font-weight: 600;
-	font-size: 0.86rem;
-	text-decoration: none;
-	transition: background .15s ease, color .15s ease;
 }
 
-	.tl-login-register-btn:hover {
-		background: #1a3a52;
-		color: #fff;
-	}
-
-/* ---------- Responsive ---------- */
-@media (max-width: 1000px) {
-	.tl-login-stage {
-		grid-template-columns: 1fr;
-		padding: 28px 20px;
-		gap: 28px;
-	}
-
-	.tl-login-wrap {
-		justify-self: center;
-		order: -1;
-	}
+.tl-service-title {
+	flex: 1;
 }
 
-@media (max-width: 620px) {
+/* Unified navy palette — alternating shades of the login panel's own
+   navy (#1a3a52), instead of six unrelated colours, so this list reads
+   as one branded component with the login card rather than a
+   different, clashing widget bolted on next to it. */
+.tl-service-primary {
+	background: #1a3a52;
+}
+/* base navy — matches brand panel exactly */
+.tl-service-secondary {
+	background: #234a68;
+}
+/* +1 step lighter */
+.tl-service-tertiary {
+	background: #15304a;
+}
+/* +1 step darker */
+.tl-service-quaternary {
+	background: #2a5678;
+}
+/* +2 step lighter */
+.tl-service-quinary {
+	background: #0f2438;
+}
+/* darkest — matches submit button hover */
+.tl-service-senary {
+	background: #234a68;
+}
+/* repeat lighter, keeps rhythm without needing more colours */
+
+@media (max-width: 900px) {
+	.tl-login-page-grid {
+		flex-direction: column;
+		align-items: center;
+	}
+
 	.tl-login-services {
-		grid-template-columns: repeat(2, 1fr);
-	}
-
-	.tl-login-hero-title {
-		font-size: 1.8rem;
+		max-width: 480px;
+		width: 100%;
 	}
 }
 
-/* ---------- Register modal (unchanged) ---------- */
 .register-modal {
 	border-radius: 12px;
 	overflow: hidden;
@@ -467,344 +473,858 @@
 	box-shadow: 0 10px 40px rgba(0,0,0,.25);
 }
 
-/* ---------- Registration: verify buttons ---------- */
-.btn-verify {
-	background: #D4A017;
-	color: #12304a;
-	font-weight: 600;
-	font-size: 0.82rem;
-	border: none;
-}
-
-	.btn-verify:hover {
-		background: #e8b923;
-		color: #12304a;
-	}
-
-	.btn-verify:disabled {
-		opacity: 0.65;
-	}
-
-.verify-status {
-	font-size: 0.78rem;
-	margin-top: 4px;
-}
-
-	.verify-status.ok {
-		color: #1B7F3B;
-	}
-
-	.verify-status.err {
-		color: #B3261E;
-	}
-
-.otp-box {
-	margin-top: 8px;
-}
-
-.btn-register:disabled {
-	opacity: 0.55;
-	cursor: not-allowed;
-}
-
 /* =====================================================================
-   V2 DESIGN UPDATE  (appended — overrides earlier rules above)
+   NEW LOGIN PAGE DESIGN  (classes start with  tl-lx-  )
+   Everything above this block is the ORIGINAL file, left untouched, so the
+   Officer Login page (which shares this file) looks exactly as before.
 ===================================================================== */
 
-/* ---------- Hero photo: brighter, professional overlay ---------- */
-.tl-login-stage {
-	padding: 56px 52px;
-	min-height: 640px;
-	background-image:
-		linear-gradient(115deg, rgba(8,24,40,0.92) 0%, rgba(16,46,72,0.78) 50%, rgba(20,52,78,0.35) 100%),
-		url('../Images/Matrimandir_Auroville.jpg');
-	background-position: center 35%;
-	animation: tlFadeIn .7s ease both;
+.tl-lx-page {
+	max-width: 1160px;
+	margin: 24px auto;
+	padding: 0 16px;
 }
 
-	.tl-login-stage::after {
+/* ---------- Hero stage with photo background ---------- */
+.tl-lx-stage {
+	position: relative;
+	display: grid;
+	grid-template-columns: 1.15fr 0.85fr;
+	gap: 40px;
+	align-items: center;
+	padding: 44px 44px;
+	border-radius: 18px;
+	overflow: hidden;
+	background-color: #0f2438;
+	background-image: linear-gradient(115deg, rgba(10,28,46,0.93) 0%, rgba(20,52,78,0.82) 55%, rgba(26,58,82,0.55) 100%), url('../Images/Matrimandir_Auroville.jpg');
+	background-size: cover;
+	background-position: center;
+	box-shadow: 0 18px 50px rgba(15,36,56,0.28);
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+}
+
+	.tl-lx-stage::before {
 		content: "";
 		position: absolute;
-		inset: auto 0 0 0;
-		height: 90px;
-		background: linear-gradient(to top, rgba(8,24,40,0.55), transparent);
-		pointer-events: none;
+		top: 0; left: 0; right: 0;
+		height: 4px;
+		background: linear-gradient(90deg, #D4A017 0%, #D4A017 33%, #fff 33%, #fff 67%, #1a3a52 67%);
 	}
 
-.tl-login-hero-title {
-	font-size: 2.9rem;
-	letter-spacing: -0.5px;
-	text-shadow: 0 2px 14px rgba(0,0,0,0.35);
-}
-
-.tl-login-hero-text {
-	font-size: 1rem;
-	color: #D6E4EE;
-}
-
-/* trust badges */
-.tl-login-trust {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 10px;
-	margin: 0 0 22px;
-}
-
-	.tl-login-trust span {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 7px 13px;
-		border-radius: 999px;
-		background: rgba(255,255,255,0.10);
-		border: 1px solid rgba(255,255,255,0.18);
-		color: #EAF2F8;
-		font-size: 0.76rem;
-		font-weight: 600;
+	.tl-lx-stage * {
+		box-sizing: border-box;
 	}
 
-	.tl-login-trust i {
-		color: #E8B923;
-	}
-
-/* service cards: smoother */
-.tl-service-card {
-	background: rgba(255,255,255,0.08);
-	border: 1px solid rgba(255,255,255,0.18);
-	box-shadow: 0 6px 18px rgba(0,0,0,0.18);
-}
-
-	.tl-service-card:hover {
-		box-shadow: 0 12px 26px rgba(0,0,0,0.30);
-	}
-
-/* login card */
-.tl-login-wrap {
-	border-radius: 18px;
-	border-top: 5px solid #D4A017;
-	box-shadow: 0 30px 70px rgba(0,0,0,0.45);
-	animation: tlRise .7s .1s ease both;
-}
-
-.tl-login-formpanel {
-	padding: 32px 34px 30px;
-}
-
-.tl-login-heading {
-	font-size: 1.75rem;
-}
-
-.tl-login-wrap .tl-login-input {
-	padding: 12px 42px 12px 40px;
-	border-radius: 10px;
-}
-
-.tl-login-wrap .tl-login-submit {
-	padding: 13px;
-	border-radius: 10px;
-	letter-spacing: .02em;
-	background: linear-gradient(135deg, #245c85, #12304a);
-}
-
-.tl-login-register-btn {
-	border-radius: 10px;
-	padding: 11px;
-}
-
-@keyframes tlFadeIn {
-	from { opacity: 0; }
-	to   { opacity: 1; }
-}
-
-@keyframes tlRise {
-	from { opacity: 0; transform: translateY(18px); }
-	to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ---------- Register modal: new look ---------- */
-.register-modal {
-	border-radius: 16px;
-	box-shadow: 0 30px 80px rgba(0,0,0,0.4);
-}
-
-	.register-modal .modal-header {
-		background: linear-gradient(135deg, #12304a, #245c85);
-		border-bottom: 4px solid #D4A017;
-		padding: 16px 22px;
-	}
-
-	.register-modal .modal-body {
-		padding: 20px 24px 6px;
-		background: #FBFCFD;
-	}
-
-	.register-modal label {
-		font-weight: 600;
-		font-size: 0.82rem;
-		color: #34424d;
-		margin-bottom: 5px;
-	}
-
-	.register-modal .modal-footer {
-		background: #fff;
-		padding: 14px 24px;
-	}
-
-	.register-modal .input-group-text {
-		background: #1a3a52;
-		color: #fff;
-		font-size: 0.82rem;
-	}
-
-	.register-modal .form-control {
-		padding: 10px 12px;
-		font-size: 0.9rem;
-	}
-
-		.register-modal .form-control::placeholder {
-			color: #9aa6b1;
-			font-size: 0.85rem;
-		}
-
-		.register-modal .form-control.is-invalid {
-			border-color: #B3261E;
-			background-image: none;
-		}
-
-		.register-modal .form-control.is-valid {
-			border-color: #1B7F3B;
-			background-image: none;
-		}
-
-.reg-head {
-	display: flex;
-	align-items: center;
-	gap: 14px;
+/* ---------- Left: intro + services ---------- */
+.tl-lx-intro {
+	position: relative;
+	z-index: 1;
 	color: #fff;
 }
 
-	.reg-head h4 {
-		margin: 0;
-		font-size: 1.2rem;
-		font-weight: 700;
+.tl-lx-eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 14px;
+	border-radius: 999px;
+	background: rgba(212,160,23,0.18);
+	border: 1px solid rgba(212,160,23,0.55);
+	color: #F3D27A;
+	font-size: 0.74rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.tl-lx-hero-title {
+	font-family: 'Source Serif 4', serif;
+	font-weight: 700;
+	font-size: 2.4rem;
+	line-height: 1.15;
+	margin: 16px 0 10px;
+	color: #fff;
+}
+
+	.tl-lx-hero-title span {
+		color: #D4A017;
+	}
+
+.tl-lx-hero-text {
+	font-size: 0.95rem;
+	line-height: 1.6;
+	color: #C9DAE6;
+	max-width: 520px;
+	margin: 0 0 24px;
+}
+
+.tl-lx-services {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+}
+
+.tl-lx-service {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 14px 14px 16px;
+	border-radius: 12px;
+	background: rgba(255,255,255,0.09);
+	border: 1px solid rgba(255,255,255,0.16);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	color: #fff;
+	text-decoration: none;
+	cursor: pointer;
+	transition: transform .18s ease, background .18s ease, border-color .18s ease;
+}
+
+	.tl-lx-service:hover {
+		transform: translateY(-3px);
+		background: rgba(255,255,255,0.17);
+		border-color: #D4A017;
 		color: #fff;
 	}
 
-	.reg-head small {
-		color: #BFD3E2;
-		font-size: 0.76rem;
-	}
-
-.reg-head-icon {
-	width: 42px;
-	height: 42px;
-	border-radius: 12px;
-	background: rgba(212,160,23,0.22);
-	border: 1px solid rgba(212,160,23,0.6);
-	color: #F3D27A;
+.tl-lx-service-icon {
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: linear-gradient(135deg, #E8B923, #C28F0C);
+	color: #12304a;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 1.05rem;
+	font-size: 0.95rem;
+	flex-shrink: 0;
 }
 
-.reg-note {
-	background: #FFF8E1;
-	border-left: 4px solid #D4A017;
-	color: #5a4a12;
-	font-size: 0.82rem;
-	padding: 10px 14px;
-	border-radius: 6px;
-	margin-bottom: 18px;
+.tl-lx-service-title {
+	font-size: 0.78rem;
+	font-weight: 600;
+	line-height: 1.35;
 }
 
-	.reg-note i {
-		margin-right: 6px;
-		color: #B8860B;
+/* ---------- Right: login card ---------- */
+.tl-lx-card {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	max-width: 420px;
+	justify-self: end;
+	background: #fff;
+	border-radius: 16px;
+	overflow: hidden;
+	box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+	border-top: 4px solid #D4A017;
+}
+
+	.tl-lx-card * {
+		box-sizing: border-box;
 	}
 
-.reg-section {
+.tl-lx-card-body {
+	background: #fff;
+	padding: 30px 32px 28px;
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+	color: #1C2321;
+}
+
+.tl-lx-form {
+	width: 100%;
+}
+
+.tl-lx-brand {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding-bottom: 16px;
+	margin-bottom: 18px;
+	border-bottom: 1px solid #ECE8DD;
+}
+
+.tl-lx-logo {
+	height: 42px;
+	width: auto;
+	border-radius: 8px;
+	flex-shrink: 0;
+}
+
+.tl-lx-brand-title {
+	font-family: 'Source Serif 4', serif;
+	font-weight: 700;
+	font-size: 1.1rem;
+	line-height: 1.2;
+	color: #1a3a52;
+}
+
+.tl-lx-brand-sub {
+	font-size: 0.76rem;
+	color: #6B7280;
+	margin-top: 2px;
+}
+
+.tl-lx-heading {
+	font-family: 'Source Serif 4', serif;
+	font-weight: 700;
+	font-size: 1.6rem;
+	color: #1a3a52;
+	margin: 0 0 4px;
+}
+
+.tl-lx-sub {
+	color: #6B7280;
+	font-size: 0.84rem;
+	margin: 0 0 20px;
+}
+
+.tl-lx-alert {
+	background: #FBEAE8;
+	border-left: 3px solid #B3261E;
+	color: #7A241D;
+	font-size: 0.8rem;
+	padding: 8px 12px;
+	border-radius: 4px;
+	margin-bottom: 14px;
+}
+
+.tl-lx-field {
+	margin-bottom: 15px;
+}
+
+	.tl-lx-field label {
+		display: block;
+		font-weight: 600;
+		font-size: 0.78rem;
+		color: #3B4441;
+		margin-bottom: 5px;
+	}
+
+.tl-lx-inputwrap {
+	position: relative;
+}
+
+.tl-lx-inputicon {
+	position: absolute;
+	left: 14px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #8A99A6;
+	font-size: 0.85rem;
+	pointer-events: none;
+}
+
+.tl-lx-card .tl-lx-input {
+	width: 100%;
+	font-family: 'Public Sans', sans-serif;
+	border: 1px solid #D5DBE1;
+	border-radius: 8px;
+	padding: 11px 40px 11px 38px;
+	font-size: 0.9rem;
+	background: #F7F9FB;
+	color: #1C2321;
+	transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+	.tl-lx-card .tl-lx-input:focus {
+		outline: none;
+		background: #fff;
+		border-color: #1a3a52;
+		box-shadow: 0 0 0 3px rgba(26,58,82,0.15);
+	}
+
+.tl-lx-error {
+	color: #B3261E;
+	font-size: 0.76rem;
+	display: block;
+	margin-top: 4px;
+}
+
+.tl-lx-eye {
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 0.9rem;
+	line-height: 1;
+	padding: 4px;
+}
+
+.tl-lx-captcha-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.tl-lx-captcha-img {
+	border: 1px solid #D5DBE1;
+	border-radius: 8px;
+	display: block;
+	height: 42px;
+}
+
+.tl-lx-captcha-refresh {
+	background: #EAF0F5;
+	border: 1px solid #D5DBE1;
+	border-radius: 8px;
+	width: 38px;
+	height: 38px;
+	font-size: 1rem;
+	color: #1a3a52;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background .15s ease;
+}
+
+	.tl-lx-captcha-refresh:hover {
+		background: #d9e5ee;
+	}
+
+.tl-lx-card .tl-lx-submit {
+	width: 100%;
+	background: linear-gradient(135deg, #1f4a6b, #12304a);
+	color: #fff;
+	border: none;
+	border-radius: 8px;
+	padding: 12px;
+	font-weight: 700;
+	font-size: 0.95rem;
+	cursor: pointer;
+	margin-top: 4px;
+	box-shadow: 0 6px 16px rgba(18,48,74,0.28);
+	transition: transform .15s ease, box-shadow .15s ease;
+}
+
+	.tl-lx-card .tl-lx-submit:hover {
+		transform: translateY(-1px);
+		box-shadow: 0 10px 22px rgba(18,48,74,0.36);
+	}
+
+.tl-lx-forgot {
+	text-align: center;
+	margin-top: 12px;
+}
+
+	.tl-lx-forgot a {
+		color: #6B7280;
+		font-size: 0.8rem;
+		text-decoration: none;
+	}
+
+		.tl-lx-forgot a:hover {
+			color: #1a3a52;
+			text-decoration: underline;
+		}
+
+.tl-lx-divider {
 	display: flex;
 	align-items: center;
 	gap: 10px;
-	font-weight: 700;
-	font-size: 0.9rem;
-	color: #1a3a52;
-	margin: 6px 0 14px;
-	padding-bottom: 8px;
-	border-bottom: 1px dashed #D5DBE1;
+	margin: 16px 0 12px;
+	color: #9AA5AF;
+	font-size: 0.74rem;
 }
 
-	.reg-section span {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
+	.tl-lx-divider::before,
+	.tl-lx-divider::after {
+		content: "";
+		flex: 1;
+		height: 1px;
+		background: #E5E9ED;
+	}
+
+.tl-lx-register {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 10px;
+	border: 1.5px solid #1a3a52;
+	border-radius: 8px;
+	color: #1a3a52;
+	font-weight: 600;
+	font-size: 0.86rem;
+	text-decoration: none;
+	transition: background .15s ease, color .15s ease;
+}
+
+	.tl-lx-register:hover {
 		background: #1a3a52;
 		color: #fff;
-		font-size: 0.75rem;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
 	}
 
-.btn-eye {
-	background: #EAF0F5;
-	border: 1px solid #dcd7cb;
-	color: #1a3a52;
-}
-
-	.btn-eye:hover {
-		background: #d9e5ee;
-		color: #12304a;
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+	.tl-lx-stage {
+		grid-template-columns: 1fr;
+		padding: 28px 20px;
+		gap: 28px;
 	}
 
-.pw-meter {
-	height: 5px;
-	background: #e5e7eb;
-	border-radius: 4px;
-	margin-top: 6px;
-	overflow: hidden;
-}
-
-	.pw-meter > div {
-		height: 100%;
-		width: 0;
-		transition: width .25s ease, background .25s ease;
+	.tl-lx-card {
+		justify-self: center;
+		order: -1;
 	}
-
-.btn-register {
-	background: linear-gradient(135deg, #245c85, #12304a);
-	border-radius: 8px;
-	padding: 9px 26px;
-	font-weight: 600;
-}
-
-.btn-cancel {
-	border-radius: 8px;
-	padding: 9px 20px;
 }
 
 @media (max-width: 620px) {
-	.tl-login-stage {
-		padding: 24px 16px;
-		min-height: 0;
+	.tl-lx-services {
+		grid-template-columns: repeat(2, 1fr);
 	}
 
-	.tl-login-hero-title {
-		font-size: 2rem;
-	}
-
-	.tl-login-formpanel {
-		padding: 24px 20px;
+	.tl-lx-hero-title {
+		font-size: 1.8rem;
 	}
 }
 
-/* ---------- Fix: registration popup must scroll on small screens ---------- */
-#registerModal.modal {
-	overflow-y: auto;
+/* Remove the plain white box the layout draws around the login page,
+   so the banner sits directly on the page background (modern browsers). */
+main.tl-container:has(.tl-lx-page) {
+	background: transparent;
+	box-shadow: none;
+	padding: 0;
+	max-width: 1180px;
 }
 
-#registerModal .modal-dialog {
-	margin-top: 1rem;
-	margin-bottom: 1rem;
+.tl-lx-page { margin: 8px auto 24px; }
+
+.tl-lx-stage { min-height: 560px; }
+
+.tl-lx-chips {
+	list-style: none;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 0;
+	margin: 0 0 22px;
+}
+	.tl-lx-chips li {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		padding: 6px 12px;
+		border-radius: 999px;
+		background: rgba(255,255,255,0.10);
+		border: 1px solid rgba(255,255,255,0.20);
+		color: #E6EEF5;
+		font-size: 0.76rem;
+		font-weight: 500;
+	}
+	.tl-lx-chips i { color: #E8B923; }
+
+.tl-lx-secure {
+	text-align: center;
+	margin: 14px 0 0;
+	font-size: 0.72rem;
+	color: #8A99A6;
+}
+	.tl-lx-secure i { margin-right: 4px; }
+
+@keyframes tl-lx-rise {
+	from { opacity: 0; transform: translateY(14px); }
+	to   { opacity: 1; transform: none; }
+}
+.tl-lx-intro { animation: tl-lx-rise .6s ease both; }
+.tl-lx-card  { animation: tl-lx-rise .6s .12s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx-intro, .tl-lx-card { animation: none; }
+}
+
+/* =====================================================================
+   REGISTRATION POPUP  (classes start with  rv-  )
+===================================================================== */
+.register-modal { border-radius: 16px; box-shadow: 0 24px 70px rgba(10,28,46,0.45); }
+
+.register-modal .rv-header {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 18px 22px;
+	background: linear-gradient(135deg, #12304a, #1f4a6b);
+	border-bottom: 3px solid #D4A017;
+	color: #fff;
+}
+.rv-header-icon {
+	width: 44px; height: 44px;
+	border-radius: 12px;
+	background: linear-gradient(135deg, #E8B923, #C28F0C);
+	color: #12304a;
+	display: flex; align-items: center; justify-content: center;
+	font-size: 1.1rem;
+	flex-shrink: 0;
+}
+.register-modal .rv-header h4 { margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff; }
+.rv-header-sub { margin: 2px 0 0; font-size: 0.8rem; color: #B9CEDF; }
+.register-modal .rv-header .btn-close { filter: invert(1) grayscale(1) brightness(2); opacity: .8; }
+
+.rv-progress { height: 4px; background: #E3EAF0; }
+.rv-progress-bar { height: 100%; width: 0; background: linear-gradient(90deg, #D4A017, #1B7F3B); transition: width .3s ease; }
+.rv-progress-text { text-align: right; font-size: 0.72rem; color: #6B7280; padding: 6px 22px 0; }
+
+.register-modal .rv-body { padding: 8px 22px 6px; }
+
+.rv-summary {
+	background: #FBEAE8;
+	border-left: 3px solid #B3261E;
+	color: #7A241D;
+	font-size: 0.82rem;
+	padding: 8px 12px;
+	border-radius: 6px;
+	margin: 8px 0 4px;
+}
+
+.rv-section-title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 18px 0 12px;
+	font-weight: 700;
+	font-size: 0.92rem;
+	color: #12304a;
+}
+	.rv-section-title small { font-weight: 500; color: #6B7280; font-size: 0.76rem; }
+.rv-step {
+	width: 24px; height: 24px;
+	border-radius: 50%;
+	background: #12304a; color: #fff;
+	display: inline-flex; align-items: center; justify-content: center;
+	font-size: 0.75rem;
+}
+
+.rv-field label.form-label { font-size: 0.8rem; font-weight: 600; color: #3B4441; margin-bottom: 4px; }
+.rv-field .input-group { position: relative; }
+.register-modal .rv-field .form-control { font-size: 0.9rem; padding: 9px 12px; }
+.register-modal .rv-field textarea.form-control { min-height: 84px; }
+.register-modal .rv-field .input-group-text.rv-prefix { background: #EEF2F6; color: #12304a; font-weight: 600; width: auto; padding: 0 10px; border: 1px solid #dcd7cb; }
+
+.rv-field.is-valid   .form-control { border-color: #1B7F3B; background-color: #F4FBF6; }
+.rv-field.is-invalid .form-control { border-color: #B3261E; background-color: #FEF6F5; }
+.rv-field.is-invalid .form-control:focus { box-shadow: 0 0 0 0.2rem rgba(179,38,30,.15); }
+.rv-field.is-valid   .form-control:focus { box-shadow: 0 0 0 0.2rem rgba(27,127,59,.15); }
+
+.rv-msg { font-size: 0.76rem; margin-top: 4px; min-height: 0; }
+	.rv-msg.err  { color: #B3261E; }
+	.rv-msg.ok   { color: #1B7F3B; }
+	.rv-msg.warn { color: #9A6700; }
+.rv-hint { font-size: 0.72rem; color: #8A99A6; margin-top: 3px; }
+
+/* server-side messages (shown after a failed submit) */
+.register-modal [data-valmsg-for] { font-size: 0.76rem; display: block; margin-top: 3px; }
+
+.rv-eye {
+	position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+	background: none; border: none; cursor: pointer; z-index: 5;
+	color: #6B7280; padding: 4px 6px;
+}
+.rv-eye:hover { color: #12304a; }
+.register-modal .rv-pw .form-control { padding-right: 38px; }
+
+.rv-strength { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.rv-strength-bars { display: flex; gap: 4px; flex: 1; }
+	.rv-strength-bars span { height: 5px; flex: 1; border-radius: 3px; background: #E3EAF0; transition: background .2s; }
+.rv-strength[data-level="weak"]   .rv-strength-bars span.on { background: #B3261E; }
+.rv-strength[data-level="okay"]   .rv-strength-bars span.on { background: #E0A100; }
+.rv-strength[data-level="strong"] .rv-strength-bars span.on { background: #1B7F3B; }
+.rv-strength-label { font-size: 0.74rem; font-weight: 700; min-width: 62px; text-align: right; color: #6B7280; }
+.rv-strength[data-level="weak"]   .rv-strength-label { color: #B3261E; }
+.rv-strength[data-level="okay"]   .rv-strength-label { color: #9A6700; }
+.rv-strength[data-level="strong"] .rv-strength-label { color: #1B7F3B; }
+
+.rv-rules { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0; margin: 6px 0 0; font-size: 0.72rem; color: #8A99A6; }
+	.rv-rules li::before { content: "○ "; }
+	.rv-rules li.met { color: #1B7F3B; }
+	.rv-rules li.met::before { content: "✔ "; }
+
+.register-modal .modal-footer { background: #F7F9FB; border-top: 1px solid #E5E9ED; padding: 12px 22px; }
+.rv-footer-note { font-size: 0.72rem; color: #6B7280; margin-right: auto; }
+.register-modal .btn-register { background: linear-gradient(135deg, #1f4a6b, #12304a); color: #fff; font-weight: 700; padding: 9px 26px; border-radius: 8px; border: none; }
+.register-modal .btn-register:disabled { opacity: .7; cursor: wait; }
+
+@media (max-width: 760px) {
+	.rv-footer-note { display: none; }
+}
+
+.rv-note {
+	background: #EEF4FA;
+	border-left: 3px solid #1f4a6b;
+	color: #3B4B5A;
+	font-size: 0.78rem;
+	line-height: 1.5;
+	padding: 10px 12px;
+	border-radius: 6px;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+	.rv-note i { color: #1f4a6b; }
+
+/* =====================================================================
+   TOP AREA OF THE LOGIN PAGE: header, menu bar and the two info cards.
+   Applies ONLY on the new login page (it needs .tl-lx-page on the page),
+   and is switched off in high-contrast mode. Other pages are not affected
+   and _Layout.cshtml / site.css are not edited.
+===================================================================== */
+
+/* ---------- Header ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-topbar {
+	position: relative;
+	background:
+		radial-gradient(900px 260px at 88% -30%, rgba(212,160,23,0.25), transparent 65%),
+		linear-gradient(120deg, #0b2236 0%, #14405f 55%, #1d4f78 100%);
+	border-bottom: 0;
+	box-shadow: 0 8px 26px rgba(8,24,40,0.35);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-topbar::before {
+	content: "";
+	position: absolute;
+	top: 0; left: 0; right: 0;
+	height: 5px;
+	background: linear-gradient(90deg, #FF9933 0 33.33%, #ffffff 33.33% 66.66%, #138808 66.66% 100%);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-logo,
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tr-logo {
+	border-radius: 12px;
+	box-shadow: 0 4px 14px rgba(0,0,0,0.30), 0 0 0 2px rgba(212,160,23,0.55);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-brand-divider {
+	background: linear-gradient(180deg, transparent, rgba(212,160,23,0.8), transparent);
+	width: 2px;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-brand-govt {
+	color: #F3D27A;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-brand-dept {
+	color: #B9CEDF;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-title {
+	font-family: 'Source Serif 4', serif;
+	letter-spacing: 0.4px;
+}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-title::after {
+		content: "";
+		display: block;
+		width: 52px;
+		height: 3px;
+		margin-top: 6px;
+		border-radius: 2px;
+		background: linear-gradient(90deg, #D4A017, rgba(212,160,23,0));
+	}
+
+/* font size / contrast / language buttons */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-tool-group,
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-tool-btn {
+	background: rgba(255,255,255,0.10);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-tool-group {
+	border: 1px solid rgba(255,255,255,0.20);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-tool-btn:hover {
+	background: #D4A017;
+	color: #12304a;
+}
+
+/* ---------- Menu bar ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-navbar {
+	background: linear-gradient(180deg, #12304a, #0d2539);
+	border-bottom: 3px solid #D4A017;
+	box-shadow: 0 6px 18px rgba(8,24,40,0.25);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li > a {
+	position: relative;
+	transition: color .2s ease, background-color .2s ease;
+}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li > a::after {
+		content: "";
+		position: absolute;
+		left: 13px; right: 13px;
+		bottom: 7px;
+		height: 2px;
+		border-radius: 2px;
+		background: #D4A017;
+		transform: scaleX(0);
+		transform-origin: left;
+		transition: transform .25s ease;
+	}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li:hover > a {
+	background-color: rgba(255,255,255,0.06);
+	color: #F3D27A;
+}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li:hover > a::after {
+		transform: scaleX(1);
+	}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu .dropdown-menu {
+	border-top: 3px solid #D4A017;
+	border-radius: 0 0 10px 10px;
+	overflow: hidden;
+	box-shadow: 0 14px 30px rgba(8,24,40,0.28);
+}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu .dropdown-menu a {
+		transition: padding-left .15s ease, background-color .15s ease;
+	}
+
+		html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu .dropdown-menu a:hover {
+			background-color: #F3F7FB;
+			color: #12304a;
+			padding-left: 22px;
+		}
+
+/* ---------- Info section (two cards) ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-section {
+	background: linear-gradient(180deg, #ffffff 0%, #F1F6FB 100%);
+	padding: 36px 0 40px;
+	border-bottom: 1px solid #DDE6EE;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-grid {
+	gap: 28px;
+	align-items: stretch;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card {
+	position: relative;
+	overflow: hidden;
+	padding: 26px 28px 24px;
+	border: 1px solid #E1E9F0;
+	border-radius: 16px;
+	background: #fff;
+	box-shadow: 0 8px 26px rgba(18,48,74,0.08);
+	transition: transform .2s ease, box-shadow .2s ease;
+}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card::before {
+		content: "";
+		position: absolute;
+		top: 0; left: 0; right: 0;
+		height: 4px;
+		background: linear-gradient(90deg, #D4A017, #1f4a6b);
+	}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 14px 34px rgba(18,48,74,0.14);
+	}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card h3 {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 0 0 16px;
+	padding-bottom: 0;
+	border-bottom: 0;
+	font-family: 'Source Serif 4', serif;
+	font-size: 1.2rem;
+	font-weight: 700;
+	color: #12304a;
+}
+
+	/* line that fades out after the heading */
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card h3::after {
+		content: "";
+		flex: 1;
+		height: 2px;
+		background: linear-gradient(90deg, rgba(212,160,23,0.7), rgba(212,160,23,0));
+	}
+
+	/* gold icon badge: used for the icon that is already in the heading ... */
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card h3 > i,
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card h3 > svg {
+		width: 38px;
+		height: 38px;
+		flex-shrink: 0;
+		border-radius: 11px;
+		background: linear-gradient(135deg, #E8B923, #C28F0C);
+		color: #12304a;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1rem;
+		padding: 0;
+	}
+
+	/* ... or created here when the heading has no icon */
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card h3:not(:has(> i, > svg))::before {
+		width: 38px;
+		height: 38px;
+		flex-shrink: 0;
+		border-radius: 11px;
+		background: linear-gradient(135deg, #E8B923, #C28F0C);
+		color: #12304a;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-family: "Font Awesome 6 Free";
+		font-weight: 900;
+		font-size: 1rem;
+		content: "\f19c";
+	}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card:nth-child(2) h3:not(:has(> i, > svg))::before {
+		content: "\f0ae";
+	}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card p {
+	font-size: 0.95rem;
+	line-height: 1.8;
+	color: #4A5A68;
+	text-align: left;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-services-list {
+	column-gap: 28px;
+}
+
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-services-list li {
+		break-inside: avoid;
+		padding-left: 30px;
+		margin-bottom: 11px;
+		font-size: 0.92rem;
+		line-height: 1.55;
+		color: #4A5A68;
+	}
+
+		html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-services-list li::before {
+			content: "\f00c";
+			font-family: "Font Awesome 6 Free";
+			font-weight: 900;
+			font-size: 0.6rem;
+			position: absolute;
+			left: 0;
+			top: 2px;
+			width: 20px;
+			height: 20px;
+			border-radius: 50%;
+			background: rgba(212,160,23,0.18);
+			color: #B07F0A;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+@media (max-width: 768px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card {
+		padding: 22px 18px;
+	}
 }
