@@ -35,9 +35,6 @@ namespace TradeLicence.Models
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Please enter the code shown in the image")]
-        public string CaptchaCode { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Please enter the code shown in the image")]
         [Display(Name = "Enter the code shown above")]
         public string CaptchaInput { get; set; } = string.Empty;
 

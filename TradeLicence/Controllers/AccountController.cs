@@ -90,8 +90,7 @@ namespace TradeLicence.Controllers
                 return View(model);
             }
 
-           
-            // 4. Password verification
+            // 3. Password verification
             var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, typedPassword);
             if (verifyResult == PasswordVerificationResult.Failed)
             {
@@ -106,7 +105,7 @@ namespace TradeLicence.Controllers
                 return View(model);
             }
 
-            // 5. Sign in
+            // 4. Sign in
             user.FailedLoginAttempts = 0;
             user.LastLoginDate = DateTime.UtcNow;
             await _context.SaveChangesAsync();
@@ -126,7 +125,6 @@ namespace TradeLicence.Controllers
 
             return RedirectToAction("Index", "Dashboard");
         }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SendLoginEmailOtp([FromBody] SendLoginOtpRequest req)
