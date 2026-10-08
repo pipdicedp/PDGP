@@ -33,9 +33,6 @@ namespace TradeLicence.Models
         [Required(ErrorMessage = "Password is required")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
-        [Required(ErrorMessage = "Please enter the OTP sent to your registered email")]
-        [StringLength(6, MinimumLength = 6, ErrorMessage = "OTP must be 6 digits")]
-        public string Otp { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Please enter the code shown in the image")]
         public string CaptchaCode { get; set; } = string.Empty;

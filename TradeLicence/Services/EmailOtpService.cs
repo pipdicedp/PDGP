@@ -1,7 +1,9 @@
-using System.Net;
-using System.Net.Mail;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace TradeLicence.Services
 {
@@ -24,8 +26,8 @@ namespace TradeLicence.Services
         }
     }
 
-    // LIVE MODE: sends a real email through SMTP (for example Gmail).
-    // Settings come from the "Email" section (see the guide).
+    // LIVE MODE: sends a real email through SMTP (for example Gmail) using MailKit.
+    // Settings come from the "Email" section of appsettings.json / User Secrets.
     public class SmtpOtpEmailSender : IOtpEmailSender
     {
         private readonly IConfiguration _cfg;
@@ -44,7 +46,7 @@ namespace TradeLicence.Services
                 var host = _cfg["Email:Host"] ?? "smtp.gmail.com";
                 var port = _cfg.GetValue<int?>("Email:Port") ?? 587;
                 var user = _cfg["Email:User"];
-                var pass = _cfg["Email:Password"];
+                var pass = (_cfg["Email:Password"] ?? "").Replace(" ", "");   // Gmail app passwords are often shown with spaces
                 var from = _cfg["Email:From"] ?? user;
 
                 if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass) || string.IsNullOrWhiteSpace(from))
@@ -53,29 +55,85 @@ namespace TradeLicence.Services
                     return false;
                 }
 
-                using var client = new SmtpClient(host, port)
-                {
-                    EnableSsl = true,
-                    DeliveryMethod = SmtpDeliveryMethod.Network,
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(user, pass)
-                };
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("Puducherry Investor Portal", from));
+                message.To.Add(MailboxAddress.Parse(toEmail));
+                message.Subject = subject;
+                message.Body = new TextPart("plain") { Text = body };
 
-                using var msg = new MailMessage
-                {
-                    From = new MailAddress(from, "Puducherry Investor Portal"),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = false
-                };
-                msg.To.Add(toEmail);
+                using var client = new SmtpClient();
+                client.Timeout = 20000;   // 20 seconds
 
-                await client.SendMailAsync(msg);
+                // port 465 = SSL from the start, port 587 = STARTTLS
+                var security = port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+
+                await client.ConnectAsync(host, port, security);
+                await client.AuthenticateAsync(user, pass);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
                 return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Could not send OTP email to {To}", toEmail);
+                return false;
+            }
+        }
+    }
+
+    // LIVE MODE (free, works over normal HTTPS port 443, so it does not need an SMTP port):
+    // Brevo (brevo.com) transactional e-mail API - free plan allows 300 e-mails per day.
+    // Settings (put them in User Secrets or appsettings.json):
+    //   "Brevo": { "ApiKey": "xkeysib-....", "SenderEmail": "verified-sender@gmail.com", "SenderName": "Puducherry Investor Portal" }
+    public class BrevoApiOtpEmailSender : IOtpEmailSender
+    {
+        private readonly HttpClient _http;
+        private readonly IConfiguration _cfg;
+        private readonly ILogger<BrevoApiOtpEmailSender> _logger;
+
+        public BrevoApiOtpEmailSender(HttpClient http, IConfiguration cfg, ILogger<BrevoApiOtpEmailSender> logger)
+        {
+            _http = http;
+            _cfg = cfg;
+            _logger = logger;
+            _http.Timeout = TimeSpan.FromSeconds(20);
+        }
+
+        public async Task<bool> SendAsync(string toEmail, string subject, string body)
+        {
+            try
+            {
+                var apiKey = _cfg["Brevo:ApiKey"];
+                var senderEmail = _cfg["Brevo:SenderEmail"];
+                var senderName = _cfg["Brevo:SenderName"] ?? "Puducherry Investor Portal";
+
+                if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(senderEmail))
+                {
+                    _logger.LogError("Brevo settings missing: set Brevo:ApiKey and Brevo:SenderEmail.");
+                    return false;
+                }
+
+                using var req = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+                req.Headers.Add("api-key", apiKey.Trim());
+                req.Headers.Add("accept", "application/json");
+                req.Content = JsonContent.Create(new
+                {
+                    sender = new { name = senderName, email = senderEmail.Trim() },
+                    to = new[] { new { email = toEmail } },
+                    subject = subject,
+                    textContent = body
+                });
+
+                using var res = await _http.SendAsync(req);
+                if (res.IsSuccessStatusCode) return true;
+
+                var text = await res.Content.ReadAsStringAsync();
+                _logger.LogError("Brevo refused the e-mail. Status {Status}. Reply: {Reply}", (int)res.StatusCode, text);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not send OTP email to {To} through Brevo", toEmail);
                 return false;
             }
         }

@@ -63,6 +63,7 @@
                 }
 
                 <form asp-controller="Account" asp-action="Login" method="post" novalidate>
+                        <div asp-validation-summary="All" class="tl-lx-alert"></div>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="ReturnUrl" />
 
@@ -98,18 +99,7 @@
                         <span asp-validation-for="CaptchaInput" class="tl-lx-error"></span>
                     </div>
 
-                    <div class="tl-lx-field">
-                        <label asp-for="Otp">Email OTP</label>
-                        <div class="tl-lx-otp-row">
-                            <div class="tl-lx-inputwrap">
-                                <i class="fa-solid fa-envelope-circle-check tl-lx-inputicon"></i>
-                                <input asp-for="Otp" class="tl-lx-input" placeholder="Enter 6-digit OTP" autocomplete="one-time-code" inputmode="numeric" maxlength="6" />
-                            </div>
-                            <button type="button" id="btnSendLoginOtp" class="tl-lx-otp-btn">Send OTP</button>
-                        </div>
-                        <small id="loginOtpStatus" class="tl-lx-otp-status"></small>
-                        <span asp-validation-for="Otp" class="tl-lx-error"></span>
-                    </div>
+                   
 
                     <button type="submit" class="tl-lx-submit">Login <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
 
@@ -153,73 +143,7 @@
             img.src = '@Url.Action("CaptchaImage", "Account")?t=' + Date.now();
         });
 
-        // ---- Email OTP for login: send OTP to the e-mail linked with the User Name ----
-        (function () {
-            var btn = document.getElementById('btnSendLoginOtp');
-            var statusBox = document.getElementById('loginOtpStatus');
-            var otpInput = document.getElementById('Otp');
-            var timerId = null;
-
-            function show(ok, msg) {
-                statusBox.textContent = (ok ? '\u2714 ' : '\u2716 ') + msg;
-                statusBox.className = 'tl-lx-otp-status ' + (ok ? 'ok' : 'err');
-            }
-
-            otpInput.addEventListener('input', function () {
-                otpInput.value = otpInput.value.replace(/\D/g, '');
-            });
-
-            function countdown(seconds) {
-                var left = seconds;
-                btn.disabled = true;
-                btn.textContent = 'Resend in ' + left + 's';
-                clearInterval(timerId);
-                timerId = setInterval(function () {
-                    left--;
-                    if (left <= 0) {
-                        clearInterval(timerId);
-                        btn.disabled = false;
-                        btn.textContent = 'Resend OTP';
-                    } else {
-                        btn.textContent = 'Resend in ' + left + 's';
-                    }
-                }, 1000);
-            }
-
-            btn.addEventListener('click', async function () {
-                var username = document.getElementById('Username').value.trim();
-                if (!username) { show(false, 'Enter your User Name first.'); return; }
-
-                var tokenInput = document.querySelector('.tl-lx-card input[name="__RequestVerificationToken"]');
-                btn.disabled = true;
-                btn.textContent = 'Sending...';
-
-                var data;
-                try {
-                    var res = await fetch('@Url.Action("SendLoginEmailOtp", "Account")', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'RequestVerificationToken': tokenInput ? tokenInput.value : ''
-                        },
-                        body: JSON.stringify({ username: username })
-                    });
-                    data = res.ok ? await res.json() : { success: false, message: 'Server error. Please try again.' };
-                } catch (e) {
-                    data = { success: false, message: 'Network error. Please try again.' };
-                }
-
-                show(!!data.success, data.message);
-                if (data.success) {
-                    countdown(30);
-                    otpInput.focus();
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = 'Send OTP';
-                }
-            });
-        })();
-
+        
         @if (TempData["RegisterSuccess"] != null)
             {
                 <text>

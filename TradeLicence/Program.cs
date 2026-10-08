@@ -73,7 +73,13 @@ else
 // ---- Registration: EMAIL OTP ----
 // Always send real emails through SMTP
 builder.Services.AddScoped<EmailOtpService>();
-builder.Services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
+var emailProvider = builder.Configuration["Email:Provider"] ?? "Brevo";
+if (emailProvider.Equals("Console", StringComparison.OrdinalIgnoreCase))
+    builder.Services.AddScoped<IOtpEmailSender, ConsoleOtpEmailSender>();
+else if (emailProvider.Equals("Smtp", StringComparison.OrdinalIgnoreCase))
+    builder.Services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
+else
+    builder.Services.AddHttpClient<IOtpEmailSender, BrevoApiOtpEmailSender>();
 
 var app = builder.Build();
 

@@ -90,21 +90,7 @@ namespace TradeLicence.Controllers
                 return View(model);
             }
 
-            // 3. Email OTP verification
-            var otp = (model.Otp ?? "").Trim();
-            if (!Regex.IsMatch(otp, @"^\d{6}$"))
-            {
-                ModelState.AddModelError(nameof(model.Otp), "Please enter the 6-digit OTP sent to your registered email.");
-                return View(model);
-            }
-
-            var (otpOk, otpMsg) = _emailOtpService.Verify(HttpContext.Session, user.Email ?? "", otp);
-            if (!otpOk)
-            {
-                ModelState.AddModelError(nameof(model.Otp), otpMsg);
-                return View(model);
-            }
-
+           
             // 4. Password verification
             var verifyResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, typedPassword);
             if (verifyResult == PasswordVerificationResult.Failed)
