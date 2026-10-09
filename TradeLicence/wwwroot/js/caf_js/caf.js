@@ -143,3 +143,74 @@
         });
     });
 })();
+
+/*
+ * Application Preview (6th tab) — Submit Application.
+ *
+ * "Submit Application" asks for confirmation first, then posts the form;
+ * after a successful submit the server redirects back to the preview and
+ * flags it (data-just-submitted) so the success alert is shown here.
+ * Everything the page needs comes from data-* attributes on
+ * #cafPreviewPage, so Preview.cshtml carries no inline JavaScript.
+ */
+(function () {
+    'use strict';
+
+    var page = document.getElementById('cafPreviewPage');
+    if (!page) return; // not the preview page
+
+    var dashboardUrl = page.getAttribute('data-dashboard-url');
+    var justSubmitted = page.getAttribute('data-just-submitted') === 'true';
+    var submitBtn = document.getElementById('cafSubmitBtn');
+    var submitForm = document.getElementById('cafSubmitForm');
+
+    if (submitBtn && submitForm) {
+        submitBtn.addEventListener('click', function () {
+            if (submitBtn.disabled) return;
+
+            function send() {
+                submitBtn.disabled = true; // no double submit
+                submitForm.submit();
+            }
+
+            if (window.Swal) {
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Submit application?',
+                    text: 'Please confirm every section is correct. Once submitted, the application can no longer be edited.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Submit',
+                    cancelButtonText: 'Review again',
+                    confirmButtonColor: '#1D6E3E',
+                    cancelButtonColor: '#6B7280',
+                    reverseButtons: true
+                }).then(function (result) {
+                    if (result.isConfirmed) send();
+                });
+            } else if (window.confirm('Submit this application? It can no longer be edited afterwards.')) {
+                send();
+            }
+        });
+    }
+
+    if (justSubmitted) {
+        if (window.Swal) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Application Submitted Successfully!',
+                text: 'Your Common Application Form has been submitted.',
+                showDenyButton: true,
+                confirmButtonText: 'Go to Dashboard',
+                denyButtonText: 'View Application',
+                confirmButtonColor: '#1a3a52',
+                denyButtonColor: '#6B7280',
+                allowOutsideClick: false
+            }).then(function (result) {
+                if (result.isConfirmed && dashboardUrl) window.location.href = dashboardUrl;
+            });
+        } else {
+            alert('Application submitted successfully.');
+            if (dashboardUrl) window.location.href = dashboardUrl;
+        }
+    }
+})();

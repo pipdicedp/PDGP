@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TradeLicence.Models.Caf
 {
@@ -89,10 +90,75 @@ namespace TradeLicence.Models.Caf
 
         public List<CafSubTableVm> SubTables { get; set; } = new();
 
+        /// <summary>Step numbers whose main row is already saved — drives the stepper's green ticks.</summary>
+        public HashSet<int> SavedSteps { get; set; } = new();
+
         /// <summary>False only before Step 1 (Basic Details) has ever been saved — later steps redirect back to Step 1 until then.</summary>
         public bool BasicDetailsExist { get; set; }
 
         public string? SuccessMessage { get; set; }
         public string? ErrorMessage { get; set; }
+    }
+
+    /// <summary>Data the shared stepper partial (_CafStepper.cshtml) needs — works for the 5 data steps and the Preview tab.</summary>
+    public class CafStepperVm
+    {
+        public List<CafStepDef> AllSteps { get; set; } = new();
+
+        /// <summary>1-5 for a data-entry step, CafFormMetadata.PreviewStep (6) on the Application Preview tab.</summary>
+        public int CurrentNumber { get; set; }
+
+        public bool BasicDetailsExist { get; set; }
+        public bool IsSubmitted { get; set; }
+
+        /// <summary>Steps whose data is saved. Only these show as green/done; unsaved steps stay grey.</summary>
+        public HashSet<int> SavedSteps { get; set; } = new();
+    }
+
+    /// <summary>One step's saved data for the Application Preview: the main row plus its sub-table rows.</summary>
+    public class CafPreviewSectionVm
+    {
+        public CafStepDef Step { get; set; } = null!;
+
+        /// <summary>Saved values keyed by CafField.Name. Empty when the applicant never saved this step.</summary>
+        public Dictionary<string, string?> Values { get; set; } = new();
+
+        /// <summary>True once the step's main row exists in the database (LoadMainRowAsync returns nothing otherwise).</summary>
+        public bool HasRow { get; set; }
+
+        public List<CafSubTableVm> SubTables { get; set; } = new();
+    }
+
+    /// <summary>Everything the Application Preview (6th tab) needs.</summary>
+    public class CafPreviewViewModel
+    {
+        public List<CafStepDef> AllSteps { get; set; } = new();
+        public List<CafPreviewSectionVm> Sections { get; set; } = new();
+
+        public bool BasicDetailsExist { get; set; }
+
+        /// <summary>statuss on caf_basic_details is no longer 'P' (pending) — the form is read-only.</summary>
+        public bool IsSubmitted { get; set; }
+
+        /// <summary>True only for the applicant's own preview before submission: shows the per-section Edit links. Officers' read-only views leave it false.</summary>
+        public bool AllowEdit { get; set; }
+
+        /// <summary>Officers' views: every section starts collapsed and opens when its heading is clicked. The applicant's own preview leaves it false (all sections open).</summary>
+        public bool Collapsible { get; set; }
+
+        /// <summary>Set for the single request right after a successful submit, to show the success alert.</summary>
+        public bool JustSubmitted { get; set; }
+
+        public string? SuccessMessage { get; set; }
+        public string? ErrorMessage { get; set; }
+
+        /// <summary>Every step has a saved main row, so the application can be submitted.</summary>
+        public bool IsComplete => Sections.Count > 0 && Sections.All(s => s.HasRow);
+
+        /// <summary>Step numbers that have a saved main row (same meaning as CafStepViewModel.SavedSteps).</summary>
+        public HashSet<int> SavedSteps => Sections.Where(s => s.HasRow).Select(s => s.Step.Number).ToHashSet();
+
+        public List<string> IncompleteSections =>
+            Sections.Where(s => !s.HasRow).Select(s => s.Step.Title).ToList();
     }
 }

@@ -205,6 +205,126 @@ namespace TradeLicence.Services
             finally { CloseIfWeOpenedIt(conn, opened); }
         }
 
+        public async Task<List<CafSubmittedSummary>> GetSubmittedSummariesAsync(IEnumerable<long>? loginIds = null)
+        {
+            var result = new List<CafSubmittedSummary>();
+            var idList = loginIds?.Distinct().ToList();
+            if (idList != null && idList.Count == 0) return result;
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                using var cmd = new SqlCommand();
+                cmd.Connection = conn;
+
+                var sql = "SELECT [loginid], [indname], [promotername], [mobileno], [appliedon] " +
+                          "FROM dbo.caf_basic_details WHERE [statuss] = 'S'";
+
+                if (idList != null)
+                {
+                    var names = new List<string>();
+                    for (var i = 0; i < idList.Count; i++)
+                    {
+                        var name = "@id" + i;
+                        names.Add(name);
+                        cmd.Parameters.Add(new SqlParameter(name, System.Data.SqlDbType.BigInt) { Value = idList[i] });
+                    }
+                    sql += " AND [loginid] IN (" + string.Join(",", names) + ")";
+                }
+
+                cmd.CommandText = sql + " ORDER BY [appliedon] DESC, [loginid] DESC";
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    string? mobile = null;
+                    if (!reader.IsDBNull(3))
+                    {
+                        var raw = reader.GetValue(3);
+                        mobile = decimal.TryParse(Convert.ToString(raw, System.Globalization.CultureInfo.InvariantCulture),
+                                     System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m)
+                            ? m.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
+                            : Convert.ToString(raw);
+                    }
+
+                    result.Add(new CafSubmittedSummary
+                    {
+                        LoginId = Convert.ToInt64(reader.GetValue(0)),
+                        UnitName = reader.IsDBNull(1) ? null : reader.GetString(1),
+                        PromoterName = reader.IsDBNull(2) ? null : reader.GetString(2),
+                        Mobile = mobile,
+                        AppliedOn = reader.IsDBNull(4) ? null : Convert.ToDateTime(reader.GetValue(4))
+                    });
+                }
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+
+            return result;
+        }
+
+        public async Task<CafPreviewViewModel> LoadPreviewAsync(long loginId)
+        {
+            var status = await GetStatusAsync(loginId);
+            var steps = TradeLicence.Helpers.CafFormMetadata.Steps;
+
+            var vm = new CafPreviewViewModel
+            {
+                AllSteps = steps,
+                BasicDetailsExist = await BasicDetailsExistAsync(loginId),
+                IsSubmitted = !string.IsNullOrEmpty(status) && status != "P"
+            };
+            vm.AllowEdit = !vm.IsSubmitted;
+
+            foreach (var step in steps)
+            {
+                var section = new CafPreviewSectionVm
+                {
+                    Step = step,
+                    Values = await LoadMainRowAsync(step, loginId)
+                };
+                section.HasRow = section.Values.Count > 0;
+
+                foreach (var sub in step.SubTables)
+                {
+                    section.SubTables.Add(new CafSubTableVm
+                    {
+                        Def = sub,
+                        Rows = await GetSubRowsAsync(sub, loginId)
+                    });
+                }
+
+                vm.Sections.Add(section);
+            }
+
+            return vm;
+        }
+
+        public async Task<HashSet<int>> GetSavedStepNumbersAsync(IEnumerable<CafStepDef> steps, long loginId)
+        {
+            var saved = new HashSet<int>();
+            var stepList = steps.ToList();
+            if (stepList.Count == 0) return saved;
+
+            // One round trip: "SELECT 1 WHERE EXISTS (...) UNION ALL SELECT 2 WHERE EXISTS (...) ..."
+            // Table names come from CafFormMetadata (constants), never from user input.
+            var selects = stepList.Select(s =>
+                $"SELECT {s.Number} AS [StepNo] WHERE EXISTS (SELECT 1 FROM dbo.[{s.TableName}] WHERE [loginid] = @loginid)");
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                using var cmd = new SqlCommand(string.Join(" UNION ALL ", selects), conn);
+                cmd.Parameters.Add(LoginIdParam(loginId));
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                    saved.Add(Convert.ToInt32(reader[0]));
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+
+            return saved;
+        }
+
         public async Task<Dictionary<string, string?>> LoadMainRowAsync(CafStepDef step, long loginId)
         {
             var result = new Dictionary<string, string?>();
@@ -360,16 +480,35 @@ namespace TradeLicence.Services
             finally { CloseIfWeOpenedIt(conn, opened); }
         }
 
-        public async Task MarkSubmittedAsync(long loginId)
+        public async Task<string?> GetStatusAsync(long loginId)
         {
             var (conn, opened) = await GetOpenConnectionAsync();
             try
             {
+                using var cmd = new SqlCommand("SELECT [statuss] FROM dbo.caf_basic_details WHERE [loginid] = @loginid", conn);
+                cmd.Parameters.Add(LoginIdParam(loginId));
+
+                var result = await cmd.ExecuteScalarAsync();
+                if (result == null || result == DBNull.Value) return null;
+                return result.ToString()?.Trim();
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+        }
+
+        public async Task<bool> MarkSubmittedAsync(long loginId)
+        {
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                // statuss: 'P' (pending) is set on the first save of Step 1. Only a still-pending
+                // application can be submitted — a second call affects 0 rows and returns false.
                 using var cmd = new SqlCommand(
-                    "UPDATE dbo.caf_basic_details SET [statuss] = 'S', [appliedon] = COALESCE([appliedon], GETDATE()) WHERE [loginid] = @loginid",
+                    "UPDATE dbo.caf_basic_details SET [statuss] = 'S', [appliedon] = COALESCE([appliedon], GETDATE()) " +
+                    "WHERE [loginid] = @loginid AND ([statuss] IS NULL OR [statuss] = 'P')",
                     conn);
                 cmd.Parameters.Add(LoginIdParam(loginId));
-                await cmd.ExecuteNonQueryAsync();
+                var affected = await cmd.ExecuteNonQueryAsync();
+                return affected > 0;
             }
             finally { CloseIfWeOpenedIt(conn, opened); }
         }

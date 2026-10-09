@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using TradeLicence.Models.Caf;
 
@@ -342,5 +344,42 @@ namespace TradeLicence.Helpers
         public static CafStepDef? ByKey(string key) => Steps.FirstOrDefault(s => string.Equals(s.Key, key, System.StringComparison.OrdinalIgnoreCase));
         public static int MinStep => Steps.Min(s => s.Number);
         public static int MaxStep => Steps.Max(s => s.Number);
+
+        /// <summary>Step number of the final "Application Preview" tab — one after the last data-entry step.</summary>
+        public static int PreviewStep => MaxStep + 1;
+
+        public const string PreviewTitle = "Application Preview";
+
+        /// <summary>
+        /// Human-readable text for a stored value, for read-only display (the
+        /// Application Preview). Select options can be encoded "value|label" —
+        /// e.g. unitcategory stores "M" but the applicant picked "Micro" — so
+        /// the stored code is mapped back to its label. Returns null for an
+        /// empty value so the caller can show a dash.
+        /// </summary>
+        public static string? DisplayValue(CafField field, string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw)) return null;
+            var value = raw.Trim();
+
+            if (field.Options != null)
+            {
+                foreach (var opt in field.Options)
+                {
+                    var pipe = opt.IndexOf('|');
+                    var optValue = pipe >= 0 ? opt[..pipe] : opt;
+                    var optLabel = pipe >= 0 ? opt[(pipe + 1)..] : opt;
+                    if (string.Equals(optValue, value, StringComparison.OrdinalIgnoreCase))
+                        return optLabel;
+                }
+                return value;
+            }
+
+            if (field.Type == CafFieldType.Date &&
+                DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+                return date.ToString("dd-MM-yyyy");
+
+            return value;
+        }
     }
 }

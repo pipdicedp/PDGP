@@ -29,6 +29,7 @@ builder.Services.AddScoped<ITradeLicenceService, TradeLicenceService>();
 builder.Services.AddScoped<IFileEncryptionService, FileEncryptionService>();
 builder.Services.AddScoped<TradeLicence.Interfaces.ICafFormService, TradeLicence.Services.CafFormService>();
 builder.Services.AddScoped<TradeLicence.Repositories.ApplicationRepository>();
+builder.Services.AddScoped<ICafDepartmentProvider, StaticCafDepartmentProvider>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
