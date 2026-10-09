@@ -4,6 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- iTextSharp 5.5.13.6 targets .NET Framework but works fine here; silence the compatibility notice -->
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
+    <UserSecretsId>60beb1d9-6df9-4ee7-980e-d8fdd374eca6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +20,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="QuestPDF" Version="2026.7.2" />
+    <PackageReference Include="TapInAuth.Email.Smtp" Version="0.5.1" />
   </ItemGroup>
 
 </Project>

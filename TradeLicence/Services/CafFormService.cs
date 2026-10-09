@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
+using TradeLicence.Helpers;
 using TradeLicence.Interfaces;
 using TradeLicence.Models.Caf;
 
@@ -480,22 +481,7 @@ namespace TradeLicence.Services
             finally { CloseIfWeOpenedIt(conn, opened); }
         }
 
-        public async Task<string?> GetStatusAsync(long loginId)
-        {
-            var (conn, opened) = await GetOpenConnectionAsync();
-            try
-            {
-                using var cmd = new SqlCommand("SELECT [statuss] FROM dbo.caf_basic_details WHERE [loginid] = @loginid", conn);
-                cmd.Parameters.Add(LoginIdParam(loginId));
-
-                var result = await cmd.ExecuteScalarAsync();
-                if (result == null || result == DBNull.Value) return null;
-                return result.ToString()?.Trim();
-            }
-            finally { CloseIfWeOpenedIt(conn, opened); }
-        }
-
-        public async Task<bool> MarkSubmittedAsync(long loginId)
+        public async Task MarkSubmittedAsync(long loginId)
         {
             var (conn, opened) = await GetOpenConnectionAsync();
             try

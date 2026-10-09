@@ -42,14 +42,7 @@ namespace TradeLicence.Interfaces
         /// <summary>Deletes one sub-table row, scoped to this applicant so one citizen can't delete another's row.</summary>
         Task<bool> DeleteSubRowAsync(CafSubTableDef def, long loginId, long rowId);
 
-        /// <summary>caf_basic_details.statuss for this applicant: 'P' = pending (still editable), 'S' = submitted, null = nothing saved yet. Anything other than null/'P' means the form is locked.</summary>
-        Task<string?> GetStatusAsync(long loginId);
-
-        /// <summary>
-        /// Marks the whole application Submitted (caf_basic_details.statuss = 'S'). Called from the
-        /// Application Preview's Submit button. Only acts on a still-pending application, so a double
-        /// click or a replayed request can't re-submit; returns false when nothing was updated.
-        /// </summary>
-        Task<bool> MarkSubmittedAsync(long loginId);
+        /// <summary>Marks the whole application Submitted (caf_basic_details.statuss = 'S') once the final step is saved.</summary>
+        Task MarkSubmittedAsync(long loginId);
     }
 }
