@@ -11,14 +11,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Text.RegularExpressions;
 using TradeLicence.Data;
 using TradeLicence.Models;
 using TradeLicence.Repositories;
+using TradeLicence.Services;
 using PdfTable = iText.Layout.Element.Table;
 
 namespace TradeLicence.Controllers
@@ -29,12 +34,54 @@ namespace TradeLicence.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ApplicationRepository _repository;
         private readonly ElectricityApplicationDbContext _context;
+        private readonly ApplicationDbContext _sharedContext;
+        private readonly WorkflowEngineService<EBapplication> _engine;
+        private readonly IFileEncryptionService _encryption;
 
-        public ElectricityController(IWebHostEnvironment environment, ApplicationRepository repository, ElectricityApplicationDbContext context)
+        public ElectricityController(IWebHostEnvironment environment, ApplicationRepository repository, ElectricityApplicationDbContext context, ApplicationDbContext sharedContext, IFileEncryptionService encryption)
         {
             _environment = environment;
+            _encryption = encryption;
             _repository = repository;
             _context = context;
+            _sharedContext = sharedContext;
+            _engine = new WorkflowEngineService<EBapplication>(context, sharedContext, "Electricity");
+        }
+
+        // Citizen's UserId claim (same claim Water/TradeLicence read).
+        // Officers sign in with the same cookie scheme and ALSO put their own
+        // table's id in NameIdentifier (see AccountController.OfficerLogin), so
+        // an officer with OfficerId = 1 would otherwise be treated as the
+        // citizen with UserId = 1. Officers are never citizens here.
+        private int? GetCurrentUserId()
+        {
+            if (User.IsInRole("Officer")) return null;
+
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(claim, out var id) ? id : (int?)null;
+        }
+
+        // The wizard may only touch an application that is (a) brand new,
+        // or (b) owned by the current citizen AND still editable -- a Draft,
+        // or one an officer returned for correction. Stops anyone posting
+        // someone else's application number, or editing one already with an officer.
+        private bool CanEditApplication(string? appNumber)
+        {
+            if (User.IsInRole("Officer")) return false;
+            if (string.IsNullOrWhiteSpace(appNumber)) return true;
+
+            var existing = _context.EBapplications
+                .AsNoTracking()
+                .Where(a => a.ApplicationNumber == appNumber)
+                .Select(a => new { a.UserId, a.Status })
+                .FirstOrDefault();
+
+            if (existing == null) return true;
+
+            var userId = GetCurrentUserId();
+            if (existing.UserId.HasValue && existing.UserId != userId) return false;
+
+            return existing.Status == "Draft" || existing.Status == "ReturnedToApplicant";
         }
         private void LoadDropdowns()
         {
@@ -75,8 +122,10 @@ namespace TradeLicence.Controllers
         }
 
         [HttpPost]
-        public IActionResult Index(ApplicationViewModel model, string actionButton)
+        public async Task<IActionResult> Index(ApplicationViewModel model, string actionButton)
         {
+            if (!CanEditApplication(model.ApplicationNumber)) return Forbid();
+
             if (actionButton == "next")
             {
                 ModelState.Clear();
@@ -88,7 +137,7 @@ namespace TradeLicence.Controllers
                     return View(model);
                 }
 
-                _repository.SaveOrUpdateStep(model, model.CurrentStep);
+                _repository.SaveOrUpdateStep(model, model.CurrentStep, GetCurrentUserId());
 
                 if (model.CurrentStep < 4)
                 {
@@ -104,7 +153,7 @@ namespace TradeLicence.Controllers
                     model.CurrentStep--;
                 }
             }
-            else if (actionButton == "submit")
+            else if (actionButton == "preview" || actionButton == "submit")
             {
                 ModelState.Clear();
                 ValidateCurrentStep(model);
@@ -115,35 +164,201 @@ namespace TradeLicence.Controllers
                     return View(model);
                 }
 
-                // Mandatory uploads
-                model.PhotoPath = UploadFile(model.PhotoFile) ?? model.PhotoPath;
-                model.AddressProofPath = UploadFile(model.AddressProofFile) ?? model.AddressProofPath;
-                model.IdentityProofPath = UploadFile(model.IdentityProofFile) ?? model.IdentityProofPath;
-                model.TestReportPath = UploadFile(model.TestReportFile) ?? model.TestReportPath;
+                // Documents are AES-encrypted and stored in the database
+                // (EBApplicationDocuments), not on disk. Each *Path column now
+                // holds the document id; a re-submit with no new file keeps the
+                // existing id (the "?? model.XPath" fallback).
+                try
+                {
+                    // Mandatory uploads
+                    model.PhotoPath = (await StoreDocumentAsync(model.PhotoFile, model.ApplicationNumber, "Photo", "Photograph")) ?? model.PhotoPath;
+                    model.AddressProofPath = (await StoreDocumentAsync(model.AddressProofFile, model.ApplicationNumber, "AddressProof", "Address proof")) ?? model.AddressProofPath;
+                    model.IdentityProofPath = (await StoreDocumentAsync(model.IdentityProofFile, model.ApplicationNumber, "IdentityProof", "Identity proof")) ?? model.IdentityProofPath;
+                    model.TestReportPath = (await StoreDocumentAsync(model.TestReportFile, model.ApplicationNumber, "TestReport", "Test report")) ?? model.TestReportPath;
 
-                // Optional uploads
-                if (model.SelectedSaleDeed) model.SaleDeedPath = UploadFile(model.SaleDeedFile) ?? model.SaleDeedPath;
-                if (model.SelectedPowerOfAttorney) model.PowerOfAttorneyPath = UploadFile(model.PowerOfAttorneyFile) ?? model.PowerOfAttorneyPath;
-                if (model.SelectedMunicipalTax) model.MunicipalTaxPath = UploadFile(model.MunicipalTaxFile) ?? model.MunicipalTaxPath;
-                if (model.SelectedAllotmentLetter) model.AllotmentLetterPath = UploadFile(model.AllotmentLetterFile) ?? model.AllotmentLetterPath;
-                if (model.SelectedHouseRegistration) model.HouseRegistrationPath = UploadFile(model.HouseRegistrationFile) ?? model.HouseRegistrationPath;
-                if (model.SelectedLease) model.LeasePath = UploadFile(model.LeaseFile) ?? model.LeasePath;
-                if (model.SelectedOtherOwnership) model.OtherOwnershipPath = UploadFile(model.OtherOwnershipFile) ?? model.OtherOwnershipPath;
-                if (model.SelectedPowerAgentPhoto) model.PowerAgentPhotoPath = UploadFile(model.PowerAgentPhotoFile) ?? model.PowerAgentPhotoPath;
-                if (model.SelectedOthers) model.OthersPath = UploadFile(model.OthersFile) ?? model.OthersPath;
+                    // Optional uploads
+                    if (model.SelectedSaleDeed) model.SaleDeedPath = (await StoreDocumentAsync(model.SaleDeedFile, model.ApplicationNumber, "SaleDeed", "Sale deed")) ?? model.SaleDeedPath;
+                    if (model.SelectedPowerOfAttorney) model.PowerOfAttorneyPath = (await StoreDocumentAsync(model.PowerOfAttorneyFile, model.ApplicationNumber, "PowerOfAttorney", "Power of attorney")) ?? model.PowerOfAttorneyPath;
+                    if (model.SelectedMunicipalTax) model.MunicipalTaxPath = (await StoreDocumentAsync(model.MunicipalTaxFile, model.ApplicationNumber, "MunicipalTax", "Municipal tax receipt")) ?? model.MunicipalTaxPath;
+                    if (model.SelectedAllotmentLetter) model.AllotmentLetterPath = (await StoreDocumentAsync(model.AllotmentLetterFile, model.ApplicationNumber, "AllotmentLetter", "Allotment letter")) ?? model.AllotmentLetterPath;
+                    if (model.SelectedHouseRegistration) model.HouseRegistrationPath = (await StoreDocumentAsync(model.HouseRegistrationFile, model.ApplicationNumber, "HouseRegistration", "House registration")) ?? model.HouseRegistrationPath;
+                    if (model.SelectedLease) model.LeasePath = (await StoreDocumentAsync(model.LeaseFile, model.ApplicationNumber, "Lease", "Lease document")) ?? model.LeasePath;
+                    if (model.SelectedOtherOwnership) model.OtherOwnershipPath = (await StoreDocumentAsync(model.OtherOwnershipFile, model.ApplicationNumber, "OtherOwnership", "Other ownership document")) ?? model.OtherOwnershipPath;
+                    if (model.SelectedPowerAgentPhoto) model.PowerAgentPhotoPath = (await StoreDocumentAsync(model.PowerAgentPhotoFile, model.ApplicationNumber, "PowerAgentPhoto", "Power agent photo")) ?? model.PowerAgentPhotoPath;
+                    if (model.SelectedOthers) model.OthersPath = (await StoreDocumentAsync(model.OthersFile, model.ApplicationNumber, "Others", "Other document")) ?? model.OthersPath;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    ModelState.AddModelError(string.Empty, ex.Message);
+                    LoadDropdowns();
+                    return View(model);
+                }
 
-                _repository.SaveOrUpdateStep(model, 4);
-
-                TempData["ShowSuccessModal"] = true;
-                TempData["ApplicantName"] = model.ApplicantName;
-                TempData["AppNumber"] = model.ApplicationNumber;
-                TempData["ServiceCat"] = model.ServiceCategory;
-                TempData["Mobile"] = model.MobileNumber;
+                // Save everything (documents were stored above) but do NOT submit yet.
+                // The applicant reviews the Preview page first and submits from
+                // there (SubmitApplication), which is also where the
+                // "submitted successfully" alert appears.
+                _repository.SaveOrUpdateStep(model, 4, GetCurrentUserId());
 
                 return RedirectToAction("Preview", new { appNum = model.ApplicationNumber });
             }
             LoadDropdowns();
             return View(model);
+        }
+
+        // ---------------- Citizen: My Applications / Edit / PayNow ----------------
+
+        [HttpGet]
+        public async Task<IActionResult> MyApplications()
+        {
+            var userId = GetCurrentUserId();
+
+            var applications = userId.HasValue
+                ? await _context.EBapplications
+                    .AsNoTracking()
+                    .Where(a => a.UserId == userId.Value)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .ToListAsync()
+                : new List<EBapplication>();
+
+            var ids = applications.Select(a => a.Id).ToList();
+            ViewBag.Payments = await _sharedContext.WorkflowPayments
+                .AsNoTracking()
+                .Where(p => p.ServiceType == "Electricity" && ids.Contains(p.ApplicationId))
+                .ToDictionaryAsync(p => p.ApplicationId);
+
+            return View(applications);
+        }
+
+        // Reopens the wizard pre-filled: "Continue" for a Draft, or
+        // "Edit & Resubmit" for an application an officer returned.
+        [HttpGet]
+        public IActionResult Edit(string? appNum)
+        {
+            if (string.IsNullOrWhiteSpace(appNum)) return RedirectToAction(nameof(MyApplications));
+
+            var entity = _context.EBapplications
+                .AsNoTracking()
+                .FirstOrDefault(a => a.ApplicationNumber == appNum);
+            if (entity == null) return NotFound();
+
+            var currentUserId = GetCurrentUserId();
+            if (!currentUserId.HasValue || entity.UserId != currentUserId) return Forbid();
+
+            if (entity.Status != "Draft" && entity.Status != "ReturnedToApplicant")
+                return RedirectToAction(nameof(MyApplications));
+
+            var model = _repository.GetByApplicationNumber(appNum);
+            if (model == null) return NotFound();
+
+            model.CurrentStep = 1;
+            if (entity.Status == "ReturnedToApplicant" && !string.IsNullOrWhiteSpace(entity.OfficerRemarks))
+                TempData["ReturnRemarks"] = entity.OfficerRemarks;
+
+            LoadDropdowns();
+            return View("Index", model);
+        }
+
+        // TEMPORARY -- stands in for the real payment gateway, same as
+        // Water / TradeLicence PayNow.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PayNow(int id)
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Forbid();
+
+            var result = await _engine.PayNowAsync(id, userId);
+
+            if (result.Success) TempData["Message"] = result.Message;
+            else TempData["Error"] = result.Error;
+
+            return RedirectToAction(nameof(MyApplications));
+        }
+
+        // Final submission — reached only from the Preview/review page. Flips a
+        // Draft to "Submitted" (first time) or a ReturnedToApplicant application back
+        // to "Submitted" (resubmit; stage + assigned officer untouched, so it lands
+        // with the same officer). Redirects back to Preview, which shows the
+        // "Application submitted successfully" alert.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SubmitApplication(string? appNum)
+        {
+            if (string.IsNullOrWhiteSpace(appNum)) return RedirectToAction(nameof(MyApplications));
+
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Forbid();
+
+            var app = await _context.EBapplications.FirstOrDefaultAsync(a => a.ApplicationNumber == appNum);
+            if (app == null) return NotFound();
+            if (app.UserId != userId) return Forbid();
+
+            if (app.Status != "Draft" && app.Status != "ReturnedToApplicant")
+            {
+                TempData["Error"] = "This application has already been submitted.";
+                return RedirectToAction(nameof(Preview), new { appNum });
+            }
+
+            // Server-side guard: don't let a half-filled draft be submitted by
+            // calling this action directly.
+            if (string.IsNullOrWhiteSpace(app.ApplicantName)
+                || string.IsNullOrWhiteSpace(app.MobileNumber)
+                || string.IsNullOrWhiteSpace(app.PhotoPath)
+                || string.IsNullOrWhiteSpace(app.AddressProofPath)
+                || string.IsNullOrWhiteSpace(app.IdentityProofPath))
+            {
+                TempData["Error"] = "Please complete all four steps, including the mandatory documents, before submitting.";
+                return RedirectToAction(nameof(Preview), new { appNum });
+            }
+
+            if (app.Status == "ReturnedToApplicant")
+            {
+                var result = await _engine.ResubmitAsync(app.Id, userId);
+                if (!result.Success)
+                {
+                    TempData["Error"] = result.Error;
+                    return RedirectToAction(nameof(Preview), new { appNum });
+                }
+            }
+            else
+            {
+                _repository.MarkSubmitted(appNum, userId);
+            }
+
+            TempData["SubmitSuccess"] = true;
+            TempData["SubmittedAppNumber"] = appNum;
+            return RedirectToAction(nameof(Preview), new { appNum });
+        }
+
+        // Serves a citizen's own uploaded document (decrypted on the fly). Only the
+        // owner of the application can open it; officers use
+        // ElectricityOfficerController.OfficerDocument instead.
+        [HttpGet]
+        public async Task<IActionResult> ViewDocument(int documentId, bool download = false)
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Forbid();
+
+            var doc = await _context.EBApplicationDocuments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.DocumentId == documentId);
+            if (doc == null || doc.FileData.Length == 0) return NotFound();
+
+            var ownerId = await _context.EBapplications
+                .AsNoTracking()
+                .Where(a => a.ApplicationNumber == doc.ApplicationNumber)
+                .Select(a => a.UserId)
+                .FirstOrDefaultAsync();
+            if (ownerId != userId) return Forbid();
+
+            var bytes = _encryption.Decrypt(doc.FileData, doc.FileIV);
+
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            Response.Headers.Append("Content-Disposition",
+                $"{(download ? "attachment" : "inline")}; filename=\"{EBDocumentHelper.SafeFileName(doc)}\"");
+
+            return File(bytes, doc.ContentType ?? "application/octet-stream");
         }
 
         [HttpGet]
@@ -159,6 +374,19 @@ namespace TradeLicence.Controllers
             {
                 return NotFound("Application details could not be found.");
             }
+
+            // Workflow info for the status badge / returned + payment notices.
+            // (ApplicationViewModel only carries the legacy ApplicationStatus.)
+            var workflow = _context.EBapplications
+                .AsNoTracking()
+                .Where(a => a.ApplicationNumber == appNum)
+                .Select(a => new { a.Status, a.CurrentStage, a.PaymentStatus, a.OfficerRemarks })
+                .FirstOrDefault();
+
+            ViewBag.WorkflowStatus = workflow?.Status;
+            ViewBag.CurrentStage = workflow?.CurrentStage;
+            ViewBag.PaymentStatus = workflow?.PaymentStatus;
+            ViewBag.OfficerRemarks = workflow?.OfficerRemarks;
 
             return View("Preview", model);
         }
@@ -212,11 +440,26 @@ namespace TradeLicence.Controllers
                 mainSummaryTable.AddCell(summaryCell);
 
                 Cell photoCell = new Cell().SetBorder(iText.Layout.Borders.Border.NO_BORDER).SetTextAlignment(TextAlignment.RIGHT);
-                string photoFullPath = string.IsNullOrEmpty(model.PhotoPath) ? "" : Path.Combine(_environment.WebRootPath, model.PhotoPath.TrimStart('/'));
-
-                if (!string.IsNullOrEmpty(photoFullPath) && System.IO.File.Exists(photoFullPath))
+                // Photo lives encrypted in the database (PhotoPath = document id);
+                // older applications still have a disk path under wwwroot.
+                byte[]? photoBytes = null;
+                if (EBDocumentHelper.TryGetDocumentId(model.PhotoPath, out var photoDocId))
                 {
-                    ImageData imgData = ImageDataFactory.Create(photoFullPath);
+                    var photoDoc = _context.EBApplicationDocuments.AsNoTracking()
+                        .FirstOrDefault(d => d.DocumentId == photoDocId && d.ApplicationNumber == model.ApplicationNumber);
+                    if (photoDoc != null && photoDoc.FileData.Length > 0)
+                        photoBytes = _encryption.Decrypt(photoDoc.FileData, photoDoc.FileIV);
+                }
+                else if (!string.IsNullOrEmpty(model.PhotoPath))
+                {
+                    var legacyPhotoPath = Path.Combine(_environment.WebRootPath, model.PhotoPath.TrimStart('/'));
+                    if (System.IO.File.Exists(legacyPhotoPath))
+                        photoBytes = System.IO.File.ReadAllBytes(legacyPhotoPath);
+                }
+
+                if (photoBytes != null)
+                {
+                    ImageData imgData = ImageDataFactory.Create(photoBytes);
                     Image photo = new Image(imgData).SetWidth(80).SetHeight(90).SetAutoScale(false);
                     photoCell.Add(photo);
                 }
@@ -504,32 +747,57 @@ namespace TradeLicence.Controllers
             }
         }
 
-        private string? UploadFile(IFormFile? file)
+        // Encrypts the uploaded file (same AES service the officer stage documents
+        // use) and stores it in EBApplicationDocuments. Returns the DocumentId as
+        // text — it goes into the existing *Path column where the old
+        // "/uploads/<guid>.ext" disk path used to be. Returns null when there is no
+        // new file (caller keeps the existing value). One row per
+        // (application, document type): re-uploading replaces that row's content.
+        private async Task<string?> StoreDocumentAsync(IFormFile? file, string? applicationNumber, string documentType, string label)
         {
             if (file == null || file.Length == 0)
                 return null;
 
             string[] allowedExtensions = { ".jpg", ".jpeg", ".pdf" };
             string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
             if (Array.IndexOf(allowedExtensions, extension) < 0)
                 return null;
 
-            string uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-            if (!Directory.Exists(uploadsFolder))
+            if (string.IsNullOrWhiteSpace(applicationNumber))
+                throw new InvalidOperationException("The application number is missing — please start the application again.");
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+            var plainBytes = ms.ToArray();
+
+            // Trust the file's own bytes, not its name or the browser's Content-Type.
+            var detected = EBDocumentHelper.DetectFile(plainBytes);
+            if (detected == null)
+                throw new InvalidOperationException($"{label} must be a valid PDF or JPG file.");
+
+            var (cipherBytes, iv) = _encryption.Encrypt(plainBytes);
+
+            var doc = await _context.EBApplicationDocuments
+                .FirstOrDefaultAsync(d => d.ApplicationNumber == applicationNumber && d.DocumentType == documentType);
+
+            if (doc == null)
             {
-                Directory.CreateDirectory(uploadsFolder);
+                doc = new EBApplicationDocument
+                {
+                    ApplicationNumber = applicationNumber,
+                    DocumentType = documentType
+                };
+                _context.EBApplicationDocuments.Add(doc);
             }
 
-            string uniqueFileName = Guid.NewGuid().ToString() + extension;
-            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            doc.FileName = Path.GetFileName(file.FileName);
+            doc.ContentType = detected.Value.ContentType;
+            doc.FileData = cipherBytes;
+            doc.FileIV = iv;
+            doc.UploadedDate = DateTime.UtcNow;
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                file.CopyTo(stream);
-            }
-
-            return "/uploads/" + uniqueFileName;
+            await _context.SaveChangesAsync();
+            return doc.DocumentId.ToString();
         }
     }
 }

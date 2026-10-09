@@ -1,0 +1,242 @@
+using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+
+namespace TradeLicence.Services
+{
+    public interface IOtpEmailSender
+    {
+        Task<bool> SendAsync(string toEmail, string subject, string body);
+    }
+
+    // TEST MODE: prints the email in Visual Studio (Output window / console, look for "DEV EMAIL").
+    // Nothing is really sent. Use only while developing.
+    public class ConsoleOtpEmailSender : IOtpEmailSender
+    {
+        private readonly ILogger<ConsoleOtpEmailSender> _logger;
+        public ConsoleOtpEmailSender(ILogger<ConsoleOtpEmailSender> logger) => _logger = logger;
+
+        public Task<bool> SendAsync(string toEmail, string subject, string body)
+        {
+            _logger.LogWarning("DEV EMAIL to {To} | {Subject} | {Body}", toEmail, subject, body);
+            return Task.FromResult(true);
+        }
+    }
+
+    // LIVE MODE: sends a real email through SMTP (for example Gmail) using MailKit.
+    // Settings come from the "Email" section of appsettings.json / User Secrets.
+    public class SmtpOtpEmailSender : IOtpEmailSender
+    {
+        private readonly IConfiguration _cfg;
+        private readonly ILogger<SmtpOtpEmailSender> _logger;
+
+        public SmtpOtpEmailSender(IConfiguration cfg, ILogger<SmtpOtpEmailSender> logger)
+        {
+            _cfg = cfg;
+            _logger = logger;
+        }
+
+        public async Task<bool> SendAsync(string toEmail, string subject, string body)
+        {
+            try
+            {
+                var host = _cfg["Email:Host"] ?? "smtp.gmail.com";
+                var port = _cfg.GetValue<int?>("Email:Port") ?? 587;
+                var user = _cfg["Email:User"];
+                var pass = (_cfg["Email:Password"] ?? "").Replace(" ", "");   // Gmail app passwords are often shown with spaces
+                var from = _cfg["Email:From"] ?? user;
+
+                if (string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass) || string.IsNullOrWhiteSpace(from))
+                {
+                    _logger.LogError("Email settings missing: set Email:User, Email:Password and Email:From.");
+                    return false;
+                }
+
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("Puducherry Investor Portal", from));
+                message.To.Add(MailboxAddress.Parse(toEmail));
+                message.Subject = subject;
+                message.Body = new TextPart("plain") { Text = body };
+
+                using var client = new SmtpClient();
+                client.Timeout = 20000;   // 20 seconds
+
+                // port 465 = SSL from the start, port 587 = STARTTLS
+                var security = port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+
+                await client.ConnectAsync(host, port, security);
+                await client.AuthenticateAsync(user, pass);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not send OTP email to {To}", toEmail);
+                return false;
+            }
+        }
+    }
+
+    // LIVE MODE (free, works over normal HTTPS port 443, so it does not need an SMTP port):
+    // Brevo (brevo.com) transactional e-mail API - free plan allows 300 e-mails per day.
+    // Settings (put them in User Secrets or appsettings.json):
+    //   "Brevo": { "ApiKey": "xkeysib-....", "SenderEmail": "verified-sender@gmail.com", "SenderName": "Puducherry Investor Portal" }
+    public class BrevoApiOtpEmailSender : IOtpEmailSender
+    {
+        private readonly HttpClient _http;
+        private readonly IConfiguration _cfg;
+        private readonly ILogger<BrevoApiOtpEmailSender> _logger;
+
+        public BrevoApiOtpEmailSender(HttpClient http, IConfiguration cfg, ILogger<BrevoApiOtpEmailSender> logger)
+        {
+            _http = http;
+            _cfg = cfg;
+            _logger = logger;
+            _http.Timeout = TimeSpan.FromSeconds(20);
+        }
+
+        public async Task<bool> SendAsync(string toEmail, string subject, string body)
+        {
+            try
+            {
+                var apiKey = _cfg["Brevo:ApiKey"];
+                var senderEmail = _cfg["Brevo:SenderEmail"];
+                var senderName = _cfg["Brevo:SenderName"] ?? "Puducherry Investor Portal";
+
+                if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(senderEmail))
+                {
+                    _logger.LogError("Brevo settings missing: set Brevo:ApiKey and Brevo:SenderEmail.");
+                    return false;
+                }
+
+                using var req = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+                req.Headers.Add("api-key", apiKey.Trim());
+                req.Headers.Add("accept", "application/json");
+                req.Content = JsonContent.Create(new
+                {
+                    sender = new { name = senderName, email = senderEmail.Trim() },
+                    to = new[] { new { email = toEmail } },
+                    subject = subject,
+                    textContent = body
+                });
+
+                using var res = await _http.SendAsync(req);
+                if (res.IsSuccessStatusCode) return true;
+
+                var text = await res.Content.ReadAsStringAsync();
+                _logger.LogError("Brevo refused the e-mail. Status {Status}. Reply: {Reply}", (int)res.StatusCode, text);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Could not send OTP email to {To} through Brevo", toEmail);
+                return false;
+            }
+        }
+    }
+
+    // Generates, sends and checks EMAIL OTPs. State lives in the server-side Session
+    // (same idea as the mobile OtpService, with its own "EOtp_" keys so they never mix).
+    public class EmailOtpService
+    {
+        private const int ExpiryMinutes = 5;
+        private const int MaxAttempts = 3;
+        private const int ResendSeconds = 30;
+        private const int MaxSendsPerSession = 5;
+
+        private readonly IOtpEmailSender _email;
+        public EmailOtpService(IOtpEmailSender email) => _email = email;
+
+        private static string Norm(string? email) => (email ?? "").Trim().ToLowerInvariant();
+
+        public async Task<(bool ok, string message)> SendAsync(ISession s, string emailRaw)
+        {
+            var email = Norm(emailRaw);
+
+            if (long.TryParse(s.GetString("EOtp_LastSent"), out var lastTicks) &&
+                DateTime.UtcNow < new DateTime(lastTicks, DateTimeKind.Utc).AddSeconds(ResendSeconds))
+                return (false, $"Please wait {ResendSeconds} seconds before requesting another OTP.");
+
+            if ((s.GetInt32("EOtp_Sends") ?? 0) >= MaxSendsPerSession)
+                return (false, "Too many OTP requests. Please try again later.");
+
+            var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
+            var body =
+                "Dear Applicant,\n\n" +
+                $"Your OTP for Puducherry Investor Portal registration is {otp}.\n" +
+                $"It is valid for {ExpiryMinutes} minutes. Do not share it with anyone.\n\n" +
+                "Government of Puducherry - Investor Portal";
+
+            if (!await _email.SendAsync(email, "Investor Portal - Email verification OTP", body))
+                return (false, "Could not send the email. Please check the email address and try again.");
+
+            s.SetString("EOtp_Email", email);
+            s.SetString("EOtp_Hash", Hash(email, otp));
+            s.SetString("EOtp_Expiry", DateTime.UtcNow.AddMinutes(ExpiryMinutes).Ticks.ToString());
+            s.SetString("EOtp_LastSent", DateTime.UtcNow.Ticks.ToString());
+            s.SetInt32("EOtp_Tries", 0);
+            s.SetInt32("EOtp_Sends", (s.GetInt32("EOtp_Sends") ?? 0) + 1);
+            s.Remove("EOtp_VerifiedEmail");
+
+            return (true, $"OTP sent to {Mask(email)}. Valid for {ExpiryMinutes} minutes.");
+        }
+
+        public (bool ok, string message) Verify(ISession s, string emailRaw, string otp)
+        {
+            var email = Norm(emailRaw);
+            var hash = s.GetString("EOtp_Hash");
+            if (hash == null || s.GetString("EOtp_Email") != email)
+                return (false, "Please request an OTP for this email address first.");
+
+            if (!long.TryParse(s.GetString("EOtp_Expiry"), out var expiry) || DateTime.UtcNow.Ticks > expiry)
+            {
+                ClearOtp(s);
+                return (false, "OTP has expired. Please request a new one.");
+            }
+
+            var tries = s.GetInt32("EOtp_Tries") ?? 0;
+            if (tries >= MaxAttempts)
+            {
+                ClearOtp(s);
+                return (false, "Too many wrong attempts. Please request a new OTP.");
+            }
+
+            var given = Encoding.UTF8.GetBytes(Hash(email, otp ?? ""));
+            if (!CryptographicOperations.FixedTimeEquals(given, Encoding.UTF8.GetBytes(hash)))
+            {
+                s.SetInt32("EOtp_Tries", tries + 1);
+                return (false, $"Incorrect OTP. {MaxAttempts - tries - 1} attempt(s) left.");
+            }
+
+            ClearOtp(s);
+            s.SetString("EOtp_VerifiedEmail", email);
+            return (true, "Email verified successfully.");
+        }
+
+        public bool IsVerified(ISession s, string? email)
+            => !string.IsNullOrEmpty(email) && s.GetString("EOtp_VerifiedEmail") == Norm(email);
+
+        public void ClearVerified(ISession s) => s.Remove("EOtp_VerifiedEmail");
+
+        private static void ClearOtp(ISession s)
+        {
+            s.Remove("EOtp_Hash"); s.Remove("EOtp_Email"); s.Remove("EOtp_Expiry"); s.Remove("EOtp_Tries");
+        }
+
+        private static string Mask(string email)
+        {
+            var at = email.IndexOf('@');
+            if (at < 1) return email;
+            var name = email[..at];
+            var shown = name.Length <= 2 ? name[..1] : name[..2];
+            return shown + "****" + email[at..];
+        }
+
+        private static string Hash(string email, string otp)
+            => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{email}:{otp}")));
+    }
+}

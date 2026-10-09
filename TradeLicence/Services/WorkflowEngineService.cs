@@ -122,7 +122,7 @@ namespace TradeLicence.Services
         }
 
         // One row per stage at most, oldest-uploaded first + uploader names.
-        public async Task<(List<WorkflowSupportingDocument> Docs, Dictionary<int, string> OfficerNames)>GetStageDocumentsAsync(int applicationId)
+        public async Task<(List<WorkflowSupportingDocument> Docs, Dictionary<int, string> OfficerNames)> GetStageDocumentsAsync(int applicationId)
         {
             var docs = await _sharedContext.WorkflowSupportingDocuments
                 .Where(d => d.ServiceType == _serviceType && d.ApplicationId == applicationId)
@@ -274,7 +274,13 @@ namespace TradeLicence.Services
             return WorkflowActionResult.Ok("Application rejected.");
         }
 
-        public async Task<WorkflowActionResult> ReturnToApplicantAsync(int applicationId, string? remarks)
+        // actingOfficerId is optional so existing callers (Water) keep compiling
+        // unchanged. When supplied and the application has no assigned officer
+        // yet (e.g. returned straight from Initial Scrutiny), the returning
+        // officer is pinned as AssignedOfficerId — so after the applicant
+        // resubmits it lands back with THAT officer, not any officer sharing
+        // the designation.
+        public async Task<WorkflowActionResult> ReturnToApplicantAsync(int applicationId, string? remarks, int? actingOfficerId = null)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
@@ -282,12 +288,36 @@ namespace TradeLicence.Services
             if (application.PaymentStatus == "Pending")
                 return WorkflowActionResult.Fail("This application can't be returned to the applicant while a payment is pending.");
 
+            if (application.AssignedOfficerId == null && actingOfficerId.HasValue)
+                application.AssignedOfficerId = actingOfficerId;
+
             application.Status = "ReturnedToApplicant";
             application.OfficerRemarks = remarks;
             application.ModifiedDate = DateTime.UtcNow;
 
             await _appContext.SaveChangesAsync();
             return WorkflowActionResult.Ok("Application returned to the applicant successfully.");
+        }
+
+        // Citizen-initiated — applicant fixed what the officer asked for and
+        // sends it back. CurrentStage and AssignedOfficerId are deliberately
+        // untouched, so it reappears in the same officer's queue.
+        public async Task<WorkflowActionResult> ResubmitAsync(int applicationId, int? requestingUserId)
+        {
+            var application = await Applications.FindAsync(applicationId);
+            if (application == null) return WorkflowActionResult.Fail("Application not found.");
+
+            if (!requestingUserId.HasValue || application.UserId != requestingUserId)
+                return WorkflowActionResult.Fail("You don't have permission to resubmit this application.");
+
+            if (application.Status != "ReturnedToApplicant")
+                return WorkflowActionResult.Fail("This application hasn't been returned for correction.");
+
+            application.Status = "Submitted";
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _appContext.SaveChangesAsync();
+            return WorkflowActionResult.Ok("Application resubmitted to the officer successfully.");
         }
 
         // Officer-initiated — fixed amounts are the caller's decision (each

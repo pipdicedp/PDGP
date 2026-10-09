@@ -1,0 +1,161 @@
+﻿@model IEnumerable<TradeLicence.Models.EBapplication>
+
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    var myApplications = Model?.ToList() ?? new List<TradeLicence.Models.EBapplication>();
+    var payments = ViewBag.Payments as Dictionary<int, TradeLicence.Models.WorkflowPayment>
+                   ?? new Dictionary<int, TradeLicence.Models.WorkflowPayment>();
+}
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/tl_css/dashboard.css"
+          asp-append-version="true" />
+}
+<div class="dashboard-body">
+
+    @if (TempData["Message"] != null)
+    {
+        <p class="tl-note" style="color:#1a7f4b; font-weight:600;">@TempData["Message"]</p>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <p class="tl-note" style="color:#B3261E; font-weight:600;">@TempData["Error"]</p>
+    }
+
+    @if (myApplications.Any())
+    {
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📄</span>
+                <div>
+                    <h3>Your Applications</h3>
+                    <p>Continue a draft, pay a pending request, or check the status of a submitted application.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="myapps-list">
+            @foreach (var app in myApplications)
+            {
+                var statusClass = app.Status switch
+                {
+                    "Draft" => "myapps-status-draft",
+                    "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "myapps-status-submitted" : "myapps-status-review",
+                    "ReturnedToApplicant" => "myapps-status-rejected",
+                    "Approved" => "myapps-status-approved",
+                    "Rejected" => "myapps-status-rejected",
+                    _ => "myapps-status-draft"
+                };
+                var statusText = app.Status switch
+                {
+                    "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "Submitted" : $"In Progress — {app.CurrentStage}",
+                    "ReturnedToApplicant" => "Returned for Correction",
+                    _ => app.Status
+                };
+                var rowAccentClass = app.Status switch
+                {
+                    "Draft" => "myapps-row-draft",
+                    "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "myapps-row-submitted" : "myapps-row-review",
+                    "ReturnedToApplicant" => "myapps-row-rejected",
+                    "Approved" => "myapps-row-approved",
+                    "Rejected" => "myapps-row-rejected",
+                    _ => "myapps-row-draft"
+                };
+
+                var paymentPending = app.Status == "Submitted" && app.PaymentStatus == "Pending";
+                payments.TryGetValue(app.Id, out var payment);
+
+                <div class="myapps-row @rowAccentClass">
+                    <div class="myapps-info">
+                        <span class="myapps-name">@(string.IsNullOrEmpty(app.ApplicantName) ? "Untitled application" : app.ApplicantName)</span>
+                        <span class="myapps-meta">
+                            @(app.ApplicationNumber ?? "No application number yet")
+                            &bull; Started @(app.CreatedDate?.ToString("dd-MM-yyyy") ?? "-")
+                            @if (!string.IsNullOrEmpty(app.ServiceType))
+                            {
+                                <text>&bull; @app.ServiceType</text>
+                            }
+                        </span>
+                        @if (app.Status == "ReturnedToApplicant" && !string.IsNullOrWhiteSpace(app.OfficerRemarks))
+                        {
+                            <span class="myapps-remarks">Officer's note: "@app.OfficerRemarks"</span>
+                        }
+                        @if (paymentPending && payment != null)
+                        {
+                            <span class="myapps-meta">Payment requested: &#8377;@payment.TotalPaymentAmount.ToString("N2")</span>
+                        }
+                    </div>
+                    <span class="myapps-status-badge @statusClass">@statusText</span>
+                    @if (app.Status == "Draft")
+                    {
+                        <a class="myapps-btn" href="@Url.Action("Edit", "Electricity", new { appNum = app.ApplicationNumber })">Continue</a>
+                    }
+                    else if (app.Status == "ReturnedToApplicant")
+                    {
+                        <a class="myapps-btn" href="@Url.Action("Edit", "Electricity", new { appNum = app.ApplicationNumber })">Correct &amp; Resubmit</a>
+                    }
+                    else if (paymentPending)
+                    {
+                        <form method="post" asp-action="PayNow" asp-controller="Electricity" style="display:inline;" class="eb-pay-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@app.Id" />
+                            <button type="button" class="myapps-btn eb-pay-now" style="background:#1D6E3E; border:none; cursor:pointer;">
+                                <i class="fas fa-indian-rupee-sign"></i> Pay Now (Test)
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("Preview", "Electricity", new { appNum = app.ApplicationNumber })">View</a>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="myapps-new-wrap">
+            <a class="myapps-new-btn" href="@Url.Action("Index", "Electricity")">
+                <i class="fa-solid fa-plus"></i> New Application
+            </a>
+        </div>
+
+        <hr class="myapps-divider" />
+    }
+    else
+    {
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📄</span>
+                <div>
+                    <h3>Your Applications</h3>
+                    <p>You haven't started any applications yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="myapps-empty">
+            <div class="myapps-empty-icon">🗂️</div>
+            <p>No applications yet — start your first electricity connection application below.</p>
+            <div class="myapps-new-wrap">
+                <a class="myapps-new-btn" href="@Url.Action("Index", "Electricity")">
+                    <i class="fa-solid fa-plus"></i> New Application
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Own tiny handler (not the shared .btn-pay-now one) so this page's
+        // Pay Now works without depending on any other page's script.
+        document.querySelectorAll('.eb-pay-now').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                if (confirm('Proceed with the payment?')) {
+                    btn.closest('form').submit();
+                }
+            });
+        });
+    </script>
+}

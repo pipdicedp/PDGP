@@ -1,103 +1,157 @@
 ﻿@model TradeLicence.Models.RegisterViewModel
 
-<div class="modal fade" id="registerModal" tabindex="-1">
+<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerTitle" aria-hidden="true">
 
     <div class="modal-dialog modal-lg modal-dialog-centered">
 
         <div class="modal-content register-modal">
 
-            <form asp-controller="Account" asp-action="Register" method="post">
+            <form asp-controller="Account" asp-action="Register" method="post" id="registerForm" autocomplete="off" novalidate>
                 @Html.AntiForgeryToken()
 
-                <div class="modal-header">
-                    <h4>
-                        <i class="fas fa-user-plus"></i>
-                        User Registration
-                    </h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header rv-header">
+                    <div class="rv-header-icon"><i class="fas fa-user-plus"></i></div>
+                    <div>
+                        <h4 id="registerTitle">Create your Investor account</h4>
+                        <p class="rv-header-sub">Enter your details exactly as they appear on your PAN card</p>
+                    </div>
+                    <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body">
-                    <div class="row">
+                <div class="rv-progress"><div class="rv-progress-bar" id="rvProgressBar"></div></div>
+                <div class="rv-progress-text"><span id="rvProgressText">0 of 9 fields completed</span></div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="FullName"></label>
+                <div class="modal-body rv-body">
+
+                    <div id="rvSummary" class="rv-summary d-none" role="alert">
+                        <i class="fas fa-circle-exclamation"></i> Please correct the highlighted fields and try again.
+                    </div>
+
+                    <!-- ===== 1. PAN details ===== -->
+                    <div class="rv-section-title"><span class="rv-step">1</span> PAN details <small>as printed on your PAN card</small></div>
+                    <div class="row g-3">
+
+                        <div class="col-md-6 rv-field" data-field="FullName">
+                            <label asp-for="FullName" class="form-label"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                <input asp-for="FullName" class="form-control" />
+                                <input asp-for="FullName" class="form-control" maxlength="150" placeholder="e.g. RAJESH KUMAR" style="text-transform:uppercase" autocomplete="off" />
                             </div>
+                            <div class="rv-msg"></div>
                             <span asp-validation-for="FullName" class="text-danger"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="DateOfBirth"></label>
+                        <div class="col-md-6 rv-field" data-field="PANNumber">
+                            <label asp-for="PANNumber" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
+                                <input asp-for="PANNumber" class="form-control" maxlength="10" placeholder="ABCPE1234F" style="text-transform:uppercase" autocomplete="off" />
+                            </div>
+                            <div class="rv-msg"></div>
+                            <div class="rv-hint">5 letters + 4 digits + 1 letter</div>
+                            <span asp-validation-for="PANNumber" class="text-danger"></span>
+                        </div>
+
+                        <div class="col-md-6 rv-field" data-field="DateOfBirth">
+                            <label asp-for="DateOfBirth" class="form-label">Date of Birth (as per PAN)</label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-calendar"></i></span>
                                 <input asp-for="DateOfBirth" type="date" class="form-control" />
                             </div>
+                            <div class="rv-msg"></div>
                             <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="PANNumber"></label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-id-card"></i></span>
-                                <input asp-for="PANNumber" class="form-control" maxlength="10" style="text-transform:uppercase" />
-                            </div>
-                            <span asp-validation-for="PANNumber" class="text-danger"></span>
+                        <div class="col-md-6">
+                            <div class="rv-note"><i class="fas fa-circle-info"></i> Name, PAN and date of birth must match your PAN card. Individuals must be 18 or older. For a company or firm PAN, enter the date of incorporation.</div>
                         </div>
+                    </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="MobileNumber"></label>
+                    <!-- ===== 2. Contact ===== -->
+                    <div class="rv-section-title"><span class="rv-step">2</span> Contact details</div>
+                    <div class="row g-3">
+
+                        <div class="col-md-6 rv-field" data-field="MobileNumber">
+                            <label asp-for="MobileNumber" class="form-label"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                <input asp-for="MobileNumber" class="form-control" maxlength="10" />
+                                <span class="input-group-text rv-prefix">+91</span>
+                                <input asp-for="MobileNumber" class="form-control" maxlength="10" inputmode="numeric" placeholder="10-digit mobile number" autocomplete="off" />
                             </div>
+                            <div class="rv-msg"></div>
                             <span asp-validation-for="MobileNumber" class="text-danger"></span>
                         </div>
 
-                        <div class="col-12 mb-3">
-                            <label asp-for="Address"></label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="fas fa-location-dot"></i></span>
-                                <textarea asp-for="Address" class="form-control" rows="3"></textarea>
-                            </div>
-                            <span asp-validation-for="Address" class="text-danger"></span>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="Email"></label>
+                        <div class="col-md-6 rv-field" data-field="Email">
+                            <label asp-for="Email" class="form-label"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-                                <input asp-for="Email" type="email" class="form-control" />
+                                <input asp-for="Email" type="email" class="form-control" maxlength="150" placeholder="name@@example.com" autocomplete="off" />
                             </div>
+                            <div class="rv-msg"></div>
                             <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="Username"></label>
+                        <div class="col-12 rv-field" data-field="Address">
+                            <label asp-for="Address" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-location-dot"></i></span>
+                                <textarea asp-for="Address" class="form-control" rows="3" maxlength="500" placeholder="Door no., street, area, city, PIN code"></textarea>
+                            </div>
+                            <div class="rv-msg"></div>
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                    </div>
+
+                    <!-- ===== 3. Account ===== -->
+                    <div class="rv-section-title"><span class="rv-step">3</span> Login details</div>
+                    <div class="row g-3 mb-2">
+
+                        <div class="col-md-6 rv-field" data-field="Username">
+                            <label asp-for="Username" class="form-label"></label>
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-user-circle"></i></span>
-                                <input asp-for="Username" class="form-control" maxlength="15" />
+                                <input asp-for="Username" class="form-control" maxlength="15" placeholder="4 to 15 characters" autocomplete="off" />
                             </div>
+                            <div class="rv-msg"></div>
+                            <div class="rv-hint">Start with a letter. Letters, numbers, dot and underscore only.</div>
                             <span asp-validation-for="Username" class="text-danger"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="Password"></label>
-                            <div class="input-group">
+                        <div class="col-md-6">
+                            <div class="rv-note"><i class="fas fa-circle-info"></i> You will use this user name and password to log in to the portal.</div>
+                        </div>
+
+                        <div class="col-md-6 rv-field" data-field="Password">
+                            <label asp-for="Password" class="form-label"></label>
+                            <div class="input-group rv-pw">
                                 <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                                <input asp-for="Password" type="password" class="form-control" maxlength="15" />
+                                <input asp-for="Password" class="form-control" maxlength="15" placeholder="6 to 15 characters" autocomplete="new-password" />
+                                <button type="button" class="rv-eye" data-target="Password" aria-label="Show or hide password"><i class="fas fa-eye"></i></button>
                             </div>
+                            <div class="rv-strength" id="rvStrength" data-level="">
+                                <div class="rv-strength-bars"><span></span><span></span><span></span><span></span></div>
+                                <div class="rv-strength-label" id="rvStrengthLabel"></div>
+                            </div>
+                            <ul class="rv-rules" id="rvRules">
+                                <li data-rule="len">6-15 characters</li>
+                                <li data-rule="case">Upper &amp; lower case</li>
+                                <li data-rule="num">A number</li>
+                                <li data-rule="sym">A symbol (@@ # $ !)</li>
+                            </ul>
+                            <div class="rv-msg"></div>
                             <span asp-validation-for="Password" class="text-danger"></span>
                         </div>
 
-                        <div class="col-md-6 mb-3">
-                            <label asp-for="ConfirmPassword"></label>
-                            <div class="input-group">
+                        <div class="col-md-6 rv-field" data-field="ConfirmPassword">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <div class="input-group rv-pw">
                                 <span class="input-group-text"><i class="fas fa-shield-alt"></i></span>
-                                <input asp-for="ConfirmPassword" type="password" class="form-control" maxlength="15" />
+                                <input asp-for="ConfirmPassword" class="form-control" maxlength="15" placeholder="Re-enter password" autocomplete="new-password" />
+                                <button type="button" class="rv-eye" data-target="ConfirmPassword" aria-label="Show or hide password"><i class="fas fa-eye"></i></button>
                             </div>
+                            <div class="rv-msg"></div>
                             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
                         </div>
 
@@ -105,8 +159,9 @@
                 </div>
 
                 <div class="modal-footer">
+                    <span class="rv-footer-note"><i class="fas fa-lock"></i> Your details are used only for portal registration.</span>
                     <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-register">Register</button>
+                    <button type="submit" class="btn btn-register" id="rvSubmit">Register</button>
                 </div>
 
             </form>
