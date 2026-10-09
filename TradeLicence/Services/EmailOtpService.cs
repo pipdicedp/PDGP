@@ -81,10 +81,7 @@ namespace TradeLicence.Services
         }
     }
 
-    // LIVE MODE (free, works over normal HTTPS port 443, so it does not need an SMTP port):
-    // Brevo (brevo.com) transactional e-mail API - free plan allows 300 e-mails per day.
-    // Settings (put them in User Secrets or appsettings.json):
-    //   "Brevo": { "ApiKey": "xkeysib-....", "SenderEmail": "verified-sender@gmail.com", "SenderName": "Puducherry Investor Portal" }
+
     public class BrevoApiOtpEmailSender : IOtpEmailSender
     {
         private readonly HttpClient _http;

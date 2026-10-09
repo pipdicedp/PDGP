@@ -491,7 +491,7 @@
 	display: grid;
 	grid-template-columns: 1.15fr 0.85fr;
 	gap: 40px;
-	align-items: center;
+	align-items: start;
 	padding: 44px 44px;
 	border-radius: 18px;
 	overflow: hidden;
@@ -569,6 +569,7 @@
 	flex-direction: column;
 	align-items: flex-start;
 	gap: 10px;
+	min-width: 0;
 	padding: 14px 14px 16px;
 	border-radius: 12px;
 	background: rgba(255,255,255,0.09);
@@ -605,6 +606,8 @@
 	font-size: 0.78rem;
 	font-weight: 600;
 	line-height: 1.35;
+	overflow-wrap: break-word;
+	min-width: 0;
 }
 
 /* ---------- Right: login card ---------- */
@@ -691,7 +694,7 @@
 }
 
 .tl-lx-field {
-	margin-bottom: 15px;
+	margin-bottom: 18px;
 }
 
 	.tl-lx-field label {
@@ -699,7 +702,7 @@
 		font-weight: 600;
 		font-size: 0.78rem;
 		color: #3B4441;
-		margin-bottom: 5px;
+		margin-bottom: 6px;
 	}
 
 .tl-lx-inputwrap {
@@ -759,7 +762,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	margin-bottom: 8px;
+	margin-bottom: 10px;
 }
 
 .tl-lx-captcha-img {
@@ -773,8 +776,8 @@
 	background: #EAF0F5;
 	border: 1px solid #D5DBE1;
 	border-radius: 8px;
-	width: 38px;
-	height: 38px;
+	width: 42px;
+	height: 42px;
 	font-size: 1rem;
 	color: #1a3a52;
 	cursor: pointer;
@@ -804,6 +807,11 @@
 	.tl-lx-card .tl-lx-submit:hover {
 		transform: translateY(-1px);
 		box-shadow: 0 10px 22px rgba(18,48,74,0.36);
+	}
+
+	.tl-lx-card .tl-lx-submit:active {
+		transform: translateY(0);
+		box-shadow: 0 4px 12px rgba(18,48,74,0.3);
 	}
 
 .tl-lx-forgot {
@@ -1785,3 +1793,590 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-services-list {
 	.tl-lx-otp-status.err {
 		color: #B3261E;
 	}
+
+/* =====================================================================
+   CONCEPT 1 REDESIGN — REGAL SPLIT  (classes start with tl-lx2-)
+   Professional split-screen login: photo hero + services on the left,
+   white sign-in card on the right. Applied to Citizen Login and
+   Official Login pages. Kept in its own class family so nothing here
+   collides with the older .tl-lx-* styles still in this file.
+===================================================================== */
+.tl-lx2-shell {
+	display: grid;
+	grid-template-columns: 1.12fr 1fr;
+	width: 100%;
+	min-height: 640px;
+	position: relative;
+	background: #0b1f33 url('../Images/Matrimandir_Auroville.jpg') center / cover no-repeat;
+	border-radius: 18px;
+	overflow: hidden;
+	box-shadow: 0 18px 50px rgba(15,36,56,0.28);
+	font-family: 'Public Sans', -apple-system, Segoe UI, sans-serif;
+}
+
+	/* Full-bleed Auroville photo with a navy wash so both panels share one backdrop */
+	.tl-lx2-shell::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+		background:
+			linear-gradient(90deg, rgba(6,20,34,0.72) 0%, rgba(8,26,42,0.16) 50%, rgba(6,18,30,0.62) 100%),
+			linear-gradient(180deg, rgba(10,28,46,0.14) 0%, rgba(6,18,30,0.62) 100%);
+	}
+
+	.tl-lx2-shell > * {
+		position: relative;
+		z-index: 1;
+	}
+
+	.tl-lx2-shell * {
+		box-sizing: border-box;
+	}
+
+/* ---------- Left: photo hero panel ---------- */
+.tl-lx2-photo {
+	position: relative;
+	overflow: hidden;
+	background: transparent;
+	display: flex;
+	flex-direction: column;
+	padding: 36px 38px;
+	animation: tl-lx2-rise .6s ease both;
+}
+
+/* Photo now lives on .tl-lx2-shell, so this inner layer is retired. */
+.tl-lx2-photo-bg {
+	display: none;
+}
+
+	.tl-lx2-photo::after {
+		content: none;
+	}
+
+.tl-lx2-photo > * {
+	position: relative;
+	z-index: 2;
+}
+
+.tl-lx2-crest {
+	display: flex;
+	align-items: center;
+	gap: 13px;
+}
+
+.tl-lx2-crest-img {
+	height: 46px;
+	width: auto;
+	border-radius: 8px;
+	background: #fff;
+	padding: 2px;
+	flex-shrink: 0;
+}
+
+.tl-lx2-crest-govt {
+	color: #F3D27A;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+}
+
+.tl-lx2-crest-dept {
+	color: #C9DAE6;
+	font-size: 0.76rem;
+	margin-top: 2px;
+}
+
+.tl-lx2-hero {
+	margin-top: 26px;
+}
+
+.tl-lx2-eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 14px;
+	border-radius: 999px;
+	background: rgba(212,160,23,0.16);
+	border: 1px solid rgba(212,160,23,0.5);
+	color: #F3D27A;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.tl-lx2-hero-title {
+	font-family: 'Source Serif 4', serif;
+	font-weight: 700;
+	font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+	line-height: 1.16;
+	color: #fff;
+	margin: 16px 0 10px;
+}
+
+	.tl-lx2-hero-title em {
+		font-style: normal;
+		color: #E8B923;
+	}
+
+.tl-lx2-hero-text {
+	color: #C9DAE6;
+	font-size: 0.92rem;
+	line-height: 1.66;
+	margin: 0 0 16px;
+	max-width: 520px;
+}
+
+/* Keep hero copy legible over the photo */
+.tl-lx2-hero-title,
+.tl-lx2-hero-text,
+.tl-lx2-crest-govt,
+.tl-lx2-crest-dept {
+	text-shadow: 0 1px 10px rgba(2,10,20,0.60);
+}
+
+.tl-lx2-points {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-bottom: 18px;
+}
+
+	.tl-lx2-points span {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		padding: 7px 12px;
+		border-radius: 999px;
+		background: rgba(255,255,255,0.09);
+		border: 1px solid rgba(255,255,255,0.18);
+		color: #E8F0F7;
+		font-size: 0.76rem;
+		font-weight: 500;
+	}
+
+	.tl-lx2-points i {
+		color: #E8B923;
+		font-size: 0.7rem;
+	}
+
+/* ---------- Services tiles ---------- */
+.tl-lx2-services {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 10px;
+}
+
+.tl-lx2-service {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 8px;
+	min-width: 0;
+	padding: 12px 12px 13px;
+	border-radius: 12px;
+	background: rgba(255,255,255,0.07);
+	border: 1px solid rgba(255,255,255,0.14);
+	backdrop-filter: blur(6px);
+	-webkit-backdrop-filter: blur(6px);
+	color: #fff;
+	text-decoration: none;
+	cursor: pointer;
+	transition: transform .18s ease, background .18s ease, border-color .18s ease;
+}
+
+	.tl-lx2-service:hover {
+		transform: translateY(-3px);
+		background: rgba(255,255,255,0.16);
+		border-color: #D4A017;
+		color: #fff;
+	}
+
+.tl-lx2-service-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 9px;
+	background: linear-gradient(135deg, #E8B923, #C28F0C);
+	color: #12304a;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 0.86rem;
+	flex-shrink: 0;
+}
+
+.tl-lx2-service-title {
+	font-size: 0.72rem;
+	font-weight: 600;
+	line-height: 1.35;
+	overflow-wrap: break-word;
+	min-width: 0;
+}
+
+.tl-lx2-footline {
+	margin-top: auto;
+	padding-top: 16px;
+	border-top: 1px solid rgba(255,255,255,0.14);
+	color: #8FA8BC;
+	font-size: 0.74rem;
+	display: flex;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+	.tl-lx2-footline i {
+		color: #E8B923;
+		margin-right: 5px;
+	}
+
+/* ---------- Right: sign-in card ---------- */
+.tl-lx2-form-side {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 42px 38px;
+	background: linear-gradient(180deg, rgba(6,18,30,0.10) 0%, rgba(6,18,30,0.42) 100%);
+	animation: tl-lx2-rise .6s .12s ease both;
+}
+
+/* decorative gold concentric rings — bottom right */
+.tl-lx2-form-side::before {
+	content: "";
+	position: absolute;
+	right: -150px;
+	bottom: -150px;
+	width: 560px;
+	height: 560px;
+	border-radius: 50%;
+	background: repeating-radial-gradient(circle at 50% 50%,
+		transparent 0 40px,
+		rgba(212,160,23,0.16) 40px 42px,
+		transparent 42px 128px,
+		rgba(212,160,23,0.10) 128px 130px,
+		transparent 130px 224px,
+		rgba(212,160,23,0.07) 224px 226px,
+		transparent 226px 330px);
+	pointer-events: none;
+	z-index: 0;
+}
+
+/* faint diagonal silk texture */
+.tl-lx2-form-side::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(135deg, rgba(255,255,255,0.028) 0 2px, transparent 2px 18px);
+	pointer-events: none;
+	z-index: 1;
+}
+
+.tl-lx2-card {
+	position: relative;
+	z-index: 2;
+	width: 100%;
+	max-width: 420px;
+	background: #FFFDF6;
+	border-radius: 18px;
+	padding: 36px 38px 30px;
+	border-top: 4px solid #D4A017;
+	box-shadow:
+		0 0 0 1px rgba(212,160,23,0.28),
+		0 26px 64px rgba(4,16,30,0.48),
+		0 10px 30px rgba(4,16,30,0.35);
+}
+
+.tl-lx2-signin-label {
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: #B07F0A;
+}
+
+.tl-lx2-heading {
+	font-family: 'Source Serif 4', serif;
+	font-weight: 700;
+	font-size: 1.75rem;
+	color: #12304a;
+	margin: 8px 0 6px;
+}
+
+.tl-lx2-sub {
+	color: #64748b;
+	font-size: 0.86rem;
+	line-height: 1.6;
+	margin: 0 0 22px;
+}
+
+.tl-lx2-alert {
+	background: #FBEAE8;
+	border-left: 3px solid #B3261E;
+	color: #7A241D;
+	font-size: 0.8rem;
+	padding: 8px 12px;
+	border-radius: 6px;
+	margin-bottom: 14px;
+}
+
+.tl-lx2-field {
+	margin-bottom: 16px;
+}
+
+	.tl-lx2-field label {
+		display: block;
+		font-weight: 600;
+		font-size: 0.78rem;
+		color: #2c3e50;
+		margin-bottom: 7px;
+	}
+
+.tl-lx2-control {
+	position: relative;
+}
+
+	.tl-lx2-control > i {
+		position: absolute;
+		left: 14px;
+		top: 50%;
+		transform: translateY(-50%);
+		color: #94a3b8;
+		font-size: 0.88rem;
+		pointer-events: none;
+	}
+
+.tl-lx2-input {
+	width: 100%;
+	font-family: inherit;
+	border: 1px solid #dbe2ea;
+	background: #F8FAFC;
+	border-radius: 11px;
+	padding: 11px 40px 11px 42px;
+	font-size: 0.9rem;
+	color: #172636;
+	transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+	.tl-lx2-input::placeholder {
+		color: #9aa8b8;
+	}
+
+	.tl-lx2-input:focus {
+		outline: none;
+		background: #fff;
+		border-color: #1a3a52;
+		box-shadow: 0 0 0 4px rgba(26,58,82,0.12);
+	}
+
+.tl-lx2-eye {
+	position: absolute;
+	right: 6px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 1rem;
+	color: #64748b;
+	padding: 6px;
+	line-height: 1;
+}
+
+	.tl-lx2-eye:hover {
+		color: #1a3a52;
+	}
+
+.tl-lx2-error {
+	color: #B3261E;
+	font-size: 0.76rem;
+	display: block;
+	margin-top: 4px;
+}
+
+.tl-lx2-captcha-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 10px;
+}
+
+.tl-lx2-captcha-img {
+	height: 44px;
+	border: 1px solid #dbe2ea;
+	border-radius: 10px;
+	background: #eef2f6;
+	display: block;
+}
+
+.tl-lx2-captcha-refresh {
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	border: 1px solid #dbe2ea;
+	background: #EEF3F8;
+	color: #1a3a52;
+	font-size: 1rem;
+	cursor: pointer;
+	flex-shrink: 0;
+	transition: background .15s ease;
+}
+
+	.tl-lx2-captcha-refresh:hover {
+		background: #dfe9f2;
+	}
+
+.tl-lx2-submit {
+	width: 100%;
+	margin-top: 6px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 12px;
+	border: none;
+	border-radius: 11px;
+	background: linear-gradient(135deg, #E8B923, #C28F0C);
+	color: #12304a;
+	font-family: inherit;
+	font-weight: 700;
+	font-size: 0.94rem;
+	cursor: pointer;
+	box-shadow: 0 10px 24px rgba(6,20,36,0.4), inset 0 1px 0 rgba(255,255,255,0.35);
+	transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+	.tl-lx2-submit:hover {
+		transform: translateY(-1px);
+		filter: brightness(1.06);
+		box-shadow: 0 14px 30px rgba(6,20,36,0.45), inset 0 1px 0 rgba(255,255,255,0.35);
+	}
+
+	.tl-lx2-submit:active {
+		transform: translateY(0);
+		box-shadow: 0 5px 14px rgba(6,20,36,0.4);
+	}
+
+	.tl-lx2-submit i {
+		color: #12304a;
+	}
+
+.tl-lx2-forgot {
+	text-align: center;
+	margin-top: 14px;
+}
+
+	.tl-lx2-forgot a {
+		color: #1a3a52;
+		font-size: 0.82rem;
+		font-weight: 600;
+		text-decoration: none;
+	}
+
+		.tl-lx2-forgot a:hover {
+			text-decoration: underline;
+		}
+
+.tl-lx2-divider {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 20px 0 14px;
+	color: #94a3b8;
+	font-size: 0.74rem;
+}
+
+	.tl-lx2-divider::before,
+	.tl-lx2-divider::after {
+		content: "";
+		flex: 1;
+		height: 1px;
+		background: #E5EAF0;
+	}
+
+.tl-lx2-register {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 9px;
+	padding: 11px;
+	border: 1.5px solid #1a3a52;
+	border-radius: 11px;
+	color: #1a3a52;
+	font-weight: 600;
+	font-size: 0.88rem;
+	text-decoration: none;
+	transition: background .15s ease, color .15s ease;
+}
+
+	.tl-lx2-register:hover {
+		background: #1a3a52;
+		color: #fff;
+	}
+
+.tl-lx2-secure {
+	text-align: center;
+	margin-top: 18px;
+	font-size: 0.74rem;
+	color: #94a3b8;
+}
+
+	.tl-lx2-secure i {
+		margin-right: 5px;
+		color: #1B7F3B;
+	}
+
+@keyframes tl-lx2-rise {
+	from { opacity: 0; transform: translateY(14px); }
+	to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx2-photo, .tl-lx2-form-side { animation: none; }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1000px) {
+	.tl-lx2-shell {
+		grid-template-columns: 1fr;
+	}
+
+	.tl-lx2-form-side {
+		order: -1;
+		padding: 34px 20px;
+	}
+
+	.tl-lx2-card {
+		padding: 28px 24px 24px;
+	}
+
+	.tl-lx2-photo {
+		order: 1;
+		padding: 26px 22px;
+	}
+
+	.tl-lx2-hero {
+		margin-top: 18px;
+	}
+
+	.tl-lx2-footline {
+		display: none;
+	}
+}
+
+@media (max-width: 620px) {
+	.tl-lx2-services {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	.tl-lx2-hero-title {
+		font-size: 1.6rem;
+	}
+
+	.tl-lx2-points span {
+		font-size: 0.7rem;
+	}
+}
