@@ -1,0 +1,67 @@
+﻿@model TradeLicence.Models.Caf.CafDepartmentApplicationVm
+@{
+    ViewData["Title"] = "Common Application Form — " + Model.Application.Department;
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+
+    var app = Model.Application;
+    var s = Model.Summary;
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/caf_css/caf.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📄</span>
+                <div>
+                    <h3>@(string.IsNullOrEmpty(s?.UnitName) ? "Common Application Form" : s!.UnitName)</h3>
+                    <p>CAF Ref. No. @app.LoginId &bull; Forwarded to @app.Department &bull; Current stage: @app.CurrentStage &bull; Status: @app.Status</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info caf-alert">
+            <strong>Forwarded by the Industry Department</strong>
+            @(string.IsNullOrEmpty(Model.ForwardedByName) ? "" : $"({Model.ForwardedByName})")
+            on @app.ForwardedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt").
+            @if (!string.IsNullOrWhiteSpace(app.ForwardRemarks))
+            {
+                <span class="caf-of-forward-note">Remarks: "@app.ForwardRemarks"</span>
+            }
+        </div>
+
+        <!-- ================= Full CAF preview (read-only) ================= -->
+        <partial name="~/Views/CommonApplicationForm/_CafPreviewSections.cshtml" model="Model.Preview" />
+
+        <div class="tl-section-divider">
+            <span class="tl-section-divider-icon"><i class="fa-solid fa-angles-down"></i></span>
+        </div>
+
+        <!-- ================= Shared Officer Workflow panel (4-category workflow) ================= -->
+        <partial name="_OfficerWorkflowPanel" model="(TradeLicence.Models.IWorkflowApplication)Model.Application" />
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+    <script src="~/js/caf_js/caf_preview.js" asp-append-version="true"></script>
+
+    @if (TempData["OfficerActionMessage"] != null)
+    {
+        <script>
+            showOfficerActionAlert(
+                            @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
+                @Html.Raw(Json.Serialize(TempData["OfficerActionMessage"]))
+            );
+        </script>
+    }
+}

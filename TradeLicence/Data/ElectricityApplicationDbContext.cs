@@ -12,5 +12,6 @@ namespace TradeLicence.Data
 
         public DbSet<EBapplication> EBapplications { get; set; } = null!;
         public DbSet<DropdownMaster> DropdownMasters { get; set; } = null!;
+        public DbSet<EBApplicationDocument> EBApplicationDocuments { get; set; }
     }
 }

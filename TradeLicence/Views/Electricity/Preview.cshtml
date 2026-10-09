@@ -3,200 +3,294 @@
 @{
     ViewData["Title"] = "Acknowledgement Receipt";
     Layout = "_UserLayout";
+
+    // Workflow info is passed in by ElectricityController.Preview (ViewBag) —
+    // ApplicationViewModel only carries the legacy ApplicationStatus column.
+    var wfStatus = ViewBag.WorkflowStatus as string;
+    var stage = ViewBag.CurrentStage as string;
+    var payStatus = ViewBag.PaymentStatus as string;
+    var officerRemarks = ViewBag.OfficerRemarks as string;
+
+    var statusText = wfStatus switch
+    {
+        null => "—",
+        "Submitted" => stage == "Initial Scrutiny" ? "Submitted" : $"In Progress — {stage}",
+        "ReturnedToApplicant" => "Returned for Correction",
+        "Draft" => "Draft — not submitted yet",
+        _ => wfStatus
+    };
+    var statusClass = wfStatus switch
+    {
+        "Draft" => "myapps-status-draft",
+        "Submitted" => stage == "Initial Scrutiny" ? "myapps-status-submitted" : "myapps-status-review",
+        "ReturnedToApplicant" => "myapps-status-rejected",
+        "Approved" => "myapps-status-approved",
+        "Rejected" => "myapps-status-rejected",
+        _ => "myapps-status-draft"
+    };
+    var paymentPending = wfStatus == "Submitted" && payStatus == "Pending";
+
+    // Review mode: not submitted yet (new draft, or returned for correction) —
+    // the applicant checks the details here and submits from this page.
+    var canSubmit = wfStatus == "Draft" || wfStatus == "ReturnedToApplicant";
+    var isResubmit = wfStatus == "ReturnedToApplicant";
+    var submitSuccess = TempData["SubmitSuccess"] is true;
+    var submittedNo = (TempData["SubmittedAppNumber"] as string) ?? Model.ApplicationNumber ?? "";
+    var errorMessage = TempData["Error"] as string;
+
+    // New uploads: the *Path value is a document id (encrypted in the database),
+    // opened through ElectricityController.ViewDocument. Older applications still
+    // hold a disk path under wwwroot/uploads, served as a plain static file.
+    string DocUrl(string path) =>
+        TradeLicence.Services.EBDocumentHelper.TryGetDocumentId(path, out var docId)
+            ? Url.Action("ViewDocument", "Electricity", new { documentId = docId })!
+            : Url.Content("~/" + path.TrimStart('/'));
+
+    string V(object? value)
+    {
+        var s = value?.ToString();
+        return string.IsNullOrWhiteSpace(s) ? "—" : s;
+    }
+
+    var documents = new List<(string Label, string? Type, string? Path, bool Mandatory)>
+    {
+        ("Photograph", "Passport Size Photo", Model.PhotoPath, true),
+        ("Address Proof", Model.AddressProofType, Model.AddressProofPath, true),
+        ("Identity Proof", Model.IdentityProofType, Model.IdentityProofPath, true),
+        ("Test Report", null, Model.TestReportPath, false),
+        ("Sale Deed", null, Model.SaleDeedPath, false),
+        ("Power of Attorney", null, Model.PowerOfAttorneyPath, false),
+        ("Municipal Tax Receipt", null, Model.MunicipalTaxPath, false),
+        ("Allotment Letter", null, Model.AllotmentLetterPath, false),
+        ("House Registration", null, Model.HouseRegistrationPath, false),
+        ("Lease Agreement", null, Model.LeasePath, false),
+        ("Other Ownership Proof", null, Model.OtherOwnershipPath, false),
+        ("Power Agent Photo", null, Model.PowerAgentPhotoPath, false),
+        ("Other Documents", null, Model.OthersPath, false)
+    }
+    .Where(d => d.Mandatory || !string.IsNullOrEmpty(d.Path))
+    .ToList();
+
+    var submittedOn = ((DateTime?)Model.CreatedDate)?.ToString("dd-MM-yyyy hh:mm tt") ?? "-";
 }
-<link rel="stylesheet" href="~/css/EB_css/preview.css" asp-append-version="true" />
-<!-- Action Buttons: Hidden when printing or saving as PDF -->
-<div class="container my-3 d-print-none text-end">
-    <a href="@Url.Action("DownloadAcknowledgement", "Electricity", new { appNum = Model.ApplicationNumber })" class="btn btn-success fw-bold me-2">
-        📥 Download PDF Acknowledgement
-    </a>
-    <button onclick="window.print()" class="btn btn-primary fw-bold me-2">
-        🖨️ Print / Save as PDF
-    </button>
-    <a asp-action="Index" class="btn btn-outline-secondary">
-        Back to Home
-    </a>
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/EB_css/preview.css" asp-append-version="true" />
+}
+
+<div class="dashboard-body eb-preview-body" id="ebPreviewPage"
+     data-my-apps-url="@Url.Action("MyApplications", "Electricity")"
+     data-download-url="@Url.Action("DownloadAcknowledgement", "Electricity", new { appNum = submittedNo })"
+     data-app-no="@submittedNo"
+     data-submit-success="@(submitSuccess ? "true" : "false")">
+
+    <!-- Banner: hidden when printing / saving as PDF -->
+    <div class="dashboard-banner d-print-none">
+        <div class="dashboard-banner-text">
+            <span class="dashboard-banner-icon">⚡</span>
+            <div>
+                <h3>@(canSubmit ? "Review Your Application" : "Application Acknowledgement")</h3>
+                <p>@(string.IsNullOrEmpty(Model.ApplicationNumber) ? "No application number yet" : Model.ApplicationNumber) &bull; Electricity New Service Connection</p>
+            </div>
+        </div>
+        <span class="myapps-status-badge @statusClass">@statusText</span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="eb-alert eb-alert-danger d-print-none"><div>@errorMessage</div></div>
+    }
+
+    @if (wfStatus == "Draft")
+    {
+        <div class="eb-alert eb-alert-info d-print-none">
+            <div><strong>Please review your application.</strong> Check every detail and document below. You can still go back and edit — nothing reaches the officer until you click <strong>Submit Application</strong>.</div>
+        </div>
+    }
+
+    @if (wfStatus == "ReturnedToApplicant")
+    {
+        <div class="eb-alert eb-alert-danger d-print-none">
+            <div>
+                <strong>Returned for correction.</strong> Edit the details if needed, then click <strong>Resubmit Application</strong>.
+                @if (!string.IsNullOrWhiteSpace(officerRemarks))
+                {
+                    <span class="myapps-remarks" style="display:block; margin-top:4px;">Officer's note: "@officerRemarks"</span>
+                }
+            </div>
+        </div>
+    }
+    else if (paymentPending)
+    {
+        <div class="eb-alert eb-alert-warning d-print-none">
+            <div><strong>Payment requested.</strong> The inspection officer has requested a payment for this application.</div>
+            <a class="myapps-btn" style="background:#1D6E3E;" href="@Url.Action("MyApplications", "Electricity")">Go to Payment</a>
+        </div>
+    }
+
+    <!-- Action buttons: hidden when printing or saving as PDF -->
+    <div class="eb-preview-actions d-print-none">
+        <a asp-action="MyApplications" class="myapps-btn myapps-btn-view">
+            <i class="fas fa-arrow-left"></i> Back to My Applications
+        </a>
+        @if (canSubmit)
+        {
+            <a href="@Url.Action("Edit", "Electricity", new { appNum = Model.ApplicationNumber })" class="myapps-btn">
+                <i class="fas fa-pen"></i> Edit Application
+            </a>
+            <form id="ebSubmitForm" method="post" asp-action="SubmitApplication" asp-controller="Electricity" class="eb-inline-form">
+                <input type="hidden" name="appNum" value="@Model.ApplicationNumber" />
+                <button type="button" id="ebSubmitBtn" class="myapps-btn myapps-btn-success eb-btn-reset">
+                    <i class="fas fa-paper-plane"></i> @(isResubmit ? "Resubmit Application" : "Submit Application")
+                </button>
+            </form>
+        }
+        else
+        {
+            <button type="button" class="myapps-btn eb-btn-reset eb-print-btn">
+                <i class="fas fa-print"></i> Print / Save as PDF
+            </button>
+            <a href="@Url.Action("DownloadAcknowledgement", "Electricity", new { appNum = Model.ApplicationNumber })" class="myapps-btn myapps-btn-success">
+                <i class="fas fa-download"></i> Download PDF Acknowledgement
+            </a>
+        }
+    </div>
+
+    <!-- Printable Document Container -->
+    <div class="acknowledgement-container">
+
+        <!-- Hero: photo + title + key facts -->
+        <div class="eb-ack-hero">
+            <div class="eb-ack-photo-wrap">
+                @if (!string.IsNullOrEmpty(Model.PhotoPath))
+                {
+                    <img src="@DocUrl(Model.PhotoPath)" alt="Applicant Photo" class="passport-photo eb-photo" />
+                    <div class="passport-placeholder d-none"><span>Photo</span></div>
+                }
+                else
+                {
+                    <div class="passport-placeholder"><span>Photo</span></div>
+                }
+            </div>
+            <div class="eb-ack-hero-main">
+                <h4 class="eb-ack-dept">ELECTRICITY DEPARTMENT</h4>
+                <h5 class="eb-ack-subtitle">NEW SERVICE CONNECTION ACKNOWLEDGEMENT</h5>
+                <div class="eb-grid eb-ack-facts">
+                    <div class="eb-field"><span class="eb-label">Application No</span><span class="eb-value">@V(Model.ApplicationNumber)</span></div>
+                    <div class="eb-field"><span class="eb-label">Status</span><span class="eb-value">@statusText</span></div>
+                    <div class="eb-field"><span class="eb-label">Applicant Name</span><span class="eb-value">@V(Model.ApplicantName)</span></div>
+                    <div class="eb-field"><span class="eb-label">Mobile Number</span><span class="eb-value">@V(Model.MobileNumber)</span></div>
+                    <div class="eb-field"><span class="eb-label">Service Category</span><span class="eb-value">@V(Model.ServiceCategory)</span></div>
+                    <div class="eb-field"><span class="eb-label">Submission Date</span><span class="eb-value">@submittedOn</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 1: Applicant & Service Details -->
+        <section class="eb-card">
+            <header class="eb-card-head"><span class="eb-card-icon">👤</span><h4>1. Applicant &amp; Service Details</h4></header>
+            <div class="eb-grid">
+                <div class="eb-field"><span class="eb-label">Service Category</span><span class="eb-value">@V(Model.ServiceCategory)</span></div>
+                <div class="eb-field"><span class="eb-label">Ownership Type</span><span class="eb-value">@V(Model.OwnershipType)</span></div>
+                <div class="eb-field"><span class="eb-label">Connection Type</span><span class="eb-value">@V(Model.ConnectionType)</span></div>
+                <div class="eb-field"><span class="eb-label">Service Type</span><span class="eb-value">@V(Model.ServiceType)</span></div>
+                <div class="eb-field"><span class="eb-label">Applicant Name</span><span class="eb-value">@V(Model.ApplicantName)</span></div>
+                <div class="eb-field"><span class="eb-label">Gender</span><span class="eb-value">@V(Model.Gender)</span></div>
+                <div class="eb-field"><span class="eb-label">Father/Husband Name</span><span class="eb-value">@V(Model.RelativeName)</span></div>
+                <div class="eb-field"><span class="eb-label">Mobile Number</span><span class="eb-value">@V(Model.MobileNumber)</span></div>
+                <div class="eb-field"><span class="eb-label">Proposed Pincode</span><span class="eb-value">@V(Model.ProposedPincode)</span></div>
+                <div class="eb-field"><span class="eb-label">Email Address</span><span class="eb-value">@V(Model.Email)</span></div>
+            </div>
+        </section>
+
+        <!-- Section 2: Address Details -->
+        <section class="eb-card">
+            <header class="eb-card-head"><span class="eb-card-icon">📍</span><h4>2. Address Details</h4></header>
+            <div class="eb-grid">
+                <div class="eb-field"><span class="eb-label">Site Door/Plot No</span><span class="eb-value">@V(Model.SiteDoorNo)</span></div>
+                <div class="eb-field"><span class="eb-label">Site Street Name</span><span class="eb-value">@V(Model.SiteStreet)</span></div>
+                <div class="eb-field"><span class="eb-label">Site Area</span><span class="eb-value">@V(Model.SiteArea)</span></div>
+                <div class="eb-field"><span class="eb-label">District/Region</span><span class="eb-value">@V(Model.SiteDistrict)</span></div>
+                <div class="eb-field"><span class="eb-label">Site Pincode</span><span class="eb-value">@V(Model.SitePincode)</span></div>
+                <div class="eb-field"><span class="eb-label">Landmark 1</span><span class="eb-value">@V(Model.Landmark1)</span></div>
+                <div class="eb-field"><span class="eb-label">Landmark 2</span><span class="eb-value">@V(Model.Landmark2)</span></div>
+                <div class="eb-field"><span class="eb-label">Comm. Same as Site?</span><span class="eb-value">@(Model.IsSameAddress ? "Yes" : "No")</span></div>
+                @if (!Model.IsSameAddress)
+                {
+                    <div class="eb-field"><span class="eb-label">Comm. Door No</span><span class="eb-value">@V(Model.CommDoorNo)</span></div>
+                    <div class="eb-field"><span class="eb-label">Comm. Street</span><span class="eb-value">@V(Model.CommStreet)</span></div>
+                    <div class="eb-field"><span class="eb-label">Comm. Area</span><span class="eb-value">@V(Model.CommArea)</span></div>
+                    <div class="eb-field"><span class="eb-label">Comm. Region</span><span class="eb-value">@V(Model.CommRegion)</span></div>
+                    <div class="eb-field"><span class="eb-label">Comm. Pincode</span><span class="eb-value">@V(Model.CommPincode)</span></div>
+                }
+            </div>
+        </section>
+
+        <!-- Section 3: Plot & Technical Specifications -->
+        <section class="eb-card">
+            <header class="eb-card-head"><span class="eb-card-icon">🏗️</span><h4>3. Plot &amp; Technical Specifications</h4></header>
+            <div class="eb-grid">
+                <div class="eb-field"><span class="eb-label">RS No.</span><span class="eb-value">@V(Model.RSNo)</span></div>
+                <div class="eb-field"><span class="eb-label">Plot Area (Sq.ft)</span><span class="eb-value">@V(Model.PlotArea)</span></div>
+                <div class="eb-field"><span class="eb-label">Build Area (Sq.ft)</span><span class="eb-value">@V(Model.BuildArea)</span></div>
+                <div class="eb-field"><span class="eb-label">Supply Category</span><span class="eb-value">@V(Model.SupplyCategory)</span></div>
+                <div class="eb-field"><span class="eb-label">Purpose</span><span class="eb-value">@V(Model.Purpose)</span></div>
+                <div class="eb-field"><span class="eb-label">Applied Load (Watts)</span><span class="eb-value">@V(Model.TotalLoad)</span></div>
+                <div class="eb-field"><span class="eb-label">Type of Supply</span><span class="eb-value">@V(Model.TypeOfSupply)</span></div>
+                <div class="eb-field"><span class="eb-label">Own Meter Preference</span><span class="eb-value">@(Model.OwnMeter == "true" ? "Yes" : "No")</span></div>
+            </div>
+        </section>
+
+        <!-- Section 4: Submitted Documents -->
+        <section class="eb-card">
+            <header class="eb-card-head"><span class="eb-card-icon">📎</span><h4>4. Submitted Documents Checklist</h4></header>
+            <ul class="eb-docs">
+                @foreach (var doc in documents)
+                {
+                    var uploaded = !string.IsNullOrEmpty(doc.Path);
+                    <li class="eb-doc">
+                        <div class="eb-doc-info">
+                            <span class="eb-doc-name">@doc.Label</span>
+                            <span class="eb-doc-type">@(string.IsNullOrEmpty(doc.Type) ? "—" : doc.Type)</span>
+                        </div>
+                        @if (uploaded)
+                        {
+                            <span class="eb-chip eb-chip-ok">Uploaded ✔</span>
+                            <button type="button" class="myapps-btn eb-doc-view eb-btn-reset d-print-none"
+                                    data-url="@DocUrl(doc.Path!)" data-title="@doc.Label">
+                                <i class="fas fa-eye"></i> View
+                            </button>
+                        }
+                        else
+                        {
+                            <span class="eb-chip eb-chip-missing">Not uploaded</span>
+                        }
+                    </li>
+                }
+            </ul>
+        </section>
+
+        <div class="eb-ack-note">
+            <em>Note: This is an official computer-generated acknowledgement receipt.</em>
+        </div>
+    </div>
 </div>
 
-<!-- Printable Document Container -->
-<div class="container acknowledgement-container border p-4 bg-white">
-    <!-- Header with Photo & Title -->
-    <div class="row align-items-center mb-3">
-        <div class="col-3 text-center">
-            @if (!string.IsNullOrEmpty(Model.PhotoPath))
-            {
-                <img src="@Url.Action("ViewDocument", "Electricity", new { documentId = Model.PhotoPath })" alt="Applicant Photo" class="passport-photo border" />
-            }
-            else
-            {
-                <div class="passport-placeholder border d-flex align-items-center justify-content-center">
-                    <span class="text-muted small">Photo</span>
-                </div>
-            }
-        </div>
-        <div class="col-9">
-            <h4 class="fw-bold mb-1 text-uppercase text-primary">ELECTRICITY DEPARTMENT</h4>
-            <h5 class="text-secondary fw-semibold mb-2">NEW SERVICE CONNECTION ACKNOWLEDGEMENT</h5>
-            <div class="small">
-                <strong>Application No:</strong> @Model.ApplicationNumber<br />
-                <strong>Applicant Name:</strong> @Model.ApplicantName<br />
-                <strong>Mobile Number:</strong> @Model.MobileNumber<br />
-                <strong>Service Category:</strong> @Model.ServiceCategory<br />
-                <strong>Submission Date:</strong> @DateTime.Now.ToString("dd-MM-yyyy hh:mm tt")
+<!-- Document preview modal (same look as the Water Connection document preview) -->
+<div class="modal fade d-print-none" id="docPreviewModal" tabindex="-1" aria-labelledby="docPreviewTitle" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content wc-preview-modal">
+            <div class="modal-header wc-preview-header">
+                <h5 class="modal-title wc-preview-title" id="docPreviewTitle">Document Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body wc-preview-body">
+                <iframe id="docPreviewFrame" class="wc-preview-frame" src="about:blank" title="Document preview"></iframe>
             </div>
         </div>
     </div>
-
-    <!-- Section 1: Applicant & Service Details -->
-    <div class="section-title">1. APPLICANT & SERVICE DETAILS</div>
-    <table class="table table-bordered table-sm mb-3">
-        <tbody>
-            <tr>
-                <th style="width: 25%;">Service Category</th>
-                <td style="width: 25%;">@Model.ServiceCategory</td>
-                <th style="width: 25%;">Ownership Type</th>
-                <td style="width: 25%;">@Model.OwnershipType</td>
-            </tr>
-            <tr>
-                <th>Connection Type</th>
-                <td>@Model.ConnectionType</td>
-                <th>Service Type</th>
-                <td>@Model.ServiceType</td>
-            </tr>
-            <tr>
-                <th>Applicant Name</th>
-                <td>@Model.ApplicantName</td>
-                <th>Gender</th>
-                <td>@Model.Gender</td>
-            </tr>
-            <tr>
-                <th>Father/Husband Name</th>
-                <td>@Model.RelativeName</td>
-                <th>Mobile Number</th>
-                <td>@Model.MobileNumber</td>
-            </tr>
-            <tr>
-                <th>Proposed Pincode</th>
-                <td>@Model.ProposedPincode</td>
-                <th>Email Address</th>
-                <td>@Model.Email</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Section 2: Address Details -->
-    <div class="section-title">2. ADDRESS DETAILS</div>
-    <table class="table table-bordered table-sm mb-3">
-        <tbody>
-            <tr>
-                <th style="width: 25%;">Site Door/Plot No</th>
-                <td style="width: 25%;">@Model.SiteDoorNo</td>
-                <th style="width: 25%;">Site Street Name</th>
-                <td style="width: 25%;">@Model.SiteStreet</td>
-            </tr>
-            <tr>
-                <th>Site Area</th>
-                <td>@Model.SiteArea</td>
-                <th>District/Region</th>
-                <td>@Model.SiteDistrict</td>
-            </tr>
-            <tr>
-                <th>Site Pincode</th>
-                <td>@Model.SitePincode</td>
-                <th>Landmark 1</th>
-                <td>@Model.Landmark1</td>
-            </tr>
-            <tr>
-                <th>Landmark 2</th>
-                <td>@Model.Landmark2</td>
-                <th>Comm. Same as Site?</th>
-                <td>@(Model.IsSameAddress ? "Yes" : "No")</td>
-            </tr>
-            @if (!Model.IsSameAddress)
-            {
-                <tr>
-                    <th>Comm. Door No</th>
-                    <td>@Model.CommDoorNo</td>
-                    <th>Comm. Street</th>
-                    <td>@Model.CommStreet</td>
-                </tr>
-                <tr>
-                    <th>Comm. Area</th>
-                    <td>@Model.CommArea</td>
-                    <th>Comm. Region</th>
-                    <td>@Model.CommRegion</td>
-                </tr>
-                <tr>
-                    <th>Comm. Pincode</th>
-                    <td>@Model.CommPincode</td>
-                    <th>-</th>
-                    <td>-</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <!-- Section 3: Plot & Technical Specifications -->
-    <div class="section-title">3. PLOT & TECHNICAL SPECIFICATIONS</div>
-    <table class="table table-bordered table-sm mb-3">
-        <tbody>
-            <tr>
-                <th style="width: 25%;">RS No.</th>
-                <td style="width: 25%;">@Model.RSNo</td>
-                <th style="width: 25%;">Plot Area (Sq.ft)</th>
-                <td style="width: 25%;">@Model.PlotArea</td>
-            </tr>
-            <tr>
-                <th>Build Area (Sq.ft)</th>
-                <td>@Model.BuildArea</td>
-                <th>Supply Category</th>
-                <td>@Model.SupplyCategory</td>
-            </tr>
-            <tr>
-                <th>Purpose</th>
-                <td>@Model.Purpose</td>
-                <th>Applied Load (Watts)</th>
-                <td>@Model.TotalLoad</td>
-            </tr>
-            <tr>
-                <th>Type of Supply</th>
-                <td>@Model.TypeOfSupply</td>
-                <th>Own Meter Preference</th>
-                <td>@(Model.OwnMeter == "true" ? "Yes" : "No")</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- Section 4: Submitted Documents Checklist -->
-    <div class="section-title">4. SUBMITTED DOCUMENTS CHECKLIST</div>
-    <table class="table table-bordered table-sm mb-3">
-        <thead class="table-light">
-            <tr>
-                <th style="width: 30%;">Document Type</th>
-                <th style="width: 40%;">Selected Proof Type</th>
-                <th style="width: 30%;">Upload Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Photograph</td>
-                <td>Passport Size Photo (.jpg)</td>
-                <td><span class="badge bg-success">Uploaded ✔️</span></td>
-            </tr>
-            <tr>
-                <td>Address Proof</td>
-                <td>@(Model.AddressProofType ?? "Address Proof")</td>
-                <td><span class="badge bg-success">Uploaded ✔️</span></td>
-            </tr>
-            <tr>
-                <td>Identity Proof</td>
-                <td>@(Model.IdentityProofType ?? "Identity Proof")</td>
-                <td><span class="badge bg-success">Uploaded ✔️</span></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="text-center mt-3 pt-2 border-top text-muted small">
-        <em>Note: This is an official computer-generated acknowledgement receipt.</em>
-    </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/EB_js/Electricity.js" asp-append-version="true"></script>
+}

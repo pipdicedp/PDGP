@@ -41,12 +41,22 @@ namespace TradeLicence.Services
         private readonly DbContext _appContext;
         private readonly ApplicationDbContext _sharedContext;
         private readonly string _serviceType;
+        private readonly string? _department;
+        private readonly bool _requirePaymentAtInspection;
 
-        public WorkflowEngineService(DbContext appContext, ApplicationDbContext sharedContext, string serviceType)
+        // department: when set, "forward to officer" is limited to officers of that department.
+        //   CAF needs this because the same workflow runs in several departments at once.
+        //   Null keeps the original behaviour (any officer with the right designation), so
+        //   Water / Electricity are unchanged.
+        // requirePaymentAtInspection: false for workflows with no applicant-payment step (CAF).
+        public WorkflowEngineService(DbContext appContext, ApplicationDbContext sharedContext, string serviceType,
+            string? department = null, bool requirePaymentAtInspection = true)
         {
             _appContext = appContext;
             _sharedContext = sharedContext;
             _serviceType = serviceType;
+            _department = department;
+            _requirePaymentAtInspection = requirePaymentAtInspection;
         }
 
         private DbSet<TApp> Applications => _appContext.Set<TApp>();
@@ -82,8 +92,12 @@ namespace TradeLicence.Services
             foreach (var stage in laterStages)
             {
                 var designation = TradeLicence.Models.OfficerWorkflow.StageToDesignation[stage];
-                var officers = await _sharedContext.Officers
-                    .Where(o => o.Designation == designation && !o.IsLocked)
+                var officersQuery = _sharedContext.Officers
+                    .Where(o => o.Designation == designation && !o.IsLocked);
+                if (_department != null)
+                    officersQuery = officersQuery.Where(o => o.Department == _department);
+
+                var officers = await officersQuery
                     .OrderBy(o => o.FullName)
                     .ToListAsync();
 
@@ -122,7 +136,7 @@ namespace TradeLicence.Services
         }
 
         // One row per stage at most, oldest-uploaded first + uploader names.
-        public async Task<(List<WorkflowSupportingDocument> Docs, Dictionary<int, string> OfficerNames)>GetStageDocumentsAsync(int applicationId)
+        public async Task<(List<WorkflowSupportingDocument> Docs, Dictionary<int, string> OfficerNames)> GetStageDocumentsAsync(int applicationId)
         {
             var docs = await _sharedContext.WorkflowSupportingDocuments
                 .Where(d => d.ServiceType == _serviceType && d.ApplicationId == applicationId)
@@ -158,12 +172,15 @@ namespace TradeLicence.Services
             if (expectedDesignation == null || officer.Designation != expectedDesignation)
                 return WorkflowActionResult.Fail("That officer doesn't match the selected stage.");
 
+            if (_department != null && !string.Equals(officer.Department, _department, StringComparison.OrdinalIgnoreCase))
+                return WorkflowActionResult.Fail($"That officer doesn't belong to the {_department} department.");
+
             var currentIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(application.CurrentStage);
             var targetIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(targetStage);
             if (targetIndex <= currentIndex)
                 return WorkflowActionResult.Fail("You can only forward to a later stage, not the current or an earlier one.");
 
-            if (application.CurrentStage == "Inspection" && application.PaymentStatus != "Paid")
+            if (_requirePaymentAtInspection && application.CurrentStage == "Inspection" && application.PaymentStatus != "Paid")
                 return WorkflowActionResult.Fail("This application can't be forwarded until the payment has been received.");
 
             var fromStage = application.CurrentStage;
@@ -274,7 +291,13 @@ namespace TradeLicence.Services
             return WorkflowActionResult.Ok("Application rejected.");
         }
 
-        public async Task<WorkflowActionResult> ReturnToApplicantAsync(int applicationId, string? remarks)
+        // actingOfficerId is optional so existing callers (Water) keep compiling
+        // unchanged. When supplied and the application has no assigned officer
+        // yet (e.g. returned straight from Initial Scrutiny), the returning
+        // officer is pinned as AssignedOfficerId — so after the applicant
+        // resubmits it lands back with THAT officer, not any officer sharing
+        // the designation.
+        public async Task<WorkflowActionResult> ReturnToApplicantAsync(int applicationId, string? remarks, int? actingOfficerId = null)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
@@ -282,12 +305,36 @@ namespace TradeLicence.Services
             if (application.PaymentStatus == "Pending")
                 return WorkflowActionResult.Fail("This application can't be returned to the applicant while a payment is pending.");
 
+            if (application.AssignedOfficerId == null && actingOfficerId.HasValue)
+                application.AssignedOfficerId = actingOfficerId;
+
             application.Status = "ReturnedToApplicant";
             application.OfficerRemarks = remarks;
             application.ModifiedDate = DateTime.UtcNow;
 
             await _appContext.SaveChangesAsync();
             return WorkflowActionResult.Ok("Application returned to the applicant successfully.");
+        }
+
+        // Citizen-initiated — applicant fixed what the officer asked for and
+        // sends it back. CurrentStage and AssignedOfficerId are deliberately
+        // untouched, so it reappears in the same officer's queue.
+        public async Task<WorkflowActionResult> ResubmitAsync(int applicationId, int? requestingUserId)
+        {
+            var application = await Applications.FindAsync(applicationId);
+            if (application == null) return WorkflowActionResult.Fail("Application not found.");
+
+            if (!requestingUserId.HasValue || application.UserId != requestingUserId)
+                return WorkflowActionResult.Fail("You don't have permission to resubmit this application.");
+
+            if (application.Status != "ReturnedToApplicant")
+                return WorkflowActionResult.Fail("This application hasn't been returned for correction.");
+
+            application.Status = "Submitted";
+            application.ModifiedDate = DateTime.UtcNow;
+
+            await _appContext.SaveChangesAsync();
+            return WorkflowActionResult.Ok("Application resubmitted to the officer successfully.");
         }
 
         // Officer-initiated — fixed amounts are the caller's decision (each
