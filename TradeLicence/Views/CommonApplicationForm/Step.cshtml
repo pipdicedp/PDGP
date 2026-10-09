@@ -13,6 +13,9 @@
         .GroupBy(f => f.Section)
         .ToList();
 
+    string FileSize(long b) =>
+        b >= 1048576 ? $"{b / 1048576.0:0.0} MB" : $"{Math.Max(1, b / 1024)} KB";
+
     string Val(string name) =>
         Model.Values.TryGetValue(name, out var v) ? (v ?? "") : "";
 }
@@ -70,7 +73,8 @@
 
     <form method="post"
           action="@(Url.Action("SaveStep", new { step = Model.Current.Number }))"
-          id="cafStepForm">
+          id="cafStepForm"
+          enctype="@(Model.Documents.Any() ? "multipart/form-data" : null)">
 
         @Html.AntiForgeryToken()
 
@@ -359,6 +363,63 @@
                         No rows added yet.
 
                     </p>
+
+                </div>
+
+            </fieldset>
+        }
+
+        @if (Model.Documents.Any())
+        {
+            <fieldset class="tl-section caf-documents">
+
+                <legend>
+                    Upload Documents
+                </legend>
+
+                <p class="tl-note">
+                    Accepted: PDF, JPG or PNG, up to 5 MB per file. A document you uploaded
+                    earlier is kept unless you choose a new file for it.
+                </p>
+
+                <div class="tl-grid-2">
+
+                    @foreach (var d in Model.Documents)
+                    {
+                        <div class="form-group caf-doc">
+
+                            <label for="caf_doc_@d.Def.Column">
+                                @d.Def.Label
+                                @if (d.Def.Required)
+                                {
+                                    <span class="caf-required">*</span>
+                                }
+                            </label>
+
+                            <input id="caf_doc_@d.Def.Column"
+                                   name="@d.Def.Column"
+                                   type="file"
+                                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                   class="form-control caf-file-input" />
+
+                            <div class="caf-doc-status">
+                                @if (d.HasFile)
+                                {
+                                    <span class="caf-doc-uploaded">
+                                        &#10003; Uploaded (@FileSize(d.SizeBytes!.Value))
+                                    </span>
+                                    <a href="@(Url.Action("Document", new { column = d.Def.Column }))"
+                                       target="_blank"
+                                       rel="noopener">View</a>
+                                }
+                                else
+                                {
+                                    <span class="caf-doc-missing">Not uploaded yet</span>
+                                }
+                            </div>
+
+                        </div>
+                    }
 
                 </div>
 

@@ -336,7 +336,44 @@ namespace TradeLicence.Helpers
                     }
                 }
             },
+
+            // ============================================================
+            // STEP 6 — Upload Documents  (dbo.caf_doc_table)
+            // One varbinary(max) column per document; no Fields — the view
+            // renders a file input for each entry of Documents instead.
+            // Set Required = true on any document that must be uploaded
+            // before the application can be submitted.
+            // ============================================================
+            new CafStepDef
+            {
+                Number = 6,
+                Key = "documents",
+                Title = "Upload Documents",
+                TableName = "caf_doc_table",
+                Documents = new List<CafDocumentDef>
+                {
+                    new() { Column = "common_app",       Label = "Common Application" },
+                    new() { Column = "land_doc",         Label = "Land Document" },
+                    new() { Column = "building_plan",    Label = "Building Plan" },
+                    new() { Column = "process_details",  Label = "Process Details" },
+                    new() { Column = "partnership_deed", Label = "Partnership Deed" },
+                    new() { Column = "resolution",       Label = "Resolution" },
+                    new() { Column = "demand_bill",      Label = "Demand Bill" },
+                    new() { Column = "form1c_challan",   Label = "Form 1C Challan" },
+                    new() { Column = "fmb_sketch",       Label = "FMB Sketch" },
+                }
+            },
         };
+
+        /// <summary>Largest single document accepted, in bytes (5 MB).</summary>
+        public const int MaxDocumentBytes = 5 * 1024 * 1024;
+
+        /// <summary>Every document column of dbo.caf_doc_table — also the whitelist used to build SQL.</summary>
+        public static IReadOnlyList<CafDocumentDef> AllDocuments =>
+            Steps.SelectMany(x => x.Documents).ToList();
+
+        public static CafDocumentDef? DocumentByColumn(string column) =>
+            AllDocuments.FirstOrDefault(d => string.Equals(d.Column, column, System.StringComparison.OrdinalIgnoreCase));
 
         public static CafStepDef? ByNumber(int number) => Steps.FirstOrDefault(s => s.Number == number);
         public static CafStepDef? ByKey(string key) => Steps.FirstOrDefault(s => string.Equals(s.Key, key, System.StringComparison.OrdinalIgnoreCase));

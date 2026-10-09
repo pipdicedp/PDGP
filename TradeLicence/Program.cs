@@ -20,7 +20,10 @@ builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServe
 });
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 26_214_400; // 25 MB
+    // 50 MB: the Common Application Form's documents step posts up to 9 files of 5 MB each in
+    // one request, and the antiforgery check reads the form before any per-action limit applies.
+    // The request-body cap above stays at 25 MB; the CAF SaveStep action raises it for itself.
+    options.MultipartBodyLengthLimit = 52_428_800;
 });
 
 // Application services and repositories

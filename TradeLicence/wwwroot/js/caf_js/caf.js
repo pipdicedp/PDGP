@@ -143,3 +143,28 @@
         });
     });
 })();
+
+/* ---------- Step 6: quick client-side check of chosen documents ----------
+   The server re-checks everything (size, extension, and the file's real
+   type); this only saves the applicant a round trip. */
+(function () {
+  var MAX_BYTES = 5 * 1024 * 1024;
+  var OK_EXT = /\.(pdf|jpe?g|png)$/i;
+
+  document.querySelectorAll('.caf-file-input').forEach(function (input) {
+    input.addEventListener('change', function () {
+      var file = input.files && input.files[0];
+      if (!file) return;
+
+      var problem = null;
+      if (!OK_EXT.test(file.name)) problem = 'Only PDF, JPG or PNG files are accepted.';
+      else if (file.size > MAX_BYTES) problem = 'This file is larger than 5 MB.';
+
+      if (problem) {
+        input.value = '';
+        if (window.Swal) Swal.fire({ icon: 'warning', title: 'Cannot use this file', text: problem });
+        else alert(problem);
+      }
+    });
+  });
+})();

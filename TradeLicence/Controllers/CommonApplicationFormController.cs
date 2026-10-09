@@ -1,3 +1,4 @@
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -74,8 +75,12 @@ namespace TradeLicence.Controllers
             return View("Step", vm);
         }
 
+        // 9 documents x 5 MB each, plus headroom. The global 25 MB request-body cap in Program.cs
+        // is too small for the documents step, so it is raised for this action only (the
+        // multipart form limit is raised globally in Program.cs for the reason noted there).
         [HttpPost("{step:int}")]
         [ValidateAntiForgeryToken]
+        [RequestSizeLimit(52_428_800)]
         public async Task<IActionResult> SaveStep(int step, [FromForm] IFormCollection form)
         {
             if (User.IsInRole("Officer")) return Forbid();
@@ -92,6 +97,9 @@ namespace TradeLicence.Controllers
                 TempData["CafMessage"] = "Please save Basic Details first.";
                 return RedirectToAction("Step", new { step = CafFormMetadata.MinStep });
             }
+
+            if (stepDef.Key == "documents")
+                return await SaveDocumentsStepAsync(stepDef, loginId.Value, form, basicExists);
 
             var posted = stepDef.Fields.ToDictionary(f => f.Name, f => (string?)form[f.Name].ToString());
             try
@@ -121,6 +129,104 @@ namespace TradeLicence.Controllers
 
             TempData["CafMessage"] = $"{stepDef.Title} saved.";
             return RedirectToAction("Step", new { step = step + 1 });
+        }
+
+        // ---------------- Documents (Step 6) ----------------
+
+        private static readonly string[] AllowedDocumentExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
+
+        /// <summary>Content type from the file's first bytes (not its name), or null if it isn't a PDF/JPG/PNG.</summary>
+        private static string? SniffContentType(byte[] b)
+        {
+            if (b.Length >= 4 && b[0] == 0x25 && b[1] == 0x50 && b[2] == 0x44 && b[3] == 0x46) return "application/pdf";               // %PDF
+            if (b.Length >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) return "image/jpeg";
+            if (b.Length >= 8 && b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47) return "image/png";
+            return null;
+        }
+
+        private async Task<IActionResult> SaveDocumentsStepAsync(CafStepDef stepDef, long loginId, IFormCollection form, bool basicExists)
+        {
+            var toSave = new Dictionary<string, byte[]>();
+            var problems = new List<string>();
+
+            foreach (var doc in stepDef.Documents)
+            {
+                var file = form.Files.GetFile(doc.Column);
+                if (file == null || file.Length == 0) continue;
+
+                if (file.Length > CafFormMetadata.MaxDocumentBytes)
+                {
+                    problems.Add($"{doc.Label}: file is larger than 5 MB.");
+                    continue;
+                }
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!AllowedDocumentExtensions.Contains(ext))
+                {
+                    problems.Add($"{doc.Label}: only PDF, JPG or PNG files are accepted.");
+                    continue;
+                }
+
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                if (SniffContentType(bytes) == null)
+                {
+                    problems.Add($"{doc.Label}: the file is not a valid PDF, JPG or PNG.");
+                    continue;
+                }
+
+                toSave[doc.Column] = bytes;
+            }
+
+            try
+            {
+                if (toSave.Count > 0)
+                    await _service.SaveDocumentsAsync(loginId, toSave);
+
+                var onFile = await _service.GetDocumentSizesAsync(loginId);
+                foreach (var doc in stepDef.Documents.Where(d => d.Required && !onFile.ContainsKey(d.Column)))
+                    problems.Add($"{doc.Label}: this document is required.");
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ex, "CAF document save failed for login {LoginId}: SQL error {Number}", loginId, ex.Number);
+                problems.Add($"Could not save the documents (database error {ex.Number}). Please try again.");
+            }
+
+            if (problems.Count > 0)
+            {
+                var errVm = await BuildViewModelAsync(stepDef, loginId, basicExists);
+                if (toSave.Count > 0)
+                    errVm.SuccessMessage = $"{toSave.Count} document(s) uploaded.";
+                errVm.ErrorMessage = "The application was not submitted. " + string.Join(" ", problems);
+                return View("Step", errVm);
+            }
+
+            await _service.MarkSubmittedAsync(loginId);
+            TempData["CafMessage"] = "Common Application Form submitted successfully.";
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        /// <summary>Opens one of the applicant's own uploaded documents. loginid comes from the login cookie, never from the URL.</summary>
+        [HttpGet("document/{column}")]
+        public async Task<IActionResult> Document(string column)
+        {
+            if (User.IsInRole("Officer")) return Forbid();
+
+            var loginId = GetLoginId();
+            if (loginId == null) return Unauthorized();
+
+            var def = CafFormMetadata.DocumentByColumn(column);
+            if (def == null) return NotFound();
+
+            var bytes = await _service.GetDocumentAsync(loginId.Value, def.Column);
+            if (bytes == null) return NotFound();
+
+            var contentType = SniffContentType(bytes) ?? "application/octet-stream";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            return File(bytes, contentType);
         }
 
         // ---------------- Sub-table rows (Add / Delete) ----------------
@@ -177,8 +283,23 @@ namespace TradeLicence.Controllers
                 AllSteps = CafFormMetadata.Steps,
                 Current = stepDef,
                 BasicDetailsExist = basicExists,
-                Values = await _service.LoadMainRowAsync(stepDef, loginId)
+                Values = stepDef.Documents.Count > 0
+                    ? new Dictionary<string, string?>()
+                    : await _service.LoadMainRowAsync(stepDef, loginId)
             };
+
+            if (stepDef.Documents.Count > 0)
+            {
+                var sizes = await _service.GetDocumentSizesAsync(loginId);
+                foreach (var doc in stepDef.Documents)
+                {
+                    vm.Documents.Add(new CafDocumentVm
+                    {
+                        Def = doc,
+                        SizeBytes = sizes.TryGetValue(doc.Column, out var len) ? len : null
+                    });
+                }
+            }
 
             foreach (var sub in stepDef.SubTables)
             {

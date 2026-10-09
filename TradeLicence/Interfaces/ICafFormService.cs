@@ -24,6 +24,15 @@ namespace TradeLicence.Interfaces
         /// <summary>Deletes one sub-table row, scoped to this applicant so one citizen can't delete another's row.</summary>
         Task<bool> DeleteSubRowAsync(CafSubTableDef def, long loginId, long rowId);
 
+        /// <summary>Size in bytes of each document already uploaded (column name -> bytes). Columns with no file are absent.</summary>
+        Task<Dictionary<string, long>> GetDocumentSizesAsync(long loginId);
+
+        /// <summary>Saves the given documents (column name -> file bytes). Columns not in the dictionary keep whatever was uploaded before.</summary>
+        Task SaveDocumentsAsync(long loginId, Dictionary<string, byte[]> files);
+
+        /// <summary>The stored bytes of one document, or null if none was uploaded.</summary>
+        Task<byte[]?> GetDocumentAsync(long loginId, string column);
+
         /// <summary>Marks the whole application Submitted (caf_basic_details.statuss = 'S') once the final step is saved.</summary>
         Task MarkSubmittedAsync(long loginId);
     }

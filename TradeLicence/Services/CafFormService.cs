@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
+using TradeLicence.Helpers;
 using TradeLicence.Interfaces;
 using TradeLicence.Models.Caf;
 
@@ -356,6 +357,98 @@ namespace TradeLicence.Services
                 cmd.Parameters.Add(LoginIdParam(loginId));
                 var affected = await cmd.ExecuteNonQueryAsync();
                 return affected > 0;
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+        }
+
+        // ---------------- documents (dbo.caf_doc_table) ----------------
+
+        public async Task<Dictionary<string, long>> GetDocumentSizesAsync(long loginId)
+        {
+            var result = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+            var cols = CafFormMetadata.AllDocuments.Select(d => d.Column).ToList();
+            if (cols.Count == 0) return result;
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                var select = string.Join(", ", cols.Select(c => $"DATALENGTH([{c}]) AS [{c}]"));
+                using var cmd = new SqlCommand($"SELECT {select} FROM dbo.[caf_doc_table] WHERE [loginid] = @loginid", conn);
+                cmd.Parameters.Add(LoginIdParam(loginId));
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    foreach (var c in cols)
+                    {
+                        var idx = reader.GetOrdinal(c);
+                        if (!reader.IsDBNull(idx))
+                        {
+                            var len = Convert.ToInt64(reader.GetValue(idx), CultureInfo.InvariantCulture);
+                            if (len > 0) result[c] = len;
+                        }
+                    }
+                }
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+
+            return result;
+        }
+
+        public async Task SaveDocumentsAsync(long loginId, Dictionary<string, byte[]> files)
+        {
+            // Only whitelisted column names ever reach the SQL text.
+            var cols = files.Keys
+                .Select(k => CafFormMetadata.DocumentByColumn(k)?.Column)
+                .Where(k => k != null)
+                .Select(k => k!)
+                .Distinct()
+                .ToList();
+            if (cols.Count == 0) return;
+
+            SqlParameter FileParam(string col) =>
+                new("@f_" + col, SqlDbType.VarBinary, -1) { Value = files.First(kv => string.Equals(kv.Key, col, StringComparison.OrdinalIgnoreCase)).Value };
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                // 1) Row already exists for this applicant -> update just the uploaded columns.
+                var setList = string.Join(", ", cols.Select(c => $"[{c}] = @f_{c}"));
+                using (var upd = new SqlCommand(
+                    $"UPDATE dbo.[caf_doc_table] SET {setList}, [appcode] = @appcode, [uploadedon] = GETDATE() WHERE [loginid] = @loginid", conn))
+                {
+                    foreach (var c in cols) upd.Parameters.Add(FileParam(c));
+                    upd.Parameters.Add(AppCodeParam(loginId));
+                    upd.Parameters.Add(LoginIdParam(loginId));
+
+                    if (await upd.ExecuteNonQueryAsync() > 0) return;
+                }
+
+                // 2) First upload -> insert the row.
+                var colList = string.Join(", ", cols.Select(c => $"[{c}]"));
+                var valList = string.Join(", ", cols.Select(c => $"@f_{c}"));
+                using var ins = new SqlCommand(
+                    $"INSERT INTO dbo.[caf_doc_table] ([loginid], [appcode], {colList}, [uploadedon]) VALUES (@loginid, @appcode, {valList}, GETDATE())", conn);
+                foreach (var c in cols) ins.Parameters.Add(FileParam(c));
+                ins.Parameters.Add(AppCodeParam(loginId));
+                ins.Parameters.Add(LoginIdParam(loginId));
+                await ins.ExecuteNonQueryAsync();
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+        }
+
+        public async Task<byte[]?> GetDocumentAsync(long loginId, string column)
+        {
+            var def = CafFormMetadata.DocumentByColumn(column);
+            if (def == null) return null;
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                using var cmd = new SqlCommand($"SELECT [{def.Column}] FROM dbo.[caf_doc_table] WHERE [loginid] = @loginid", conn);
+                cmd.Parameters.Add(LoginIdParam(loginId));
+                var value = await cmd.ExecuteScalarAsync();
+                return value is byte[] bytes && bytes.Length > 0 ? bytes : null;
             }
             finally { CloseIfWeOpenedIt(conn, opened); }
         }

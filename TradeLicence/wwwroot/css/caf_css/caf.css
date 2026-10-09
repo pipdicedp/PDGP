@@ -195,3 +195,14 @@
         flex-direction: column;
     }
 }
+
+/* ---------- Step 6: document uploads ---------- */
+.caf-required { color: #b91c1c; margin-left: 2px; }
+
+.caf-doc-status {
+    margin-top: 4px;
+    font-size: 0.85rem;
+}
+
+.caf-doc-uploaded { color: #15803d; margin-right: 8px; }
+.caf-doc-missing  { color: #6b7280; }

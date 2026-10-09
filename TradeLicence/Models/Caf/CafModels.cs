@@ -51,6 +51,19 @@ namespace TradeLicence.Models.Caf
     }
 
     /// <summary>
+    /// One uploadable document = one varbinary(max) column of dbo.caf_doc_table.
+    /// Column must match the database column name exactly.
+    /// </summary>
+    public class CafDocumentDef
+    {
+        public string Column { get; init; } = string.Empty;
+        public string Label { get; init; } = string.Empty;
+
+        /// <summary>When true the applicant cannot submit until this document is uploaded.</summary>
+        public bool Required { get; init; }
+    }
+
+    /// <summary>
     /// One step of the Common Application Form = one main database table
     /// (one row per applicant, keyed by loginid) plus zero or more
     /// CafSubTableDef child tables (many rows per applicant).
@@ -63,6 +76,9 @@ namespace TradeLicence.Models.Caf
         public string TableName { get; init; } = string.Empty;
         public List<CafField> Fields { get; init; } = new();
         public List<CafSubTableDef> SubTables { get; init; } = new();
+
+        /// <summary>Only used by the documents step: the file uploads shown instead of Fields.</summary>
+        public List<CafDocumentDef> Documents { get; init; } = new();
     }
 
     /// <summary>One already-saved sub-table row, ready for the mini-table — Id plus the display fields.</summary>
@@ -70,6 +86,14 @@ namespace TradeLicence.Models.Caf
     {
         public long Id { get; set; }
         public Dictionary<string, string?> Values { get; set; } = new();
+    }
+
+    /// <summary>A document slot plus whether the applicant has already uploaded a file for it.</summary>
+    public class CafDocumentVm
+    {
+        public CafDocumentDef Def { get; set; } = null!;
+        public long? SizeBytes { get; set; }
+        public bool HasFile => SizeBytes.HasValue && SizeBytes.Value > 0;
     }
 
     public class CafSubTableVm
@@ -88,6 +112,9 @@ namespace TradeLicence.Models.Caf
         public Dictionary<string, string?> Values { get; set; } = new();
 
         public List<CafSubTableVm> SubTables { get; set; } = new();
+
+        /// <summary>Document slots for the documents step (empty on every other step).</summary>
+        public List<CafDocumentVm> Documents { get; set; } = new();
 
         /// <summary>False only before Step 1 (Basic Details) has ever been saved — later steps redirect back to Step 1 until then.</summary>
         public bool BasicDetailsExist { get; set; }
