@@ -63,7 +63,7 @@
                 }
 
                 <form asp-controller="Account" asp-action="Login" method="post" novalidate>
-                        <div asp-validation-summary="All" class="tl-lx-alert"></div>
+                     
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="ReturnUrl" />
 
