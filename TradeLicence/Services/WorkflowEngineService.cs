@@ -41,12 +41,22 @@ namespace TradeLicence.Services
         private readonly DbContext _appContext;
         private readonly ApplicationDbContext _sharedContext;
         private readonly string _serviceType;
+        private readonly string? _department;
+        private readonly bool _requirePaymentAtInspection;
 
-        public WorkflowEngineService(DbContext appContext, ApplicationDbContext sharedContext, string serviceType)
+        // department: when set, "forward to officer" is limited to officers of that department.
+        //   CAF needs this because the same workflow runs in several departments at once.
+        //   Null keeps the original behaviour (any officer with the right designation), so
+        //   Water / Electricity are unchanged.
+        // requirePaymentAtInspection: false for workflows with no applicant-payment step (CAF).
+        public WorkflowEngineService(DbContext appContext, ApplicationDbContext sharedContext, string serviceType,
+            string? department = null, bool requirePaymentAtInspection = true)
         {
             _appContext = appContext;
             _sharedContext = sharedContext;
             _serviceType = serviceType;
+            _department = department;
+            _requirePaymentAtInspection = requirePaymentAtInspection;
         }
 
         private DbSet<TApp> Applications => _appContext.Set<TApp>();
@@ -82,8 +92,12 @@ namespace TradeLicence.Services
             foreach (var stage in laterStages)
             {
                 var designation = TradeLicence.Models.OfficerWorkflow.StageToDesignation[stage];
-                var officers = await _sharedContext.Officers
-                    .Where(o => o.Designation == designation && !o.IsLocked)
+                var officersQuery = _sharedContext.Officers
+                    .Where(o => o.Designation == designation && !o.IsLocked);
+                if (_department != null)
+                    officersQuery = officersQuery.Where(o => o.Department == _department);
+
+                var officers = await officersQuery
                     .OrderBy(o => o.FullName)
                     .ToListAsync();
 
@@ -158,12 +172,15 @@ namespace TradeLicence.Services
             if (expectedDesignation == null || officer.Designation != expectedDesignation)
                 return WorkflowActionResult.Fail("That officer doesn't match the selected stage.");
 
+            if (_department != null && !string.Equals(officer.Department, _department, StringComparison.OrdinalIgnoreCase))
+                return WorkflowActionResult.Fail($"That officer doesn't belong to the {_department} department.");
+
             var currentIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(application.CurrentStage);
             var targetIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(targetStage);
             if (targetIndex <= currentIndex)
                 return WorkflowActionResult.Fail("You can only forward to a later stage, not the current or an earlier one.");
 
-            if (application.CurrentStage == "Inspection" && application.PaymentStatus != "Paid")
+            if (_requirePaymentAtInspection && application.CurrentStage == "Inspection" && application.PaymentStatus != "Paid")
                 return WorkflowActionResult.Fail("This application can't be forwarded until the payment has been received.");
 
             var fromStage = application.CurrentStage;

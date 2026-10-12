@@ -1,0 +1,122 @@
+﻿@model TradeLicence.Models.Caf.CafPreviewViewModel
+@using System.Linq
+@using TradeLicence.Models.Caf
+@using TradeLicence.Helpers
+
+@{
+    ViewData["Title"] = "Common Application Form - " + CafFormMetadata.PreviewTitle;
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/caf_css/caf.css"
+          asp-append-version="true" />
+}
+
+<div class="caf-wrapper"
+     id="cafPreviewPage"
+     data-just-submitted="@(Model.JustSubmitted ? "true" : "false")"
+     data-dashboard-url="@Url.Action("Index", "Dashboard")">
+
+    <div class="caf-header">
+        <h2>Common Application Form</h2>
+        <p>Government of Puducherry — Department of Industries and Commerce</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success caf-alert">
+            @Model.SuccessMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger caf-alert">
+            @Model.ErrorMessage
+        </div>
+    }
+
+    <!-- Stepper (shared with the data-entry steps) -->
+    <partial name="_CafStepper"
+             model="new CafStepperVm
+             {
+                 AllSteps = Model.AllSteps,
+                 CurrentNumber = CafFormMetadata.PreviewStep,
+                 BasicDetailsExist = Model.BasicDetailsExist,
+                 IsSubmitted = Model.IsSubmitted,
+                 SavedSteps = Model.SavedSteps
+             }" />
+
+    @if (Model.IsSubmitted)
+    {
+        <div class="alert alert-info caf-alert">
+            <strong>Application submitted.</strong>
+            This is a read-only copy of what you submitted. It can no longer be edited.
+        </div>
+    }
+    else if (!Model.IsComplete)
+    {
+        <div class="alert alert-warning caf-alert">
+            <strong>Some sections are not saved yet.</strong>
+            Complete and save them before you can submit:
+            @foreach (var missing in Model.Sections.Where(s => !s.HasRow))
+            {
+                <a class="caf-pv-missing-link" href="@Url.Action("Step", new { step = missing.Step.Number })">@missing.Step.Title</a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info caf-alert">
+            <strong>Please review your application.</strong>
+            Check every section below. Use <em>Edit</em> to go back and change anything — nothing is submitted until you click <strong>Submit Application</strong>.
+        </div>
+    }
+
+    <partial name="_CafPreviewSections" model="Model" />
+
+    <div class="caf-actions caf-pv-actions">
+
+        @if (Model.IsSubmitted)
+        {
+            <a class="btn btn-primary"
+               href="@Url.Action("Index", "Dashboard")">
+                Back to Dashboard
+            </a>
+        }
+        else
+        {
+            <a class="btn btn-secondary"
+               href="@(Url.Action("Step", new { step = CafFormMetadata.MaxStep }))">
+                Back
+            </a>
+
+            <form method="post"
+                  action="@(Url.Action("Submit"))"
+                  id="cafSubmitForm">
+
+                @Html.AntiForgeryToken()
+
+                <button type="button"
+                        id="cafSubmitBtn"
+                        class="btn btn-success caf-pv-submit"
+                        disabled="@(!Model.IsComplete)">
+                    Submit Application
+                </button>
+
+            </form>
+        }
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="~/js/caf_js/caf.js"
+            asp-append-version="true"></script>
+}

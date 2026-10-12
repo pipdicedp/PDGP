@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 namespace TradeLicence.Models
+
 {
     /// <summary>
     /// Department official / staff account — separate from ApplicationUser

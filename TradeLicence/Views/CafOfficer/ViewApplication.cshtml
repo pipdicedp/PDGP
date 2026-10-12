@@ -1,0 +1,155 @@
+﻿@model TradeLicence.Models.Caf.CafIndustryApplicationVm
+@{
+    ViewData["Title"] = "Common Application Form — Review";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+
+    var s = Model.Summary;
+    var errorMessage = TempData["CafOfficerError"] as string;
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/caf_css/caf.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📄</span>
+                <div>
+                    <h3>@(string.IsNullOrEmpty(s.UnitName) ? "Common Application Form" : s.UnitName)</h3>
+                    <p>CAF Ref. No. @s.LoginId &bull; Promoter: @(string.IsNullOrEmpty(s.PromoterName) ? "—" : s.PromoterName) &bull; Mobile: @(string.IsNullOrEmpty(s.Mobile) ? "—" : s.Mobile) &bull; Submitted on @(s.AppliedOn?.ToString("dd-MM-yyyy") ?? "—")</p>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger caf-alert">@errorMessage</div>
+        }
+
+        <!-- ================= Full CAF preview (read-only) ================= -->
+        <partial name="~/Views/CommonApplicationForm/_CafPreviewSections.cshtml" model="Model.Preview" />
+
+        <!-- Gold divider between the applicant's details and the Officer Workflow
+             (same one the Trade Licence / Water / Electricity officer pages use) -->
+        <div class="tl-section-divider caf-of-divider">
+            <span class="tl-section-divider-icon"><i class="fa-solid fa-angles-down"></i></span>
+        </div>
+
+        <!-- ================= Officer Workflow ================= -->
+        <section class="caf-of-workflow" id="officerWorkflow">
+
+            <header class="caf-of-workflow-head">
+                <h3>Officer Workflow</h3>
+                <span>Forward this application to the department(s) that should process it</span>
+            </header>
+
+            <div class="caf-of-workflow-body">
+
+                @if (Model.Forwards.Any())
+                {
+                    <div class="caf-pv-group-title">Already forwarded</div>
+
+                    <div class="caf-pv-table-wrap">
+                        <table class="table table-bordered caf-subtable-table">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Forwarded On</th>
+                                    <th>Forwarded By</th>
+                                    <th>Current Stage</th>
+                                    <th>Status</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var f in Model.Forwards)
+                                {
+                                    var statusClass = f.Status switch
+                                    {
+                                        "Approved" => "myapps-status-approved",
+                                        "Rejected" => "myapps-status-rejected",
+                                        _ => "myapps-status-submitted"
+                                    };
+
+                                    <tr>
+                                        <td>@f.Department</td>
+                                        <td>@f.ForwardedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")</td>
+                                        <td>@(Model.OfficerNames.TryGetValue(f.ForwardedByOfficerId, out var by) ? by : "—")</td>
+                                        <td>@f.CurrentStage</td>
+                                        <td><span class="myapps-status-badge @statusClass">@f.Status</span></td>
+                                        <td>@(string.IsNullOrWhiteSpace(f.ForwardRemarks) ? "—" : f.ForwardRemarks)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <div class="caf-pv-group-title">Forward to department(s)</div>
+
+                @if (!Model.AvailableDepartments.Any())
+                {
+                    <p class="caf-pv-empty-note">This application has already been forwarded to every available department.</p>
+                }
+                else
+                {
+                    <form method="post"
+                          action="@Url.Action("Forward")"
+                          id="cafForwardForm">
+
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@s.LoginId" />
+
+                        <p class="caf-of-hint">
+                            Select the department(s) this application should go to. It is sent <strong>only</strong> to the departments you tick —
+                            their officer workflow starts from there.
+                        </p>
+
+                        <div class="caf-of-dept-grid">
+                            @foreach (var dept in Model.AvailableDepartments)
+                            {
+                                <label class="caf-of-dept">
+                                    <input type="checkbox" class="caf-fwd-check" name="departments" value="@dept" />
+                                    <span>@dept</span>
+                                </label>
+                            }
+                        </div>
+
+                        <div class="caf-of-remarks">
+                            <label for="cafForwardRemarks">Remarks (optional)</label>
+                            <textarea id="cafForwardRemarks" name="remarks" class="form-control" rows="2" maxlength="1000"
+                                      placeholder="Optional note for the receiving department(s)..."></textarea>
+                        </div>
+
+                        <div class="caf-of-actions">
+                            <a class="btn btn-secondary" href="@Url.Action("Index")">&laquo; Back to Dashboard</a>
+                            <button type="button" id="cafForwardBtn" class="btn btn-success">Forward Application</button>
+                        </div>
+                    </form>
+                }
+
+                @if (!Model.AvailableDepartments.Any())
+                {
+                    <div class="caf-of-actions">
+                        <a class="btn btn-secondary" href="@Url.Action("Index")">&laquo; Back to Dashboard</a>
+                    </div>
+                }
+
+            </div>
+        </section>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+    <script src="~/js/caf_js/caf_preview.js" asp-append-version="true"></script>
+    <script src="~/js/caf_js/caf_officer.js" asp-append-version="true"></script>
+}

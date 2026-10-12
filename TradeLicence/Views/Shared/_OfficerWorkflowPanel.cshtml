@@ -81,10 +81,12 @@
                 var isInspectionStage = (string)ViewBag.CurrentStage == "Inspection";
                 var payment = (TradeLicence.Models.WorkflowPayment?)ViewBag.Payment;
                 var paymentStatus = payment?.PaymentStatus ?? "NotRequested";
-                var forwardBlocked = isInspectionStage && paymentStatus != "Paid";
+                // CAF department workflows have no applicant-payment step: the controller sets ViewBag.HidePayment.
+                var hidePayment = ViewBag.HidePayment == true;
+                var forwardBlocked = isInspectionStage && !hidePayment && paymentStatus != "Paid";
                 var paymentPendingBlock = paymentStatus == "Pending";
             }
-            @if (isInspectionStage)
+            @if (isInspectionStage && !hidePayment)
             {
                 var paymentStatusIcon = paymentStatus == "Paid" ? "fa-circle-check" : paymentStatus == "Pending" ? "fa-hourglass-half" : "fa-circle-info";
                 var paymentStatusLabel = paymentStatus == "Paid" ? "Paid" : paymentStatus == "Pending" ? "Pending" : "Not Requested";
@@ -341,7 +343,7 @@
 
     <div class="tl-actions">
         <a class="btn btn-secondary" href="@Url.Action("Index")">&laquo; Back to Dashboard</a>
-        <button type="button" id="btnReturnToApplicant" class="btn btn-warning" @(paymentPendingBlock ? "disabled" : "")>Return to Applicant</button>
+        <button type="button" id="btnReturnToApplicant" class="btn btn-warning" style="@(ViewBag.HideReturnToApplicant == true ? "display:none;" : "")" @(paymentPendingBlock ? "disabled" : "")>Return to Applicant</button>
     </div>
 
 </div>
