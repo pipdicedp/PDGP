@@ -2380,3 +2380,202 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-services-list {
 		font-size: 0.7rem;
 	}
 }
+
+/* =====================================================================
+   PROFESSIONAL ALIGNMENT + POLISH
+   - header, info cards and login banner now share ONE width and ONE
+     left/right edge
+   - equal-height cards, tidy tiles, stronger hero, better footer
+   - hides the empty red box (validation summary) on the login page
+
+   NOTE: this polish was authored against the older tl-lx-* classes, but
+   the Login / OfficerLogin views currently use the tl-lx2-* "Regal Split"
+   classes. The header / info-card / footer / page-width rules below are
+   class-agnostic and apply exactly as written; the login-banner rules are
+   provided for BOTH families (tl-lx2-* is the active one).
+===================================================================== */
+
+/* ---------- 0. empty red box ---------- */
+.tl-lx-alert.validation-summary-valid,
+.tl-lx-alert:empty,
+.tl-lx2-alert:empty {
+	display: none;
+}
+
+/* ---------- 1. one common width for header / cards / banner ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) {
+	--pg-width: 1320px;      /* outer width  (inner content = 1296px) */
+	--pg-gutter: 12px;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-topbar-container {
+	max-width: var(--pg-width);
+	width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: var(--pg-gutter);
+	padding-right: var(--pg-gutter);
+	box-sizing: border-box;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-section .container {
+	max-width: var(--pg-width);
+	padding-left: var(--pg-gutter);
+	padding-right: var(--pg-gutter);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) main.tl-container {
+	max-width: var(--pg-width);
+	width: 100%;
+	padding-left: var(--pg-gutter);
+	padding-right: var(--pg-gutter);
+	box-sizing: border-box;
+}
+
+.tl-lx-page {
+	max-width: none;
+	margin: 32px auto 40px;
+	padding: 0;
+}
+
+/* ---------- 1b. header edges match the cards; menu never creates a sideways scrollbar ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-topbar {
+	padding-left: 0;
+	padding-right: 0;
+}
+
+/* menu: keep it on ONE line on laptops by tightening it a little, and let it
+   wrap onto a second line on small screens (no sideways scrollbar) */
+@media (max-width: 1500px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li > a {
+		padding-left: 8px;
+		padding-right: 8px;
+	}
+}
+
+@media (max-width: 1380px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li > a {
+		padding-left: 6px;
+		padding-right: 6px;
+		font-size: 12px;
+	}
+}
+
+@media (max-width: 1260px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu {
+		flex-wrap: wrap !important;
+	}
+}
+
+/* ---------- 2. info cards: equal height, balanced content ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-section {
+	padding: 40px 0 44px;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-grid {
+	grid-template-columns: 1fr 1fr;
+	gap: 32px;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card {
+	display: flex;
+	flex-direction: column;
+	padding: 28px 32px 28px;
+}
+
+/* intro paragraph sits in the middle of its card, not stuck at the top */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card > p {
+	flex: 1;
+	display: flex;
+	align-items: center;
+}
+
+/* ---------- 3. login banner / service tiles (active tl-lx2 markup) ---------- */
+.tl-lx2-services {
+	grid-auto-rows: 1fr;
+	gap: 14px;
+}
+
+.tl-lx2-service {
+	min-height: 112px;
+	justify-content: space-between;
+	padding: 16px 16px 18px;
+	border-radius: 14px;
+	background: rgba(255,255,255,0.08);
+	border: 1px solid rgba(255,255,255,0.18);
+	box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+
+.tl-lx2-service-icon {
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	font-size: 1.05rem;
+}
+
+.tl-lx2-service-title {
+	font-size: 0.84rem;
+	line-height: 1.4;
+}
+
+/* ---------- 4. login card ---------- */
+.tl-lx2-card {
+	max-width: 440px;
+	justify-self: end;
+	align-self: center;
+	border-radius: 18px;
+	box-shadow: 0 30px 70px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.10);
+}
+
+.tl-lx2-card .tl-lx2-input {
+	min-height: 46px;
+	border-radius: 10px;
+}
+
+.tl-lx2-card .tl-lx2-submit {
+	min-height: 48px;
+	border-radius: 10px;
+	font-size: 0.98rem;
+	letter-spacing: 0.02em;
+}
+
+.tl-lx2-register {
+	min-height: 46px;
+	border-radius: 10px;
+}
+
+/* ---------- 5. footer ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer {
+	margin-top: 8px;
+	padding: 20px 16px;
+	background: linear-gradient(120deg, #0b2236 0%, #14405f 100%);
+	border-top: 3px solid #D4A017;
+	color: #BFD3E2;
+	text-align: center;
+	font-size: 0.85rem;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
+	margin: 0;
+	color: #BFD3E2;
+}
+
+/* ---------- 6. tablets and phones ---------- */
+@media (max-width: 1100px) {
+	.tl-lx2-card {
+		justify-self: center;
+	}
+}
+
+@media (max-width: 768px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-grid {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+}
+
+@media (max-width: 620px) {
+	.tl-lx2-services {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
