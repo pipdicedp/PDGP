@@ -1,0 +1,195 @@
+﻿@model TradeLicence.Models.Caf.CafIndustryDashboardVm
+@{
+    ViewData["Title"] = "Industry Dashboard — CAF";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+
+    var tab = Model.Tab;
+    var rows = tab == "forwarded" ? Model.Forwarded : tab == "decided" ? Model.Decided : Model.Pending;
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/caf_css/caf.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">🏭</span>
+                <div>
+                    <h3>Industry Department — Common Application Forms@(string.IsNullOrEmpty(ViewBag.Designation) ? "" : $" ({ViewBag.Designation})")</h3>
+                    <p>Review each submitted CAF, then forward it to the department(s) that should process it — or approve, reject or return it</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-stats">
+            <div class="stat-card stat-card-submitted">
+                <div class="stat-label">Awaiting Forwarding</div>
+                <div class="stat-value">@Model.Pending.Count</div>
+            </div>
+            <div class="stat-card stat-card-progress">
+                <div class="stat-label">Forwarded</div>
+                <div class="stat-value">@Model.Forwarded.Count</div>
+            </div>
+            <div class="stat-card stat-card-approved">
+                <div class="stat-label">Decided</div>
+                <div class="stat-value">@Model.Decided.Count</div>
+            </div>
+        </div>
+
+        <div class="caf-of-tabs">
+            <a class="caf-of-tab @(tab == "pending" ? "caf-of-tab-active" : "")" href="@Url.Action("Index", new { tab = "pending" })">
+                Awaiting Forwarding (@Model.Pending.Count)
+            </a>
+            <a class="caf-of-tab @(tab == "forwarded" ? "caf-of-tab-active" : "")" href="@Url.Action("Index", new { tab = "forwarded" })">
+                Forwarded (@Model.Forwarded.Count)
+            </a>
+            <a class="caf-of-tab @(tab == "decided" ? "caf-of-tab-active" : "")" href="@Url.Action("Index", new { tab = "decided" })">
+                Approved / Rejected (@Model.Decided.Count)
+            </a>
+        </div>
+
+        <div class="status-controls-card">
+            <div class="status-table-controls">
+                <div class="status-show-entries">
+                    Show
+                    <select id="statusPageSize">
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    entries
+                </div>
+                <div class="status-search">
+                    Search: <input type="text" id="statusSearchBox" placeholder="Search applications..." />
+                </div>
+            </div>
+
+            @if (!rows.Any())
+            {
+                <p class="tl-note">
+                    @(tab == "forwarded" ? "No application has been forwarded yet."
+                      : tab == "decided" ? "No application has been approved or rejected yet."
+                      : "No submitted application is waiting to be forwarded.")
+                </p>
+            }
+            else
+            {
+                <div class="status-table-scroll">
+                    <table class="status-apps-table" id="statusTable">
+                        <thead>
+                            <tr>
+                                <th>Sl No.</th>
+                                <th>CAF Ref. No.</th>
+                                <th>Name of Industry / Unit</th>
+                                <th>Promoter</th>
+                                <th>Mobile</th>
+                                <th>Submitted On</th>
+                                @if (tab == "pending")
+                                {
+                                    <th>Review</th>
+                                }
+                                else if (tab == "forwarded")
+                                {
+                                    <th>Forwarded To</th>
+                                }
+                                else
+                                {
+                                    <th>Decision</th>
+                                }
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var slNo = 1;
+                            }
+                            @foreach (var item in rows)
+                            {
+                                var s = item.Summary;
+
+                                <tr>
+                                    <td>@slNo</td>
+                                    <td>@s.LoginId</td>
+                                    <td>@(string.IsNullOrEmpty(s.UnitName) ? "—" : s.UnitName)</td>
+                                    <td>@(string.IsNullOrEmpty(s.PromoterName) ? "—" : s.PromoterName)</td>
+                                    <td>@(string.IsNullOrEmpty(s.Mobile) ? "—" : s.Mobile)</td>
+                                    <td>@(s.AppliedOn?.ToString("dd-MM-yyyy") ?? "—")</td>
+
+                                    @if (tab == "pending")
+                                    {
+                                        <td>
+                                            @if (item.Review?.Status == "Viewed")
+                                            {
+                                                <span class="caf-of-chip caf-of-chip-progress">Viewed</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="caf-of-chip caf-of-chip-new">New</span>
+                                            }
+                                        </td>
+                                    }
+                                    else if (tab == "forwarded")
+                                    {
+                                        <td>
+                                            @foreach (var f in item.Forwards)
+                                            {
+                                                var chipClass = f.Status switch
+                                                {
+                                                    "Approved" => "caf-of-chip-approved",
+                                                    "Rejected" => "caf-of-chip-rejected",
+                                                    _ => "caf-of-chip-progress"
+                                                };
+                                                <span class="caf-of-chip @chipClass">@f.Department — @(f.Status == "Submitted" ? f.CurrentStage : f.Status)</span>
+                                            }
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            <span class="caf-of-chip @(item.Review?.Status == "Approved" ? "caf-of-chip-approved" : "caf-of-chip-rejected")">@item.Review?.Status</span>
+                                            @if (item.Review?.LastActionDate != null)
+                                            {
+                                                <span class="tl-note">@item.Review.LastActionDate.Value.ToLocalTime().ToString("dd-MM-yyyy")</span>
+                                            }
+                                        </td>
+                                    }
+
+                                    <td>
+                                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("ViewApplication", new { id = s.LoginId })">
+                                            @(tab == "pending" ? "Review" : "View")
+                                        </a>
+                                    </td>
+                                </tr>
+                                slNo++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/tl_js/tl_status.js" asp-append-version="true"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+
+    @if (TempData["OfficerActionMessage"] != null)
+    {
+        <script>
+            showOfficerActionAlert(
+                            @Html.Raw(Json.Serialize(TempData["OfficerActionType"] as string ?? "")),
+                @Html.Raw(Json.Serialize(TempData["OfficerActionMessage"]))
+            );
+        </script>
+    }
+}

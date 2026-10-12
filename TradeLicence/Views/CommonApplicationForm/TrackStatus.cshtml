@@ -1,0 +1,76 @@
+﻿@model TradeLicence.Models.Caf.CafTrackStatusVm
+@using TradeLicence.Helpers
+
+@{
+    ViewData["Title"] = "Common Application Form - Track Status";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    var s = Model.Summary;
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/caf_css/caf.css"
+          asp-append-version="true" />
+}
+
+<div class="caf-wrapper">
+
+    <div class="caf-header">
+        <h2>Common Application Form</h2>
+        <p>Track the progress of your application</p>
+    </div>
+
+    <div class="caf-ts-summary">
+        <div class="caf-ts-item">
+            <span class="caf-ts-label">CAF Ref. No.</span>
+            <span class="caf-ts-value">@Model.LoginId</span>
+        </div>
+        <div class="caf-ts-item">
+            <span class="caf-ts-label">Name of Industry / Unit</span>
+            <span class="caf-ts-value">@(string.IsNullOrEmpty(s?.UnitName) ? "—" : s!.UnitName)</span>
+        </div>
+        <div class="caf-ts-item">
+            <span class="caf-ts-label">Promoter</span>
+            <span class="caf-ts-value">@(string.IsNullOrEmpty(s?.PromoterName) ? "—" : s!.PromoterName)</span>
+        </div>
+        <div class="caf-ts-item">
+            <span class="caf-ts-label">Applied On</span>
+            <span class="caf-ts-value">@(s?.AppliedOn?.ToString("dd-MM-yyyy") ?? "—")</span>
+        </div>
+    </div>
+
+    @if (Model.Status != null)
+    {
+        <partial name="_CafApplicantStatus" model="Model.Status" />
+    }
+    else
+    {
+        <section class="caf-st caf-st-warning">
+            <header class="caf-st-head">
+                <h3>Application Status</h3>
+                <span class="caf-st-badge">Not submitted yet</span>
+            </header>
+            <div class="caf-st-body">
+                <p class="caf-st-detail">
+                    You have not submitted your Common Application Form yet. Complete all the sections and submit it from the
+                    Application Preview — you can follow its progress here afterwards.
+                </p>
+            </div>
+        </section>
+    }
+
+    <div class="caf-actions caf-ts-actions">
+        <a class="btn btn-secondary" href="@Url.Action("Index", "Dashboard")">&laquo; Back to Dashboard</a>
+
+        @if (Model.IsSubmitted)
+        {
+            <a class="btn btn-primary" href="@Url.Action("Preview")">View Submitted Application</a>
+        }
+        else
+        {
+            <a class="btn btn-success" href="@Url.Action("Resume")">Continue Application</a>
+        }
+    </div>
+
+</div>

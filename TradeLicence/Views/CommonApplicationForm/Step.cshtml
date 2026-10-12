@@ -44,29 +44,16 @@
         </div>
     }
 
-    <!-- Stepper -->
-    <div class="caf-stepper">
-        @foreach (var s in Model.AllSteps)
-        {
-            var state = s.Number == Model.Current.Number
-                ? "caf-step-current"
-                : (s.Number < Model.Current.Number || Model.BasicDetailsExist
-                    ? "caf-step-done"
-                    : "caf-step-locked");
-
-            <a class="caf-step @state"
-               href="@(Url.Action("Step", new { step = s.Number }))">
-
-                <span class="caf-step-circle">
-                    @s.Number
-                </span>
-
-                <span class="caf-step-label">
-                    @s.Title
-                </span>
-            </a>
-        }
-    </div>
+    <!-- Stepper (shared with the Application Preview tab) -->
+    <partial name="_CafStepper"
+             model="new CafStepperVm
+             {
+                 AllSteps = Model.AllSteps,
+                 CurrentNumber = Model.Current.Number,
+                 BasicDetailsExist = Model.BasicDetailsExist,
+                 IsSubmitted = false,
+                 SavedSteps = Model.SavedSteps
+             }" />
 
     <form method="post"
           action="@(Url.Action("SaveStep", new { step = Model.Current.Number }))"
@@ -380,7 +367,7 @@
                     class="btn btn-success">
 
                 @(Model.Current.Number == CafFormMetadata.MaxStep
-                    ? "Save & Submit Application"
+                    ? "Save & Preview"
                     : "Save & Next")
 
             </button>

@@ -195,3 +195,1128 @@
         flex-direction: column;
     }
 }
+
+/* ============================================================
+   Application Preview (6th tab) — read-only summary of the five
+   data-entry steps. All classes prefixed "caf-pv-".
+============================================================ */
+
+.caf-pv-missing-link {
+    display: inline-block;
+    margin: 2px 6px 2px 0;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #D4A017;
+    color: #1a3a52;
+    font-weight: 600;
+    font-size: 12.5px;
+    text-decoration: none;
+}
+
+    .caf-pv-missing-link:hover {
+        background: #FCF3D9;
+        color: #1a3a52;
+    }
+
+.caf-pv-step {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .05);
+}
+
+.caf-pv-step-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 13px 20px;
+    background: #1a3a52;
+}
+
+    .caf-pv-step-head h3 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+.caf-pv-step-no {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: #D4A017;
+    color: #fff;
+}
+
+.caf-pv-step-tools {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.caf-pv-chip {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.caf-pv-chip-ok {
+    background: #DCF3E4;
+    color: #1D6E3E;
+}
+
+.caf-pv-chip-missing {
+    background: #FBEAE8;
+    color: #7A241D;
+}
+
+.caf-pv-edit {
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, .15);
+    color: #fff;
+    text-decoration: none;
+    transition: background .15s ease;
+}
+
+    .caf-pv-edit:hover {
+        background: rgba(255, 255, 255, .28);
+        color: #fff;
+    }
+
+.caf-pv-body {
+    padding: 6px 20px 18px;
+}
+
+.caf-pv-group-title {
+    margin: 16px 0 4px;
+    padding: 6px 12px;
+    border-left: 4px solid #D4A017;
+    background: #E4EFEE;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #1a3a52;
+}
+
+.caf-pv-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 32px;
+}
+
+.caf-pv-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 0;
+    border-bottom: 1px dashed #E5E7EB;
+    min-width: 0;
+}
+
+.caf-pv-field-wide {
+    grid-column: 1 / -1;
+}
+
+.caf-pv-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+.caf-pv-value {
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: #1C2321;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+
+.caf-pv-value-empty {
+    color: #9CA3AF;
+    font-weight: 400;
+}
+
+.caf-pv-empty-note {
+    margin: 14px 0 4px;
+    font-size: 0.88rem;
+    color: #6B7280;
+    font-style: italic;
+}
+
+.caf-pv-table-wrap {
+    overflow-x: auto;
+    margin-top: 8px;
+}
+
+.caf-pv-col-no {
+    width: 48px;
+    text-align: center;
+}
+
+.caf-pv-actions form {
+    margin: 0;
+}
+
+.caf-pv-submit {
+    padding: 12px 34px !important;
+    font-size: 1.05rem;
+}
+
+@media (max-width: 700px) {
+    .caf-pv-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .caf-pv-step-head {
+        padding: 12px 14px;
+    }
+
+    .caf-pv-body {
+        padding: 4px 14px 14px;
+    }
+
+    .caf-pv-actions form,
+    .caf-pv-actions .btn {
+        width: 100%;
+    }
+}
+
+@media print {
+    .caf-stepper,
+    .caf-actions,
+    .caf-pv-edit,
+    .caf-alert {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   CAF officer workflow — Industry dashboard + "Officer Workflow"
+   section under the full CAF preview. Prefixed "caf-of-".
+============================================================ */
+
+.caf-of-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 18px;
+}
+
+.caf-of-tab {
+    padding: 9px 20px;
+    border-radius: 20px;
+    border: 1.5px solid #1a3a52;
+    background: #fff;
+    color: #1a3a52;
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;
+    transition: background .15s ease, color .15s ease;
+}
+
+    .caf-of-tab:hover {
+        background: #E4EFEE;
+        color: #1a3a52;
+    }
+
+.caf-of-tab-active,
+.caf-of-tab-active:hover {
+    background: #1a3a52;
+    color: #fff;
+}
+
+.caf-of-chip {
+    display: inline-block;
+    margin: 2px 6px 2px 0;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.caf-of-chip-progress {
+    background: #DCEAFB;
+    color: #1D4E89;
+}
+
+.caf-of-chip-approved {
+    background: #DCF3E4;
+    color: #1D6E3E;
+}
+
+.caf-of-chip-rejected {
+    background: #FBEAE8;
+    color: #7A241D;
+}
+
+.caf-of-workflow {
+    margin-top: 0;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-top: 4px solid #D4A017;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .05);
+}
+
+.caf-of-workflow-head {
+    padding: 14px 20px;
+    background: #1a3a52;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px 14px;
+}
+
+    .caf-of-workflow-head h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .caf-of-workflow-head span {
+        font-size: 0.82rem;
+        color: #C7DAD7;
+    }
+
+.caf-of-workflow-body {
+    padding: 6px 20px 20px;
+}
+
+.caf-of-hint {
+    margin: 10px 0 12px;
+    font-size: 0.88rem;
+    color: #4B5563;
+}
+
+.caf-of-dept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.caf-of-dept {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border: 1.5px solid #D7DEE3;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: #1a3a52;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+    .caf-of-dept:hover {
+        border-color: #1a3a52;
+        background: #F5F9FA;
+    }
+
+    .caf-of-dept:has(input:checked) {
+        border-color: #1D6E3E;
+        background: #DCF3E4;
+    }
+
+    .caf-of-dept input {
+        width: 18px;
+        height: 18px;
+        accent-color: #1D6E3E;
+    }
+
+.caf-of-remarks label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+.caf-of-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+    .caf-of-actions .btn {
+        padding: 10px 24px;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+.caf-of-forward-note {
+    display: block;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+@media (max-width: 700px) {
+    .caf-of-actions {
+        flex-direction: column;
+    }
+
+        .caf-of-actions .btn {
+            width: 100%;
+        }
+}
+
+@media print {
+    .caf-of-workflow,
+    .caf-of-tabs {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   Collapsible sections (officers' CAF views). Sections start
+   collapsed; clicking the heading toggles the body.
+============================================================ */
+
+.caf-pv-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.caf-pv-toolbar-hint {
+    margin-right: auto;
+    font-size: 0.82rem;
+    color: #6B7280;
+}
+
+.caf-pv-step-head-toggle {
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s ease;
+}
+
+    .caf-pv-step-head-toggle:hover {
+        background: #234a66;
+    }
+
+    .caf-pv-step-head-toggle:focus-visible {
+        outline: 3px solid #D4A017;
+        outline-offset: -3px;
+    }
+
+/* the arrow: points down when collapsed, up when open */
+.caf-pv-chevron {
+    width: 10px;
+    height: 10px;
+    margin: 0 6px 3px 4px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(225deg);
+    transition: transform .2s ease;
+}
+
+.caf-pv-step-collapsed .caf-pv-chevron {
+    transform: rotate(45deg);
+    margin-bottom: 0;
+}
+
+.caf-pv-step-collapsed .caf-pv-body {
+    display: none;
+}
+
+/* printing / saving as PDF always includes every section */
+@media print {
+    .caf-pv-step-collapsed .caf-pv-body {
+        display: block !important;
+    }
+
+    .caf-pv-toolbar,
+    .caf-pv-chevron {
+        display: none !important;
+    }
+}
+
+/* Industry officer page: breathing room above and below the gold divider so the
+   arrow circle no longer touches the Officer Workflow card (or the preview above). */
+.tl-section-divider.caf-of-divider {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+/* ============================================================
+   Industry officer: action bar, forward panel, decision banner,
+   "New" chip.   Applicant: "Application Status" card (caf-st-*).
+============================================================ */
+
+.caf-of-actionbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0 6px;
+}
+
+    .caf-of-actionbar .btn {
+        padding: 10px 22px;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+.caf-of-forward-panel {
+    margin-top: 10px;
+    padding: 4px 16px 14px;
+    border: 1.5px dashed #1a3a52;
+    border-radius: 12px;
+    background: #F5F9FA;
+}
+
+    .caf-of-forward-panel[hidden] {
+        display: none;
+    }
+
+.caf-of-decision {
+    margin: 14px 0 4px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.92rem;
+}
+
+.caf-of-decision-approved {
+    background: #DCF3E4;
+    border-left: 4px solid #1D6E3E;
+    color: #14532d;
+}
+
+.caf-of-decision-rejected {
+    background: #FBEAE8;
+    border-left: 4px solid #B3261E;
+    color: #7A241D;
+}
+
+.caf-of-chip-new {
+    background: #FCF3D9;
+    color: #8A6500;
+}
+
+/* ---------- applicant: Application Status card ---------- */
+.caf-st {
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-left: 5px solid #1D4E89;
+    border-radius: 12px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, .05);
+}
+
+.caf-st-success {
+    border-left-color: #1D6E3E;
+}
+
+.caf-st-danger {
+    border-left-color: #B3261E;
+}
+
+.caf-st-warning {
+    border-left-color: #D4A017;
+}
+
+.caf-st-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 20px;
+    background: #F5F9FA;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+    .caf-st-head h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #1a3a52;
+    }
+
+.caf-st-badge {
+    padding: 4px 14px;
+    border-radius: 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: #DCEAFB;
+    color: #1D4E89;
+}
+
+.caf-st-success .caf-st-badge {
+    background: #DCF3E4;
+    color: #1D6E3E;
+}
+
+.caf-st-danger .caf-st-badge {
+    background: #FBEAE8;
+    color: #7A241D;
+}
+
+.caf-st-warning .caf-st-badge {
+    background: #FCF3D9;
+    color: #8A6500;
+}
+
+.caf-st-body {
+    padding: 14px 20px 18px;
+}
+
+.caf-st-detail {
+    margin: 0 0 8px;
+    font-size: 0.93rem;
+    color: #1C2321;
+}
+
+.caf-st-remarks {
+    margin: 0 0 12px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    background: #FBEAE8;
+    color: #7A241D;
+    font-size: 0.88rem;
+}
+
+.caf-st-steps {
+    list-style: none;
+    margin: 12px 0 4px;
+    padding: 0;
+    display: flex;
+}
+
+.caf-st-step {
+    flex: 1 1 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 5px;
+}
+
+    .caf-st-step::before {
+        content: "";
+        position: absolute;
+        top: 15px;
+        left: -50%;
+        width: 100%;
+        height: 3px;
+        background: #E5E7EB;
+    }
+
+    .caf-st-step:first-child::before {
+        display: none;
+    }
+
+.caf-st-step-done::before {
+    background: #1D6E3E;
+}
+
+.caf-st-dot {
+    position: relative;
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    background: #E5E7EB;
+    color: #6B7280;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px #E5E7EB;
+}
+
+.caf-st-step-done .caf-st-dot {
+    background: #1D6E3E;
+    color: #fff;
+    box-shadow: 0 0 0 1px #1D6E3E;
+}
+
+.caf-st-step-current .caf-st-dot {
+    background: #1a3a52;
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(212, 160, 23, .55);
+}
+
+.caf-st-step-rejected .caf-st-dot {
+    background: #B3261E;
+    color: #fff;
+    box-shadow: 0 0 0 1px #B3261E;
+}
+
+.caf-st-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #6B7280;
+    line-height: 1.25;
+}
+
+.caf-st-step-done .caf-st-label {
+    color: #1D6E3E;
+}
+
+.caf-st-step-current .caf-st-label {
+    color: #1a3a52;
+    font-weight: 700;
+}
+
+.caf-st-step-rejected .caf-st-label {
+    color: #B3261E;
+    font-weight: 700;
+}
+
+.caf-st-date {
+    font-size: 0.68rem;
+    color: #6B7280;
+}
+
+@media (max-width: 700px) {
+    .caf-of-actionbar {
+        flex-direction: column;
+    }
+
+        .caf-of-actionbar .btn {
+            width: 100%;
+        }
+
+    .caf-st-label {
+        font-size: 0.66rem;
+    }
+}
+
+@media print {
+    .caf-st {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   Officer Workflow redesign (Industry) + department progress
+   cards + applicant Track Status page.
+============================================================ */
+
+/* ---- workflow header with icon ---- */
+.caf-of-workflow-head {
+    align-items: center;
+    gap: 14px;
+}
+
+.caf-of-workflow-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, .15);
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    flex-shrink: 0;
+}
+
+.caf-of-workflow-head > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ---- status strip ---- */
+.caf-of-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 16px 0 4px;
+}
+
+.caf-of-summary-item {
+    flex: 1 1 170px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: #F5F9FA;
+    border: 1px solid #E5E7EB;
+    border-left: 4px solid #D4A017;
+}
+
+.caf-of-summary-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+.caf-of-summary-value {
+    display: block;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a3a52;
+}
+
+/* ---- action tiles ---- */
+.caf-of-tiles {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin: 12px 0 8px;
+}
+
+.caf-of-tile {
+    --tile: #1a3a52;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 16px 16px 14px;
+    background: #fff;
+    border: 1.5px solid #E5E7EB;
+    border-top: 4px solid var(--tile);
+    border-radius: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+    .caf-of-tile:hover:not(:disabled) {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, .10);
+        border-color: var(--tile);
+    }
+
+    .caf-of-tile:focus-visible {
+        outline: 3px solid #D4A017;
+        outline-offset: 2px;
+    }
+
+    .caf-of-tile:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+        background: #F9FAFB;
+    }
+
+.caf-of-tile-forward {
+    --tile: #1a3a52;
+}
+
+.caf-of-tile-approve {
+    --tile: #1D6E3E;
+}
+
+.caf-of-tile-reject {
+    --tile: #B3261E;
+}
+
+.caf-of-tile-return {
+    --tile: #D4A017;
+}
+
+.caf-of-tile-active {
+    border-color: var(--tile);
+    box-shadow: 0 0 0 3px rgba(26, 58, 82, .18);
+    background: #F5F9FA;
+}
+
+.caf-of-tile-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    color: #fff;
+    background: var(--tile);
+}
+
+.caf-of-tile-title {
+    font-size: 0.97rem;
+    font-weight: 700;
+    color: #1a3a52;
+}
+
+.caf-of-tile-desc {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: #6B7280;
+}
+
+.caf-of-tile-note {
+    margin-top: auto;
+    padding: 2px 9px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: #FCF3D9;
+    color: #8A6500;
+}
+
+/* ---- forward panel ---- */
+.caf-of-forward-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 12px 0 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #D7DEE3;
+    font-weight: 700;
+    color: #1a3a52;
+}
+
+.caf-of-forward-tools {
+    display: flex;
+    gap: 14px;
+}
+
+.caf-of-link {
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1D4E89;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+    .caf-of-link:hover {
+        color: #0f2438;
+    }
+
+/* ---- department progress cards ---- */
+.caf-dp-list {
+    display: grid;
+    gap: 12px;
+    margin: 8px 0 4px;
+}
+
+.caf-dp {
+    padding: 13px 18px 15px;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-left: 5px solid #1D4E89;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+}
+
+.caf-dp-approved {
+    border-left-color: #1D6E3E;
+}
+
+.caf-dp-rejected {
+    border-left-color: #B3261E;
+}
+
+.caf-dp-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.caf-dp-name {
+    margin-right: 10px;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: #1a3a52;
+}
+
+.caf-dp-meta {
+    font-size: 0.78rem;
+    color: #6B7280;
+}
+
+.caf-dp-stages {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.caf-dp-stage {
+    flex: 1 1 0;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    text-align: center;
+}
+
+    .caf-dp-stage::before {
+        content: "";
+        position: absolute;
+        top: 14px;
+        left: -50%;
+        width: 100%;
+        height: 3px;
+        background: #E5E7EB;
+    }
+
+    .caf-dp-stage:first-child::before {
+        display: none;
+    }
+
+.caf-dp-stage-done::before,
+.caf-dp-stage-current::before,
+.caf-dp-stage-rejected::before {
+    background: #1D6E3E;
+}
+
+.caf-dp-dot {
+    position: relative;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    background: #E5E7EB;
+    color: #6B7280;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px #E5E7EB;
+}
+
+.caf-dp-label {
+    font-size: 0.73rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #6B7280;
+}
+
+.caf-dp-stage-done .caf-dp-dot {
+    background: #1D6E3E;
+    color: #fff;
+    box-shadow: 0 0 0 1px #1D6E3E;
+}
+
+.caf-dp-stage-done .caf-dp-label {
+    color: #1D6E3E;
+}
+
+.caf-dp-stage-current .caf-dp-dot {
+    background: #1a3a52;
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(212, 160, 23, .55);
+}
+
+.caf-dp-stage-current .caf-dp-label {
+    color: #1a3a52;
+    font-weight: 700;
+}
+
+.caf-dp-stage-rejected .caf-dp-dot {
+    background: #B3261E;
+    color: #fff;
+    box-shadow: 0 0 0 1px #B3261E;
+}
+
+.caf-dp-stage-rejected .caf-dp-label {
+    color: #B3261E;
+    font-weight: 700;
+}
+
+.caf-dp-remarks {
+    margin-top: 12px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    background: #F5F9FA;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: #4B5563;
+}
+
+/* ---- applicant Track Status page ---- */
+.caf-ts-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.caf-ts-item {
+    padding: 11px 16px;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-top: 4px solid #D4A017;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+}
+
+.caf-ts-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #6B7280;
+}
+
+.caf-ts-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a3a52;
+    overflow-wrap: anywhere;
+}
+
+.caf-ts-actions {
+    margin-top: 6px;
+}
+
+@media (max-width: 1000px) {
+    .caf-of-tiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .caf-of-tiles {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .caf-dp-label {
+        font-size: 0.64rem;
+    }
+}

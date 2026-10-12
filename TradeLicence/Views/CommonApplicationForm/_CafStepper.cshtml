@@ -1,0 +1,51 @@
+﻿@model TradeLicence.Models.Caf.CafStepperVm
+@using TradeLicence.Helpers
+
+@{
+    var previewNumber = CafFormMetadata.PreviewStep;
+
+    // Preview tab: current while viewing it, green once submitted, grey until then, locked before Step 1 is saved.
+    var previewState = Model.CurrentNumber == previewNumber
+        ? "caf-step-current"
+        : !Model.BasicDetailsExist
+            ? "caf-step-locked"
+            : Model.IsSubmitted ? "caf-step-done" : "";
+}
+
+<div class="caf-stepper">
+
+    @foreach (var s in Model.AllSteps)
+    {
+        // current = gold; saved = green; not saved yet = grey; locked until Basic Details is saved.
+        var state = s.Number == Model.CurrentNumber
+            ? "caf-step-current"
+            : !Model.BasicDetailsExist
+                ? "caf-step-locked"
+                : Model.SavedSteps.Contains(s.Number) ? "caf-step-done" : "";
+
+        <a class="caf-step @state"
+           href="@(Url.Action("Step", new { step = s.Number }))">
+
+            <span class="caf-step-circle">
+                @s.Number
+            </span>
+
+            <span class="caf-step-label">
+                @s.Title
+            </span>
+        </a>
+    }
+
+    <a class="caf-step @previewState"
+       href="@(Url.Action("Preview"))">
+
+        <span class="caf-step-circle">
+            @previewNumber
+        </span>
+
+        <span class="caf-step-label">
+            @CafFormMetadata.PreviewTitle
+        </span>
+    </a>
+
+</div>

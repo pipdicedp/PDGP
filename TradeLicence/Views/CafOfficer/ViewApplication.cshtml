@@ -1,0 +1,225 @@
+﻿@model TradeLicence.Models.Caf.CafIndustryApplicationVm
+@{
+    ViewData["Title"] = "Common Application Form — Review";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+
+    var s = Model.Summary;
+    var errorMessage = TempData["CafOfficerError"] as string;
+
+    var reviewLabel = Model.Review?.Status switch
+    {
+        "Viewed" => "Viewed",
+        "Forwarded" => "Forwarded",
+        "Approved" => "Approved",
+        "Rejected" => "Rejected",
+        _ => "New"
+    };
+    var inProgress = Model.Forwards.Count(f => f.Status == "Submitted");
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/caf_css/caf.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📄</span>
+                <div>
+                    <h3>@(string.IsNullOrEmpty(s.UnitName) ? "Common Application Form" : s.UnitName)</h3>
+                    <p>CAF Ref. No. @s.LoginId &bull; Promoter: @(string.IsNullOrEmpty(s.PromoterName) ? "—" : s.PromoterName) &bull; Mobile: @(string.IsNullOrEmpty(s.Mobile) ? "—" : s.Mobile) &bull; Submitted on @(s.AppliedOn?.ToString("dd-MM-yyyy") ?? "—")</p>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger caf-alert">@errorMessage</div>
+        }
+
+        <!-- ================= Full CAF preview (read-only) ================= -->
+        <partial name="~/Views/CommonApplicationForm/_CafPreviewSections.cshtml" model="Model.Preview" />
+
+        <!-- Gold divider between the applicant's details and the Officer Workflow
+             (same one the Trade Licence / Water / Electricity officer pages use) -->
+        <div class="tl-section-divider caf-of-divider">
+            <span class="tl-section-divider-icon"><i class="fa-solid fa-angles-down"></i></span>
+        </div>
+
+        <!-- ================= Officer Workflow ================= -->
+        <section class="caf-of-workflow" id="officerWorkflow">
+
+            <header class="caf-of-workflow-head">
+                <span class="caf-of-workflow-icon"><i class="fa-solid fa-users-gear"></i></span>
+                <div>
+                    <h3>Officer Workflow</h3>
+                    <span>Decide what happens to this application</span>
+                </div>
+            </header>
+
+            <div class="caf-of-workflow-body">
+
+                <!-- where things stand -->
+                <div class="caf-of-summary">
+                    <div class="caf-of-summary-item">
+                        <span class="caf-of-summary-label">Review status</span>
+                        <span class="caf-of-summary-value">@reviewLabel</span>
+                    </div>
+                    <div class="caf-of-summary-item">
+                        <span class="caf-of-summary-label">Forwarded to</span>
+                        <span class="caf-of-summary-value">@Model.Forwards.Count department(s)</span>
+                    </div>
+                    <div class="caf-of-summary-item">
+                        <span class="caf-of-summary-label">Still processing</span>
+                        <span class="caf-of-summary-value">@inProgress</span>
+                    </div>
+                </div>
+
+                @if (Model.IsDecided)
+                {
+                    var approved = Model.Review!.Status == "Approved";
+
+                    <div class="caf-of-decision @(approved ? "caf-of-decision-approved" : "caf-of-decision-rejected")">
+                        <strong>@(approved ? "Approved" : "Rejected")</strong>
+                        @if (Model.Review.LastActionDate != null)
+                        {
+                            <span>on @Model.Review.LastActionDate.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")</span>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.Review.Remarks))
+                        {
+                            <span class="caf-of-forward-note">Remarks: "@Model.Review.Remarks"</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="caf-pv-group-title">Choose an action</div>
+
+                    <div class="caf-of-tiles">
+
+                        <button type="button" class="caf-of-tile caf-of-tile-forward" id="cafShowForward" disabled="@(!Model.CanForward)">
+                            <span class="caf-of-tile-icon"><i class="fa-solid fa-paper-plane"></i></span>
+                            <span class="caf-of-tile-title">Forward to department(s)</span>
+                            <span class="caf-of-tile-desc">Send it to the department(s) that should process it. Their officer workflow starts from there.</span>
+                            @if (!Model.CanForward)
+                            {
+                                <span class="caf-of-tile-note">Already sent to every department</span>
+                            }
+                        </button>
+
+                        <button type="button" class="caf-of-tile caf-of-tile-approve" data-caf-action="approve" disabled="@(!Model.CanDecide)">
+                            <span class="caf-of-tile-icon"><i class="fa-solid fa-circle-check"></i></span>
+                            <span class="caf-of-tile-title">Approve</span>
+                            <span class="caf-of-tile-desc">Approve this Common Application Form. The applicant is told. This is final.</span>
+                            @if (!Model.CanDecide)
+                            {
+                                <span class="caf-of-tile-note">After the forwarded departments finish</span>
+                            }
+                        </button>
+
+                        <button type="button" class="caf-of-tile caf-of-tile-reject" data-caf-action="reject" disabled="@(!Model.CanDecide)">
+                            <span class="caf-of-tile-icon"><i class="fa-solid fa-circle-xmark"></i></span>
+                            <span class="caf-of-tile-title">Reject</span>
+                            <span class="caf-of-tile-desc">Reject the application with a reason the applicant can read. This is final.</span>
+                            @if (!Model.CanDecide)
+                            {
+                                <span class="caf-of-tile-note">After the forwarded departments finish</span>
+                            }
+                        </button>
+
+                        <button type="button" class="caf-of-tile caf-of-tile-return" data-caf-action="return" disabled="@(!Model.CanReturn)">
+                            <span class="caf-of-tile-icon"><i class="fa-solid fa-rotate-left"></i></span>
+                            <span class="caf-of-tile-title">Return to Applicant</span>
+                            <span class="caf-of-tile-desc">Send it back for correction. The applicant edits and submits it again.</span>
+                            @if (!Model.CanReturn)
+                            {
+                                <span class="caf-of-tile-note">Only before forwarding</span>
+                            }
+                        </button>
+
+                    </div>
+
+                    <!-- Approve / Reject / Return: the page script asks for remarks, then posts this form -->
+                    <form method="post" action="@Url.Action("Decide")" id="cafDecisionForm">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@s.LoginId" />
+                        <input type="hidden" name="decision" id="cafDecisionValue" />
+                        <input type="hidden" name="remarks" id="cafDecisionRemarks" />
+                    </form>
+
+                    @if (Model.CanForward)
+                    {
+                        <!-- Opens when "Forward to department(s)" is clicked -->
+                        <div class="caf-of-forward-panel" id="cafForwardPanel" hidden>
+
+                            <div class="caf-of-forward-title">
+                                <span><i class="fa-solid fa-paper-plane"></i> Forward to department(s)</span>
+                                <span class="caf-of-forward-tools">
+                                    <button type="button" class="caf-of-link" data-caf-select-all>Select all</button>
+                                    <button type="button" class="caf-of-link" data-caf-clear-all>Clear</button>
+                                </span>
+                            </div>
+
+                            <form method="post" action="@Url.Action("Forward")" id="cafForwardForm">
+
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@s.LoginId" />
+
+                                <p class="caf-of-hint">
+                                    Tick the department(s) this application should go to. It is sent <strong>only</strong> to the ones you tick.
+                                </p>
+
+                                <div class="caf-of-dept-grid">
+                                    @foreach (var dept in Model.AvailableDepartments)
+                                    {
+                                        <label class="caf-of-dept">
+                                            <input type="checkbox" class="caf-fwd-check" name="departments" value="@dept" />
+                                            <span>@dept</span>
+                                        </label>
+                                    }
+                                </div>
+
+                                <div class="caf-of-remarks">
+                                    <label for="cafForwardRemarks">Remarks (optional)</label>
+                                    <textarea id="cafForwardRemarks" name="remarks" class="form-control" rows="2" maxlength="1000"
+                                              placeholder="Optional note for the receiving department(s)..."></textarea>
+                                </div>
+
+                                <div class="caf-of-actions">
+                                    <button type="button" id="cafForwardCancel" class="btn btn-secondary">Cancel</button>
+                                    <button type="button" id="cafForwardBtn" class="btn btn-success">Forward Application</button>
+                                </div>
+                            </form>
+                        </div>
+                    }
+                }
+
+                @if (Model.Forwards.Any())
+                {
+                    <div class="caf-pv-group-title">Forwarded departments</div>
+
+                    <partial name="~/Views/CommonApplicationForm/_CafDepartmentProgress.cshtml"
+                             model="new TradeLicence.Models.Caf.CafDeptProgressVm { Forwards = Model.Forwards, ShowInternal = true, OfficerNames = Model.OfficerNames }" />
+                }
+
+                <div class="caf-of-actions">
+                    <a class="btn btn-secondary" href="@Url.Action("Index")">&laquo; Back to Dashboard</a>
+                </div>
+
+            </div>
+        </section>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/officer_js/officer.js" asp-append-version="true"></script>
+    <script src="~/js/caf_js/caf_preview.js" asp-append-version="true"></script>
+    <script src="~/js/caf_js/caf_officer.js" asp-append-version="true"></script>
+}

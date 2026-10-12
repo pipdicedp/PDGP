@@ -1,0 +1,132 @@
+﻿@model TradeLicence.Models.Caf.CafPreviewViewModel
+@using System.Linq
+@using TradeLicence.Models.Caf
+@using TradeLicence.Helpers
+
+@* Read-only rendering of all five CAF sections. Shared by the applicant's Application Preview tab
+   and the officers' views. Per-section "Edit" links show only when Model.AllowEdit. *@
+
+    @if (Model.Collapsible)
+{
+    <div class="caf-pv-toolbar">
+        <span class="caf-pv-toolbar-hint">Click a section heading to open or close it.</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-caf-expand-all>Expand all</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" data-caf-collapse-all>Collapse all</button>
+    </div>
+}
+
+@foreach (var section in Model.Sections)
+{
+    var step = section.Step;
+    var groups = step.Fields.GroupBy(f => f.Section).ToList();
+
+    <section class="caf-pv-step @(Model.Collapsible ? "caf-pv-step-collapsed" : "")" id="pv-step-@step.Number" data-collapsible="@(Model.Collapsible ? "true" : "false")">
+
+        <header class="caf-pv-step-head @(Model.Collapsible ? "caf-pv-step-head-toggle" : "")" role="@(Model.Collapsible ? "button" : null)" tabindex="@(Model.Collapsible ? "0" : null)" aria-expanded="@(Model.Collapsible ? "false" : null)">
+            <h3>
+                <span class="caf-pv-step-no">@step.Number</span>
+                @step.Title
+            </h3>
+
+            <div class="caf-pv-step-tools">
+                @if (section.HasRow)
+                {
+                    <span class="caf-pv-chip caf-pv-chip-ok">Saved</span>
+                }
+                else
+                {
+                    <span class="caf-pv-chip caf-pv-chip-missing">Not filled</span>
+                }
+
+                @if (Model.AllowEdit)
+                {
+                    <a class="caf-pv-edit" href="@Url.Action("Step", new { step = step.Number })">Edit</a>
+                }
+
+                @if (Model.Collapsible)
+                {
+                    <span class="caf-pv-chevron" aria-hidden="true"></span>
+                }
+            </div>
+        </header>
+
+        <div class="caf-pv-body">
+
+            @if (!section.HasRow)
+            {
+                <p class="caf-pv-empty-note">
+                    Nothing has been saved for this section yet.
+                </p>
+            }
+            else
+            {
+                @foreach (var group in groups)
+                {
+                    <div class="caf-pv-group-title">@group.Key</div>
+
+                    <div class="caf-pv-grid">
+                        @foreach (var f in group)
+                        {
+                            var shown = CafFormMetadata.DisplayValue(f, section.Values.GetValueOrDefault(f.Name));
+
+                            <div class="caf-pv-field @(f.Type == CafFieldType.TextArea ? "caf-pv-field-wide" : "")">
+                                <span class="caf-pv-label">@f.Label</span>
+
+                                @if (shown == null)
+                                {
+                                    <span class="caf-pv-value caf-pv-value-empty">—</span>
+                                }
+                                else
+                                {
+                                    <span class="caf-pv-value">@shown</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            }
+
+            @foreach (var sub in section.SubTables)
+            {
+                <div class="caf-pv-group-title">@sub.Def.DisplayName</div>
+
+                @if (sub.Rows.Any())
+                {
+                    var rowNo = 1;
+
+                    <div class="caf-pv-table-wrap">
+                        <table class="table table-bordered caf-subtable-table">
+                            <thead>
+                                <tr>
+                                    <th class="caf-pv-col-no">#</th>
+                                    @foreach (var f in sub.Def.Fields)
+                                    {
+                                        <th>@f.Label</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in sub.Rows)
+                                {
+                                    <tr>
+                                        <td class="caf-pv-col-no">@(rowNo++)</td>
+                                        @foreach (var f in sub.Def.Fields)
+                                        {
+                                            <td>@(CafFormMetadata.DisplayValue(f, row.Values.GetValueOrDefault(f.Name)) ?? "—")</td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="caf-pv-empty-note">No rows added.</p>
+                }
+            }
+
+        </div>
+    </section>
+}
+

@@ -1,0 +1,60 @@
+﻿@model TradeLicence.Models.Caf.CafDeptProgressVm
+@using System.Linq
+@using TradeLicence.Models
+
+@* One card per department the CAF was forwarded to, with that department's own 4-stage tracker.
+   Shared by the applicant's Track Status page (ShowInternal = false: no officer names) and the
+   Industry officer's Officer Workflow (ShowInternal = true). *@
+
+@{
+    var stages = OfficerWorkflow.Stages;
+}
+
+<div class="caf-dp-list">
+
+    @foreach (var f in Model.Forwards)
+    {
+        var current = OfficerWorkflow.StageIndex(f.CurrentStage);
+        var approved = f.Status == "Approved";
+        var rejected = f.Status == "Rejected";
+        var chip = approved ? "caf-of-chip-approved" : rejected ? "caf-of-chip-rejected" : "caf-of-chip-progress";
+
+        <div class="caf-dp @(approved ? "caf-dp-approved" : rejected ? "caf-dp-rejected" : "")">
+
+            <div class="caf-dp-head">
+                <div>
+                    <span class="caf-dp-name">@f.Department</span>
+                    <span class="caf-dp-meta">
+                        Forwarded on @f.ForwardedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+                        @if (Model.ShowInternal && Model.OfficerNames.TryGetValue(f.ForwardedByOfficerId, out var by))
+                        {
+                            <text>by @by</text>
+                        }
+                    </span>
+                </div>
+                <span class="caf-of-chip @chip">@(approved ? "Approved" : rejected ? "Rejected" : "In progress")</span>
+            </div>
+
+            <ol class="caf-dp-stages">
+                @for (var i = 0; i < stages.Length; i++)
+                {
+                    var state = approved ? "done"
+                        : i < current ? "done"
+                        : i == current ? (rejected ? "rejected" : "current")
+                        : "todo";
+
+                    <li class="caf-dp-stage caf-dp-stage-@state">
+                        <span class="caf-dp-dot">@(state == "done" ? "✓" : state == "rejected" ? "✕" : (i + 1).ToString())</span>
+                        <span class="caf-dp-label">@stages[i]</span>
+                    </li>
+                }
+            </ol>
+
+            @if (Model.ShowInternal && !string.IsNullOrWhiteSpace(f.ForwardRemarks))
+            {
+                <div class="caf-dp-remarks">Forwarding remarks: "@f.ForwardRemarks"</div>
+            }
+        </div>
+    }
+
+</div>

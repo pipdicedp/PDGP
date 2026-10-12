@@ -1,0 +1,77 @@
+﻿@model TradeLicence.Models.Caf.CafApplicantStatusVm
+@using System.Linq
+
+@* "Where is my CAF?" — shown to the applicant on the Application Preview page.
+   Names departments only, never individual officers. *@
+
+@{
+    var reviewed = Model.ReviewStatus == "Viewed" || Model.ReviewStatus == "Forwarded"
+                   || Model.ReviewStatus == "Approved" || Model.ReviewStatus == "Rejected";
+    var forwarded = Model.Forwards.Any();
+    var decided = Model.ReviewStatus == "Approved" || Model.ReviewStatus == "Rejected";
+    var firstForwardDate = Model.Forwards.Any() ? Model.Forwards.Min(f => f.ForwardedDate) : (DateTime?)null;
+}
+
+<section class="caf-st caf-st-@Model.Tone">
+
+    <header class="caf-st-head">
+        <h3>Application Status</h3>
+        <span class="caf-st-badge">@Model.Headline</span>
+    </header>
+
+    <div class="caf-st-body">
+
+        <p class="caf-st-detail">@Model.Detail</p>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Remarks))
+        {
+            <p class="caf-st-remarks"><strong>Remarks from the Industry Department:</strong> @Model.Remarks</p>
+        }
+
+        @if (!Model.Returned)
+        {
+            <ol class="caf-st-steps">
+                <li class="caf-st-step caf-st-step-done">
+                    <span class="caf-st-dot">✓</span>
+                    <span class="caf-st-label">Submitted</span>
+                </li>
+
+                <li class="caf-st-step @(reviewed ? "caf-st-step-done" : "caf-st-step-current")">
+                    <span class="caf-st-dot">@(reviewed ? "✓" : "2")</span>
+                    <span class="caf-st-label">Reviewed by Industry Department</span>
+                    @if (Model.ViewedDate != null)
+                    {
+                        <span class="caf-st-date">@Model.ViewedDate.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")</span>
+                    }
+                </li>
+
+                <li class="caf-st-step @(forwarded ? "caf-st-step-done" : reviewed && !decided ? "caf-st-step-current" : "")">
+                    <span class="caf-st-dot">@(forwarded ? "✓" : "3")</span>
+                    <span class="caf-st-label">Forwarded to departments</span>
+                    @if (firstForwardDate != null)
+                    {
+                        <span class="caf-st-date">@firstForwardDate.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")</span>
+                    }
+                </li>
+
+                <li class="caf-st-step @(decided ? (Model.ReviewStatus == "Approved" ? "caf-st-step-done" : "caf-st-step-rejected") : "")">
+                    <span class="caf-st-dot">@(decided ? (Model.ReviewStatus == "Approved" ? "✓" : "✕") : "4")</span>
+                    <span class="caf-st-label">@(decided ? Model.ReviewStatus : "Decision")</span>
+                    @if (decided && Model.DecisionDate != null)
+                    {
+                        <span class="caf-st-date">@Model.DecisionDate.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")</span>
+                    }
+                </li>
+            </ol>
+        }
+
+        @if (forwarded)
+        {
+            <div class="caf-pv-group-title">Departments</div>
+
+            <partial name="_CafDepartmentProgress"
+                     model="new TradeLicence.Models.Caf.CafDeptProgressVm { Forwards = Model.Forwards, ShowInternal = false }" />
+        }
+
+    </div>
+</section>

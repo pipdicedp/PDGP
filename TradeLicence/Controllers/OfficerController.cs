@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TradeLicence.Data;
+using TradeLicence.Helpers;
 using TradeLicence.Interfaces;
 using TradeLicence.Models;
 using TradeLicence.Services;
@@ -20,10 +21,14 @@ namespace TradeLicence.Controllers
         private readonly IFileEncryptionService _encryption;
         private readonly WaterApplicationDbContext _waterContext;
         private readonly ElectricityApplicationDbContext _electricityContext;
+        private readonly ICafFormService _cafService;
+        private readonly ICafDepartmentProvider _cafDepartments;
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
-        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext)
+        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext, ICafFormService cafService, ICafDepartmentProvider cafDepartments)
         {
+            _cafService = cafService;
+            _cafDepartments = cafDepartments;
             _context = context;
             _service = service;
             _encryption = encryption;
@@ -47,6 +52,37 @@ namespace TradeLicence.Controllers
         private bool IsCurrentOfficerAdmin() =>
             User.FindFirst("Designation")?.Value == "Admin";
 
+        // CAF applications forwarded to THIS officer's department and visible to them (same visibility
+        // rule as every other service: unassigned at one of their stages, or assigned to them by name).
+        private async Task<List<OfficerQueueItem>> BuildCafQueueItemsAsync(Officer officer)
+        {
+            var engine = new WorkflowEngineService<CafDepartmentApplication>(_context, _context, CafWorkflowConfig.ServiceType);
+            var apps = (await engine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId))
+                .Where(a => string.Equals(a.Department, officer.Department, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (apps.Count == 0) return new List<OfficerQueueItem>();
+
+            var summaries = (await _cafService.GetSubmittedSummariesAsync(apps.Select(a => a.LoginId)))
+                .ToDictionary(s => s.LoginId);
+
+            return apps.Select(a =>
+            {
+                summaries.TryGetValue(a.LoginId, out var s);
+                return new OfficerQueueItem
+                {
+                    ApplicationId = a.Id,
+                    ServiceType = "CAF",
+                    DisplayName = s?.UnitName ?? s?.PromoterName ?? "-",
+                    Contact = s?.Mobile ?? "-",
+                    CurrentStage = a.CurrentStage,
+                    Status = a.Status,
+                    SubmittedDate = a.ForwardedDate,
+                    ViewUrl = Url.Action("ViewApplication", "CafDepartmentOfficer", new { id = a.Id })!
+                };
+            }).ToList();
+        }
+
         public async Task<IActionResult> Index()
         {
             var currentOfficerId = GetCurrentOfficerId();
@@ -60,6 +96,12 @@ namespace TradeLicence.Controllers
             // department (Water now, Electricity/Transport/... later) is
             // handled by the shared-queue branch here, one "else if" per
             // new service, no new controller or Index view needed.
+            // ---------------- CAF (Common Application Form) ----------------
+            // Industry department officers only work CAF: they review submitted CAFs and forward
+            // them to the departments they choose (CafOfficerController).
+            if (string.Equals(officer.Department, CafWorkflowConfig.IndustryDepartment, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Index", "CafOfficer");
+
             if (officer.Department == "Water")
             {
                 var waterEngine = new WorkflowEngineService<WaterConnectionApplication>(_waterContext, _context, "Water");
@@ -76,6 +118,9 @@ namespace TradeLicence.Controllers
                     SubmittedDate = a.ApplicationDate,
                     ViewUrl = Url.Action("ViewApplication", "WaterOfficer", new { id = a.ApplicationId })!
                 }).ToList();
+
+                // CAFs the Industry department forwarded to Water
+                items.AddRange(await BuildCafQueueItemsAsync(officer));
 
                 ViewBag.Designation = officer.Designation;
                 ViewBag.Department = officer.Department;
@@ -100,9 +145,24 @@ namespace TradeLicence.Controllers
                     ViewUrl = Url.Action("ViewApplication", "ElectricityOfficer", new { id = a.ApplicationId })!
                 }).ToList();
 
+                // CAFs the Industry department forwarded to Electricity
+                electricityItems.AddRange(await BuildCafQueueItemsAsync(officer));
+
                 ViewBag.Designation = officer.Designation;
                 ViewBag.Department = officer.Department;
                 return View("SharedQueue", electricityItems);
+            }
+
+            // Any other department CAF can be forwarded to (Town & Country Planning, Factory & Boiler,
+            // Science & Technology, ...): their queue is the CAFs forwarded to them.
+            var cafDepartmentNames = await _cafDepartments.GetForwardableDepartmentsAsync();
+            if (cafDepartmentNames.Any(d => string.Equals(d, officer.Department, StringComparison.OrdinalIgnoreCase)))
+            {
+                var cafItems = await BuildCafQueueItemsAsync(officer);
+
+                ViewBag.Designation = officer.Designation;
+                ViewBag.Department = officer.Department;
+                return View("SharedQueue", cafItems);
             }
 
             // ---------------- TradeLicence — unchanged from here down ----------------

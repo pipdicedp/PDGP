@@ -37,6 +37,10 @@ namespace TradeLicence.Data
         public DbSet<WorkflowSupportingDocument> WorkflowSupportingDocuments { get; set; } = null!;
         public DbSet<WorkflowPayment> WorkflowPayments { get; set; } = null!;
 
+        // ---------------- CAF forwarded to a department (Industry officer -> receiving department) ----------------
+        public DbSet<CafDepartmentApplication> CafDepartmentApplications { get; set; } = null!;
+        public DbSet<CafIndustryReview> CafIndustryReviews { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -317,6 +321,33 @@ namespace TradeLicence.Data
 
                 // One payment row per (ServiceType, ApplicationId).
                 entity.HasIndex(e => new { e.ServiceType, e.ApplicationId }).IsUnique();
+            });
+
+            // ---------------- CAF forwarded to a department ----------------
+            // One row per (CAF, department) — a CAF is forwarded to a department at most once.
+            // Industry department's review state of a CAF — one row per CAF.
+            modelBuilder.Entity<CafIndustryReview>(entity =>
+            {
+                entity.ToTable("CafIndustryReviews");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.LoginId).IsUnique();
+            });
+
+            modelBuilder.Entity<CafDepartmentApplication>(entity =>
+            {
+                entity.ToTable("CafDepartmentApplications");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.LoginId, e.Department }).IsUnique();
+
+                entity.HasOne<Officer>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ForwardedByOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<Officer>()
+                      .WithMany()
+                      .HasForeignKey(e => e.AssignedOfficerId)
+                      .OnDelete(DeleteBehavior.SetNull);
             });
 
         }
