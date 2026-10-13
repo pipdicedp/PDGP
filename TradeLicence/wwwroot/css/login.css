@@ -2759,3 +2759,68 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 	background: #14314F;
 	border-color: #E8B923;
 }
+
+/* =====================================================================
+   FULL AUROVILLE BACKDROP — dark navy, softly blurred
+   One full-bleed Matrimandir (Auroville) photograph now sits behind the
+   WHOLE login shell — it is no longer split between a photo panel and a
+   flat-navy panel. It is oversized, blurred and laid under a deep-navy
+   duotone with a vignette, and the sign-in card floats on top as frosted
+   glass. Applies to the citizen (Login) and officer (OfficerLogin) pages.
+===================================================================== */
+
+/* fallback fill so there is never a flash of white before the photo paints */
+.tl-lx2-shell {
+	background: #061726;
+}
+
+/* ---------- 1. the photograph: full-bleed, oversized, blurred ---------- */
+.tl-lx2-shell::before {
+	inset: -8%;
+	background: #061726 url('../Images/Matrimandir_Auroville.jpg') center / cover no-repeat;
+	filter: blur(17px) saturate(1.02) brightness(1.02) contrast(1.06);
+	transform: scale(1.12);
+	transform-origin: center;
+	animation: tl-lx2-drift 48s ease-in-out infinite alternate;
+	will-change: transform;
+}
+
+/* ---------- 2. navy duotone + vignette + a soft glow where the dome sits ---------- */
+.tl-lx2-shell::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background:
+		radial-gradient(125% 115% at 50% 40%, rgba(30,74,110,0.26) 0%, rgba(7,22,38,0.82) 58%, rgba(3,10,18,0.96) 100%),
+		linear-gradient(180deg, rgba(6,20,36,0.58) 0%, rgba(5,17,30,0.66) 55%, rgba(3,11,20,0.84) 100%);
+	box-shadow: inset 0 0 170px 45px rgba(2,8,15,0.62);
+}
+
+/* keep both panels transparent so the single backdrop reads edge-to-edge */
+.tl-lx2-photo,
+.tl-lx2-form-side {
+	background: transparent;
+}
+
+/* ---------- 3. sign-in card floats as frosted glass over the photo ---------- */
+.tl-lx2-card {
+	background: linear-gradient(180deg, rgba(15,42,68,0.72) 0%, rgba(6,20,36,0.82) 100%);
+	-webkit-backdrop-filter: blur(20px) saturate(1.15);
+	backdrop-filter: blur(20px) saturate(1.15);
+	box-shadow:
+		0 0 0 1px rgba(212,160,23,0.32),
+		0 30px 70px rgba(0,0,0,0.55),
+		inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ---------- 4. very slow drift so the backdrop feels alive, not static ---------- */
+@keyframes tl-lx2-drift {
+	from { transform: scale(1.12) translate3d(-1.2%, -0.8%, 0); }
+	to   { transform: scale(1.19) translate3d(1.4%, 1.2%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx2-shell::before { animation: none; }
+}
