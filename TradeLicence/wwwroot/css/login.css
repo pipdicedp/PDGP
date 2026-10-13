@@ -2715,3 +2715,47 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 	border-left: 3px solid #FF9B8F;
 	color: #FFC9C2;
 }
+
+/* =====================================================================
+   ALIGNMENT FIXES
+   Lining up the service tiles and the sign-in card fields on both the
+   citizen (Login) and officer (OfficerLogin) pages.
+===================================================================== */
+
+/* ---------- 1. service tiles: icon + title sit together at the top ---------- */
+/* The tiles used `justify-content: space-between`, which pinned the title to
+   the bottom of the tile. With 1-, 2- and 3-line titles the titles then began
+   at 3 different heights and drifted away from their icon. Top-aligning keeps
+   every icon and every first title line on the same line. */
+.tl-lx2-service {
+	justify-content: flex-start;
+	gap: 12px;
+}
+
+/* ---------- 2. sign-in card: captcha row spans the field width ---------- */
+/* The 160x56 captcha SVG plus its refresh button only filled the left half of
+   the field. Pin the image left and the refresh button right so the row lines
+   up with the inputs above and below it. */
+.tl-lx2-card .tl-lx2-captcha-row {
+	justify-content: space-between;
+}
+
+.tl-lx2-card .tl-lx2-captcha-img,
+.tl-lx2-card .tl-lx2-captcha-refresh {
+	height: 46px;
+}
+
+/* ---------- 3. sign-in card: make the input boxes read as aligned fields ---------- */
+/* On the navy card the input fill was almost the same shade as the card, so
+   the boxes and their leading icons looked like they floated out of line.
+   A slightly lifted fill plus a clearer border gives every field a visible,
+   aligned box edge. */
+.tl-lx2-input {
+	background: #102A44;
+	border: 1px solid rgba(255,255,255,0.22);
+}
+
+.tl-lx2-input:focus {
+	background: #14314F;
+	border-color: #E8B923;
+}
