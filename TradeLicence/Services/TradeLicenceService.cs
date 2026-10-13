@@ -616,7 +616,7 @@ namespace TradeLicence.Services
                         });
 
                         col.Item().Text("Applicant & Trade Details").Bold().FontSize(12).FontColor("#1a3a52");
-                        col.Item().Element(c => AddDetailTable(c, new (string, string)[]
+                        col.Item().Element(c => AddDetailTable(c, new (string, string?)[]
                         {
                             ("Applicant Name", application.ApplicantName),
                             ("Father/Husband Name", application.ApplicantFatherHusbandName),
@@ -664,7 +664,7 @@ namespace TradeLicence.Services
                         if (shop != null)
                         {
                             col.Item().PaddingTop(8).Text("Shop / Establishment Registration").Bold().FontSize(12).FontColor("#1a3a52");
-                            col.Item().Element(c => AddDetailTable(c, new (string, string)[]
+                            col.Item().Element(c => AddDetailTable(c, new (string, string?)[]
                             {
                                 ("Shop/Establishment Name", shop.ShopOrEstablishmentName ?? "-"),
                                 ("Registration Period", shop.RegistrationPeriod ?? "-"),
@@ -768,7 +768,7 @@ namespace TradeLicence.Services
                             text.Span(", at the premises described below, subject to the provisions of the applicable Municipal/Local Body Act and Rules.").FontSize(11);
                         });
 
-                        col.Item().Element(c => AddDetailTable(c, new (string, string)[]
+                        col.Item().Element(c => AddDetailTable(c, new (string, string?)[]
                         {
                             ("Applicant Name", application.ApplicantName),
                             ("Father/Husband Name", application.ApplicantFatherHusbandName),
