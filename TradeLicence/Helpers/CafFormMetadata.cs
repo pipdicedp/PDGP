@@ -24,7 +24,7 @@ namespace TradeLicence.Helpers
     /// hquantity, etc.) — relabel in this file if your team already has the
     /// "real" field names for that sheet.
     /// </summary>
-    public static class CafFormMetadata
+    public static partial class CafFormMetadata
     {
         private static readonly string[] YesNo = { "Yes", "No" };
 

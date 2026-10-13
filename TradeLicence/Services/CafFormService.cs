@@ -466,5 +466,109 @@ namespace TradeLicence.Services
             }
             finally { CloseIfWeOpenedIt(conn, opened); }
         }
+
+        // ---------------- submitted queue + read-only preview ----------------
+
+        public async Task<List<CafSubmittedSummary>> GetSubmittedSummariesAsync(IEnumerable<long>? loginIds = null)
+        {
+            var summaries = new List<CafSubmittedSummary>();
+
+            var ids = loginIds?.Distinct().ToList();
+            // Caller asked for "these specific applicants" and there are none — nothing to return.
+            if (ids is { Count: 0 }) return summaries;
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                var sql = "SELECT [loginid], [indname], [promotername], [mobileno], [appliedon] " +
+                          "FROM dbo.[caf_basic_details] WHERE [statuss] = 'S'";
+                if (ids is { Count: > 0 })
+                    sql += " AND [loginid] IN (" + string.Join(", ", ids.Select((_, i) => $"@id{i}")) + ")";
+                sql += " ORDER BY [appliedon] DESC, [loginid] DESC";
+
+                using var cmd = new SqlCommand(sql, conn);
+                if (ids is { Count: > 0 })
+                {
+                    for (int i = 0; i < ids.Count; i++)
+                        cmd.Parameters.Add(new SqlParameter($"@id{i}", SqlDbType.Decimal) { Precision = 18, Scale = 0, Value = ids[i] });
+                }
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var applied = reader["appliedon"];
+                    summaries.Add(new CafSubmittedSummary
+                    {
+                        LoginId = Convert.ToInt64(reader["loginid"], CultureInfo.InvariantCulture),
+                        UnitName = ReadCell(reader, "indname"),
+                        PromoterName = ReadCell(reader, "promotername"),
+                        Mobile = ReadCell(reader, "mobileno"),
+                        AppliedOn = applied is DateTime dt ? dt : null
+                    });
+                }
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+
+            return summaries;
+        }
+
+        public async Task<CafPreviewViewModel> LoadPreviewAsync(long loginId)
+        {
+            var vm = new CafPreviewViewModel
+            {
+                AllSteps = CafFormMetadata.Steps,
+                BasicDetailsExist = await BasicDetailsExistAsync(loginId),
+                AllowEdit = true,
+                Collapsible = false
+            };
+
+            var docSizes = await GetDocumentSizesAsync(loginId);
+
+            foreach (var step in CafFormMetadata.Steps)
+            {
+                var section = new CafPreviewSection { Step = step };
+
+                if (step.Key == "documents")
+                {
+                    // The documents step has no main-row columns; it counts as saved once a file exists.
+                    section.HasRow = docSizes.Count > 0;
+                }
+                else
+                {
+                    section.Values = await LoadMainRowAsync(step, loginId);
+                    section.HasRow = section.Values.Count > 0;
+
+                    foreach (var sub in step.SubTables)
+                    {
+                        section.SubTables.Add(new CafSubTableVm
+                        {
+                            Def = sub,
+                            Rows = await GetSubRowsAsync(sub, loginId)
+                        });
+                    }
+                }
+
+                vm.Sections.Add(section);
+                if (section.HasRow) vm.SavedSteps.Add(step.Number);
+            }
+
+            vm.IsComplete = vm.Sections.Count > 0 && vm.Sections.All(s => s.HasRow);
+            vm.IsSubmitted = await IsSubmittedAsync(loginId);
+
+            return vm;
+        }
+
+        private async Task<bool> IsSubmittedAsync(long loginId)
+        {
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                using var cmd = new SqlCommand("SELECT [statuss] FROM dbo.[caf_basic_details] WHERE [loginid] = @loginid", conn);
+                cmd.Parameters.Add(LoginIdParam(loginId));
+                var value = await cmd.ExecuteScalarAsync();
+                return value is string s && string.Equals(s.Trim(), "S", StringComparison.OrdinalIgnoreCase);
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+        }
     }
 }

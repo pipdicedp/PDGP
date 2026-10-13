@@ -75,6 +75,51 @@ namespace TradeLicence.Controllers
             return View("Step", vm);
         }
 
+        // ---------------- Preview & Submit ----------------
+
+        [HttpGet("preview")]
+        public async Task<IActionResult> Preview()
+        {
+            if (User.IsInRole("Officer")) return Forbid();
+
+            var loginId = GetLoginId();
+            if (loginId == null) return Unauthorized();
+
+            var vm = await _service.LoadPreviewAsync(loginId.Value);
+            vm.AllowEdit = true;
+            vm.Collapsible = false;
+
+            if (TempData["CafJustSubmitted"] is string just && just == "1")
+                vm.JustSubmitted = true;
+            if (TempData["CafMessage"] is string msg) vm.SuccessMessage = msg;
+
+            return View("Preview", vm);
+        }
+
+        [HttpPost("submit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Submit()
+        {
+            if (User.IsInRole("Officer")) return Forbid();
+
+            var loginId = GetLoginId();
+            if (loginId == null) return Unauthorized();
+
+            var vm = await _service.LoadPreviewAsync(loginId.Value);
+
+            if (vm.IsSubmitted) return RedirectToAction("Preview");
+
+            if (!vm.IsComplete)
+            {
+                vm.ErrorMessage = "Please save every section before submitting the application.";
+                return View("Preview", vm);
+            }
+
+            await _service.MarkSubmittedAsync(loginId.Value);
+            TempData["CafJustSubmitted"] = "1";
+            return RedirectToAction("Preview");
+        }
+
         // 9 documents x 5 MB each, plus headroom. The global 25 MB request-body cap in Program.cs
         // is too small for the documents step, so it is raised for this action only (the
         // multipart form limit is raised globally in Program.cs for the reason noted there).

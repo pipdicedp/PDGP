@@ -35,5 +35,14 @@ namespace TradeLicence.Interfaces
 
         /// <summary>Marks the whole application Submitted (caf_basic_details.statuss = 'S') once the final step is saved.</summary>
         Task MarkSubmittedAsync(long loginId);
+
+        /// <summary>
+        /// Submitted CAFs (caf_basic_details.statuss = 'S') as one line each, newest first.
+        /// Pass a non-null loginIds to restrict to those applicants (an empty set returns nothing).
+        /// </summary>
+        Task<List<CafSubmittedSummary>> GetSubmittedSummariesAsync(IEnumerable<long>? loginIds = null);
+
+        /// <summary>Read-only view of everything an applicant has saved, for the Preview page and officer reviews.</summary>
+        Task<CafPreviewViewModel> LoadPreviewAsync(long loginId);
     }
 }
