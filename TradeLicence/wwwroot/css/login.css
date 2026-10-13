@@ -2579,3 +2579,139 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 		grid-template-columns: repeat(2, 1fr);
 	}
 }
+
+/* =====================================================================
+   DARK BLUE LOGIN THEME
+   Applies to both the citizen (Login) and officer (OfficerLogin) pages,
+   which share the tl-lx2-* "Regal Split" markup. Keeps the Auroville
+   (Matrimandir) photo as the backdrop image and lays a deep-navy theme
+   over the whole sign-in side: photo on the left, navy glass card on the
+   right. Gold (#D4A017 / #E8B923) stays the accent colour.
+===================================================================== */
+
+/* ---------- 1. backdrop: keep the photo, deepen the navy wash ---------- */
+.tl-lx2-shell {
+	background: #071A2C url('../Images/Matrimandir_Auroville.jpg') center / cover no-repeat;
+}
+
+.tl-lx2-shell::before {
+	background:
+		linear-gradient(90deg, rgba(4,14,26,0.90) 0%, rgba(6,26,46,0.72) 46%, rgba(4,14,26,0.92) 100%),
+		linear-gradient(180deg, rgba(6,22,38,0.45) 0%, rgba(3,11,20,0.85) 100%);
+}
+
+/* ---------- 2. right panel: flat deep navy ---------- */
+.tl-lx2-form-side {
+	background: linear-gradient(160deg, #0A2136 0%, #071A2C 58%, #04101D 100%);
+}
+
+/* ---------- 3. sign-in card: navy glass instead of cream ---------- */
+.tl-lx2-card {
+	background: linear-gradient(180deg, rgba(14,40,64,0.96) 0%, rgba(8,25,44,0.98) 100%);
+	border-top: 4px solid #D4A017;
+	box-shadow:
+		0 0 0 1px rgba(212,160,23,0.30),
+		0 30px 70px rgba(0,0,0,0.55);
+}
+
+.tl-lx2-signin-label {
+	color: #E8B923;
+}
+
+.tl-lx2-heading {
+	color: #EAF2FA;
+}
+
+.tl-lx2-sub {
+	color: #9FB4C8;
+}
+
+/* ---------- 4. form fields ---------- */
+.tl-lx2-field label {
+	color: #C9DAE6;
+}
+
+.tl-lx2-input {
+	background: #0B2135;
+	border: 1px solid rgba(255,255,255,0.16);
+	color: #EAF2FA;
+}
+
+.tl-lx2-input::placeholder {
+	color: #6E8AA3;
+}
+
+.tl-lx2-input:focus {
+	background: #0E2740;
+	border-color: #E8B923;
+	box-shadow: 0 0 0 4px rgba(232,185,35,0.18);
+}
+
+.tl-lx2-eye {
+	color: #8FA8BC;
+}
+
+.tl-lx2-eye:hover {
+	color: #E8B923;
+}
+
+.tl-lx2-error {
+	color: #FF9B8F;
+}
+
+/* ---------- 5. captcha ---------- */
+.tl-lx2-captcha-img {
+	background: #EAF1F8;
+	border: 1px solid rgba(255,255,255,0.16);
+}
+
+.tl-lx2-captcha-refresh {
+	background: #0B2135;
+	border: 1px solid rgba(255,255,255,0.16);
+	color: #E8B923;
+}
+
+.tl-lx2-captcha-refresh:hover {
+	background: #123049;
+}
+
+/* ---------- 5b. password toggle icon colour ---------- */
+.tl-lx2-eye i {
+	color: inherit;
+}
+
+/* ---------- 6. links, divider, register ---------- */
+.tl-lx2-forgot a {
+	color: #E8B923;
+}
+
+.tl-lx2-divider {
+	color: #7E97AD;
+}
+
+.tl-lx2-divider::before,
+.tl-lx2-divider::after {
+	background: rgba(255,255,255,0.16);
+}
+
+.tl-lx2-register {
+	border: 1.5px solid rgba(232,185,35,0.75);
+	color: #F3D27A;
+	background: rgba(232,185,35,0.06);
+}
+
+.tl-lx2-register:hover {
+	background: #E8B923;
+	color: #0A2136;
+}
+
+.tl-lx2-secure {
+	color: #7E97AD;
+}
+
+/* ---------- 7. alerts on the dark card ---------- */
+.tl-lx2-alert {
+	background: rgba(179,38,30,0.22);
+	border-left: 3px solid #FF9B8F;
+	color: #FFC9C2;
+}
