@@ -88,6 +88,8 @@ namespace TradeLicence.Controllers
             var preview = await _cafService.LoadPreviewAsync(app.LoginId);
             preview.AllowEdit = false;
             preview.Collapsible = true;
+            preview.DocumentUrl = column => Url.Action("Document", "CafDepartmentOfficer", new { id, column });
+            preview.PdfUrl = Url.Action("DownloadPdf", "CafDepartmentOfficer", new { id });
 
             var forwardedBy = await _context.Officers.FindAsync(app.ForwardedByOfficerId);
 
@@ -115,6 +117,40 @@ namespace TradeLicence.Controllers
                 Summary = summary,
                 ForwardedByName = forwardedBy?.FullName ?? forwardedBy?.Username
             });
+        }
+
+        // ---------------- Applicant's uploaded documents ----------------
+
+        // id is the CafDepartmentApplication id (same as ViewApplication). Only officers of the department the CAF was
+        // forwarded to get through GetAuthorizedAsync, so one department can't read another's forwarded CAF documents.
+        [HttpGet]
+        public async Task<IActionResult> Document(int id, string column)
+        {
+            var (officer, app) = await GetAuthorizedAsync(id);
+            if (officer == null || app == null) return Forbid();
+
+            var def = CafFormMetadata.DocumentByColumn(column);
+            if (def == null) return NotFound();
+
+            var bytes = await _cafService.GetDocumentAsync(app.LoginId, def.Column);
+            if (bytes == null) return NotFound();
+
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            return File(bytes, CafDocumentFiles.SniffContentType(bytes) ?? "application/octet-stream");
+        }
+
+        // The full CAF as a PDF (same content as the preview), for officers of the department it was forwarded to.
+        [HttpGet]
+        public async Task<IActionResult> DownloadPdf(int id)
+        {
+            var (officer, app) = await GetAuthorizedAsync(id);
+            if (officer == null || app == null) return Forbid();
+
+            var summary = (await _cafService.GetSubmittedSummariesAsync(new[] { app.LoginId })).FirstOrDefault();
+            var preview = await _cafService.LoadPreviewAsync(app.LoginId);
+
+            var bytes = CafPdfBuilder.BuildFullApplication(preview, app.LoginId, summary?.AppliedOn);
+            return File(bytes, "application/pdf", $"CAF_{app.LoginId}.pdf");
         }
 
         // ---------------- Forward / Revert ----------------

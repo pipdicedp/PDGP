@@ -162,6 +162,8 @@ namespace TradeLicence.Controllers
             var preview = await _cafService.LoadPreviewAsync(id);
             preview.AllowEdit = false;
             preview.Collapsible = true;
+            preview.DocumentUrl = column => Url.Action("Document", "CafOfficer", new { id, column });
+            preview.PdfUrl = Url.Action("DownloadPdf", "CafOfficer", new { id });
 
             var review = await _context.CafIndustryReviews.AsNoTracking().FirstOrDefaultAsync(r => r.LoginId == id);
 
@@ -198,6 +200,44 @@ namespace TradeLicence.Controllers
                 AvailableDepartments = available,
                 Review = review
             });
+        }
+
+        // ---------------- Applicant's uploaded documents ----------------
+
+        // Same rule as ViewApplication: an Industry officer can open the documents of any SUBMITTED CAF.
+        // The column is checked against the fixed list in CafFormMetadata, never used to build SQL as typed.
+        [HttpGet]
+        public async Task<IActionResult> Document(long id, string column)
+        {
+            var officer = await GetCurrentIndustryOfficerAsync();
+            if (officer == null) return Forbid();
+
+            var summary = (await _cafService.GetSubmittedSummariesAsync(new[] { id })).FirstOrDefault();
+            if (summary == null) return NotFound();
+
+            var def = CafFormMetadata.DocumentByColumn(column);
+            if (def == null) return NotFound();
+
+            var bytes = await _cafService.GetDocumentAsync(id, def.Column);
+            if (bytes == null) return NotFound();
+
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            return File(bytes, CafDocumentFiles.SniffContentType(bytes) ?? "application/octet-stream");
+        }
+
+        // The full CAF as a PDF (same content as the preview). Same access rule as ViewApplication: submitted CAFs only.
+        [HttpGet]
+        public async Task<IActionResult> DownloadPdf(long id)
+        {
+            var officer = await GetCurrentIndustryOfficerAsync();
+            if (officer == null) return Forbid();
+
+            var summary = (await _cafService.GetSubmittedSummariesAsync(new[] { id })).FirstOrDefault();
+            if (summary == null) return NotFound();
+
+            var preview = await _cafService.LoadPreviewAsync(id);
+            var bytes = CafPdfBuilder.BuildFullApplication(preview, id, summary.AppliedOn);
+            return File(bytes, "application/pdf", $"CAF_{id}.pdf");
         }
 
         // ---------------- Forward to department(s) ----------------

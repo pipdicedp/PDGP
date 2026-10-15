@@ -92,12 +92,32 @@
                href="@Url.Action("Index", "Dashboard")">
                 Back to Dashboard
             </a>
+
+            <a class="btn btn-outline-primary"
+               href="@(Url.Action("DownloadAcknowledgement"))">
+                Download Acknowledgement
+            </a>
+
+            <a class="btn btn-outline-primary"
+               href="@(Url.Action("DownloadPdf"))">
+                Download PDF
+            </a>
         }
         else
         {
             <a class="btn btn-secondary"
                href="@(Url.Action("Step", new { step = CafFormMetadata.MaxStep }))">
                 Back
+            </a>
+
+            <a class="btn btn-outline-primary"
+               href="@(Url.Action("DownloadAcknowledgement"))">
+                Download Acknowledgement
+            </a>
+
+            <a class="btn btn-outline-primary"
+               href="@(Url.Action("DownloadPdf"))">
+                Download PDF
             </a>
 
             <form method="post"
