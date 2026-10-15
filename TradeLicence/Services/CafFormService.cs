@@ -276,14 +276,35 @@ namespace TradeLicence.Services
             };
             vm.AllowEdit = !vm.IsSubmitted;
 
+            // One query for all document sizes (DATALENGTH only — the file bytes are never loaded for the preview).
+            var documentSizes = steps.Any(s => s.Documents.Count > 0)
+                ? await GetDocumentSizesAsync(loginId)
+                : new Dictionary<string, long>();
+
             foreach (var step in steps)
             {
-                var section = new CafPreviewSectionVm
+                var section = new CafPreviewSectionVm { Step = step };
+
+                if (step.Documents.Count > 0)
                 {
-                    Step = step,
-                    Values = await LoadMainRowAsync(step, loginId)
-                };
-                section.HasRow = section.Values.Count > 0;
+                    // The documents step has no Fields to read back — show each document slot instead.
+                    // It counts as "complete" once every Required document is on file (none are required
+                    // by default, so an applicant may submit without uploading anything).
+                    foreach (var doc in step.Documents)
+                    {
+                        section.Documents.Add(new CafDocumentVm
+                        {
+                            Def = doc,
+                            SizeBytes = documentSizes.TryGetValue(doc.Column, out var len) ? len : null
+                        });
+                    }
+                    section.HasRow = section.Documents.All(d => !d.Def.Required || d.HasFile);
+                }
+                else
+                {
+                    section.Values = await LoadMainRowAsync(step, loginId);
+                    section.HasRow = section.Values.Count > 0;
+                }
 
                 foreach (var sub in step.SubTables)
                 {
@@ -600,7 +621,7 @@ namespace TradeLicence.Services
                     conn);
                 cmd.Parameters.Add(LoginIdParam(loginId));
                 var affected = await cmd.ExecuteNonQueryAsync();
-                return 
+                return
                     affected > 0;
             }
             finally { CloseIfWeOpenedIt(conn, opened); }
@@ -617,6 +638,6 @@ namespace TradeLicence.Services
                 return await cmd.ExecuteNonQueryAsync() > 0;
             }
             finally { CloseIfWeOpenedIt(conn, opened); }
-        }     
+        }
     }
 }

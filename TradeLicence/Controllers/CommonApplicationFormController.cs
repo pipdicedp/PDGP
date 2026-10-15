@@ -173,13 +173,7 @@ namespace TradeLicence.Controllers
         private static readonly string[] AllowedDocumentExtensions = { ".pdf", ".jpg", ".jpeg", ".png" };
 
         /// <summary>Content type from the file's first bytes (not its name), or null if it isn't a PDF/JPG/PNG.</summary>
-        private static string? SniffContentType(byte[] b)
-        {
-            if (b.Length >= 4 && b[0] == 0x25 && b[1] == 0x50 && b[2] == 0x44 && b[3] == 0x46) return "application/pdf";               // %PDF
-            if (b.Length >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) return "image/jpeg";
-            if (b.Length >= 8 && b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47) return "image/png";
-            return null;
-        }
+        private static string? SniffContentType(byte[] b) => CafDocumentFiles.SniffContentType(b);
 
         private async Task<IActionResult> SaveDocumentsStepAsync(CafStepDef stepDef, long loginId, IFormCollection form, bool basicExists)
         {
@@ -237,13 +231,15 @@ namespace TradeLicence.Controllers
                 var errVm = await BuildViewModelAsync(stepDef, loginId, basicExists);
                 if (toSave.Count > 0)
                     errVm.SuccessMessage = $"{toSave.Count} document(s) uploaded.";
-                errVm.ErrorMessage = "The application was not submitted. " + string.Join(" ", problems);
+                errVm.ErrorMessage = "Some documents could not be saved. " + string.Join(" ", problems);
                 return View("Step", errVm);
             }
 
-            await _service.MarkSubmittedAsync(loginId);
-            TempData["CafMessage"] = "Common Application Form submitted successfully.";
-            return RedirectToAction("Index", "Dashboard");
+            // The documents step is now the last data step, so it hands over to the Application Preview like every
+            // other step did before it — the applicant reviews everything there and submits explicitly (and the
+            // Submit action also resets the Industry officer's review when a returned CAF is submitted again).
+            TempData["CafMessage"] = $"{stepDef.Title} saved. Please review your application before submitting.";
+            return RedirectToAction("Preview");
         }
 
         /// <summary>Opens one of the applicant's own uploaded documents. loginid comes from the login cookie, never from the URL.</summary>
@@ -344,6 +340,53 @@ namespace TradeLicence.Controllers
             vm.JustSubmitted = TempData["CafSubmitted"] is true;
 
             return View("Preview", vm);
+        }
+
+        // ---------------- PDF downloads (applicant) ----------------
+
+        // The applicant's full application: every section, sub-table and document slot, as it stands right now
+        // (works before and after submitting).
+        [HttpGet("download-pdf")]
+        public async Task<IActionResult> DownloadPdf()
+        {
+            if (User.IsInRole("Officer")) return Forbid();
+
+            var loginId = GetLoginId();
+            if (loginId == null) return Unauthorized();
+
+            if (!await _service.BasicDetailsExistAsync(loginId.Value))
+            {
+                TempData["CafMessage"] = "Please save Basic Details first.";
+                return RedirectToAction("Step", new { step = CafFormMetadata.MinStep });
+            }
+
+            var preview = await _service.LoadPreviewAsync(loginId.Value);
+            var appliedOn = (await _service.GetSubmittedSummariesAsync(new[] { loginId.Value })).FirstOrDefault()?.AppliedOn;
+
+            var bytes = CafPdfBuilder.BuildFullApplication(preview, loginId.Value, appliedOn);
+            return File(bytes, "application/pdf", $"CAF_{loginId.Value}_Application.pdf");
+        }
+
+        // One-page slip with only the basic, important details.
+        [HttpGet("download-acknowledgement")]
+        public async Task<IActionResult> DownloadAcknowledgement()
+        {
+            if (User.IsInRole("Officer")) return Forbid();
+
+            var loginId = GetLoginId();
+            if (loginId == null) return Unauthorized();
+
+            if (!await _service.BasicDetailsExistAsync(loginId.Value))
+            {
+                TempData["CafMessage"] = "Please save Basic Details first.";
+                return RedirectToAction("Step", new { step = CafFormMetadata.MinStep });
+            }
+
+            var preview = await _service.LoadPreviewAsync(loginId.Value);
+            var appliedOn = (await _service.GetSubmittedSummariesAsync(new[] { loginId.Value })).FirstOrDefault()?.AppliedOn;
+
+            var bytes = CafPdfBuilder.BuildAcknowledgement(preview, loginId.Value, appliedOn);
+            return File(bytes, "application/pdf", $"CAF_{loginId.Value}_Acknowledgement.pdf");
         }
 
         // ---------------- Track Status (separate page) ----------------
@@ -518,6 +561,8 @@ namespace TradeLicence.Controllers
         {
             var vm = await _service.LoadPreviewAsync(loginId);
             vm.BasicDetailsExist = basicExists;
+            // the applicant opens their own documents through this controller's Document action
+            vm.DocumentUrl = column => Url.Action("Document", "CommonApplicationForm", new { column });
             return vm;
         }
 

@@ -12,6 +12,10 @@
         <span class="caf-pv-toolbar-hint">Click a section heading to open or close it.</span>
         <button type="button" class="btn btn-sm btn-outline-secondary" data-caf-expand-all>Expand all</button>
         <button type="button" class="btn btn-sm btn-outline-secondary" data-caf-collapse-all>Collapse all</button>
+        @if (!string.IsNullOrEmpty(Model.PdfUrl))
+        {
+            <a class="btn btn-sm btn-primary" href="@Model.PdfUrl">Download PDF</a>
+        }
     </div>
 }
 
@@ -29,7 +33,12 @@
             </h3>
 
             <div class="caf-pv-step-tools">
-                @if (section.HasRow)
+                @if (step.Documents.Count > 0)
+                {
+                    var uploadedCount = section.Documents.Count(d => d.HasFile);
+                    <span class="caf-pv-chip @(uploadedCount > 0 ? "caf-pv-chip-ok" : "caf-pv-chip-missing")">@uploadedCount of @(section.Documents.Count) uploaded</span>
+                }
+                else if (section.HasRow)
                 {
                     <span class="caf-pv-chip caf-pv-chip-ok">Saved</span>
                 }
@@ -52,7 +61,61 @@
 
         <div class="caf-pv-body">
 
-            @if (!section.HasRow)
+            @if (step.Documents.Count > 0)
+            {
+                @* Documents step: one row per document slot, with a View link when a file is on record. *@
+                <div class="caf-pv-table-wrap">
+                    <table class="table table-bordered caf-subtable-table">
+                        <thead>
+                            <tr>
+                                <th class="caf-pv-col-no">#</th>
+                                <th>Document</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                var docNo = 1;
+                            }
+                            @foreach (var d in section.Documents)
+                            {
+                                var docUrl = d.HasFile ? Model.DocumentUrl?.Invoke(d.Def.Column) : null;
+                                var sizeText = d.SizeBytes.HasValue
+                                    ? (d.SizeBytes.Value < 1024 * 1024
+                                        ? $"{Math.Max(1, d.SizeBytes.Value / 1024)} KB"
+                                        : $"{d.SizeBytes.Value / 1024.0 / 1024.0:0.0} MB")
+                                    : "";
+
+                                <tr>
+                                    <td class="caf-pv-col-no">@(docNo++)</td>
+                                    <td>
+                                        @d.Def.Label
+                                        @if (d.Def.Required)
+                                        {
+                                            <span class="caf-required">*</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (d.HasFile)
+                                        {
+                                            <span class="caf-doc-uploaded">Uploaded (@sizeText)</span>
+                                            @if (!string.IsNullOrEmpty(docUrl))
+                                            {
+                                                <a href="#" class="caf-doc-view" data-doc-url="@docUrl" data-doc-title="@d.Def.Label">View</a>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="caf-doc-missing">@(d.Def.Required ? "Required - not uploaded" : "Not uploaded")</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else if (!section.HasRow)
             {
                 <p class="caf-pv-empty-note">
                     Nothing has been saved for this section yet.
@@ -130,3 +193,23 @@
     </section>
 }
 
+@if (Model.DocumentUrl != null)
+{
+    @* Same popup as the Trade Licence document preview: a Bootstrap modal around an iframe. caf_document_preview.js
+       fills the iframe from the clicked link's data-doc-url. Rendered once per page, with the sections. *@
+    <div class="modal fade" id="cafDocumentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cafDocumentModalTitle">Document Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="height:75vh; padding:0;">
+                    <iframe id="cafDocumentViewer" src="" style="width:100%; height:100%; border:none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/caf_js/caf_document_preview.js" asp-append-version="true"></script>
+}

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -154,6 +155,9 @@ namespace TradeLicence.Models.Caf
         public bool HasRow { get; set; }
 
         public List<CafSubTableVm> SubTables { get; set; } = new();
+
+        /// <summary>Only filled for the documents step: each document slot and whether a file is on record for it.</summary>
+        public List<CafDocumentVm> Documents { get; set; } = new();
     }
 
     /// <summary>Everything the Application Preview (6th tab) needs.</summary>
@@ -163,6 +167,16 @@ namespace TradeLicence.Models.Caf
         public List<CafPreviewSectionVm> Sections { get; set; } = new();
 
         public bool BasicDetailsExist { get; set; }
+
+        /// <summary>
+        /// Builds the link that opens one uploaded document (argument = document column name) for whoever is
+        /// looking at this preview: the applicant, the Industry officer or the receiving department's officer each
+        /// have their own Document action. Null hides the "View" links.
+        /// </summary>
+        public Func<string, string?>? DocumentUrl { get; set; }
+
+        /// <summary>Link for the officers' "Download PDF" button (shown in the collapsible officer view). Null hides the button; the applicant's own page has its own buttons in Preview.cshtml.</summary>
+        public string? PdfUrl { get; set; }
 
         /// <summary>statuss on caf_basic_details is no longer 'P' (pending) — the form is read-only.</summary>
         public bool IsSubmitted { get; set; }
