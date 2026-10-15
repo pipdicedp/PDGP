@@ -79,7 +79,7 @@
                         <label asp-for="Username">User Name</label>
                         <div class="tl-lx2-control">
                             <i class="fa-solid fa-user"></i>
-                            <input asp-for="Username" class="tl-lx2-input" placeholder="Enter your user name" autocomplete="username" maxlength="25" autofocus />
+                            <input asp-for="Username" class="tl-lx2-input" placeholder="Enter your user name" autocomplete="off" maxlength="25" autofocus />
                         </div>
                         <span asp-validation-for="Username" class="tl-lx2-error"></span>
                     </div>
@@ -88,7 +88,7 @@
                         <label asp-for="Password">Password</label>
                         <div class="tl-lx2-control tl-lx2-pw">
                             <i class="fa-solid fa-lock"></i>
-                            <input asp-for="Password" type="password" id="passwordInput" class="tl-lx2-input" placeholder="Enter your password" autocomplete="current-password" maxlength="15" />
+                            <input asp-for="Password" type="password" id="passwordInput" class="tl-lx2-input" placeholder="Enter your password" autocomplete="new-password" maxlength="15" />
                             <button type="button" id="togglePassword" class="tl-lx2-eye" aria-label="Show password"><i id="togglePasswordIcon" class="fa-regular fa-eye"></i></button>
                         </div>
                         <span asp-validation-for="Password" class="tl-lx2-error"></span>
