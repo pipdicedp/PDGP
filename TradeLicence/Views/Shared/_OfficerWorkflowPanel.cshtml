@@ -36,6 +36,14 @@
     var revertToName = revertTarget?.FromOfficerId.HasValue == true && officerNames.ContainsKey(revertTarget.FromOfficerId.Value)
         ? officerNames[revertTarget.FromOfficerId.Value] : "previous officer";
     var submittedDate = (DateTime)ViewBag.SubmittedDate;
+
+    // A decided application (Approved/Rejected) shows a read-only decision card
+    // instead of the forward/approve/reject action buttons. Only services that
+    // opt-in via ViewBag.IsDecided are affected; others remain unchanged.
+    var isDecided = ViewBag.IsDecided == true
+        || string.Equals(Model.Status, "Approved", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(Model.Status, "Rejected", StringComparison.OrdinalIgnoreCase);
+    var decisionStatus = (ViewBag.DecisionStatus as string) ?? Model.Status;
 }
 
 <div class="tl-officer-panel">
@@ -147,7 +155,17 @@
                 </div>
             }
 
-            @if (!(bool)ViewBag.IsFinalStage)
+            @if (isDecided)
+            {
+                <fieldset class="tl-section @(string.Equals(decisionStatus, "Approved", StringComparison.OrdinalIgnoreCase) ? "tl-card-green" : "tl-card-red")">
+                    <legend><i class="fa-solid @(string.Equals(decisionStatus, "Approved", StringComparison.OrdinalIgnoreCase) ? "fa-circle-check" : "fa-circle-xmark")"></i> Decision</legend>
+                    <p class="tl-note">
+                        This application has been <strong>@(string.Equals(decisionStatus, "Approved", StringComparison.OrdinalIgnoreCase) ? "approved" : "rejected")</strong>. No further officer actions are available.
+                    </p>
+                    <p class="tl-note" style="margin-top:-8px;">Current stage recorded as <strong>@Model.CurrentStage</strong>.</p>
+                </fieldset>
+            }
+            else if (!(bool)ViewBag.IsFinalStage)
             {
                 <fieldset class="tl-section tl-card-navy">
                     <legend><i class="fa-solid fa-paper-plane"></i> Forward to Officer</legend>
@@ -300,7 +318,16 @@
                                 ? officerNames[h.FromOfficerId.Value] : "Applicant";
                             var toName = h.ToOfficerId.HasValue && officerNames.ContainsKey(h.ToOfficerId.Value)
                                 ? officerNames[h.ToOfficerId.Value] : "-";
-                            var isRevert = h.ActionType == "Revert";
+
+                            var isRevert = string.Equals(h.ActionType, "Revert", StringComparison.OrdinalIgnoreCase);
+                            var isApprove = string.Equals(h.ActionType, "Approve", StringComparison.OrdinalIgnoreCase);
+                            var isReject  = string.Equals(h.ActionType, "Reject", StringComparison.OrdinalIgnoreCase);
+                            var isReturn  = string.Equals(h.ActionType, "Return", StringComparison.OrdinalIgnoreCase);
+                            var isResubmit= string.Equals(h.ActionType, "Resubmit", StringComparison.OrdinalIgnoreCase);
+                            var isDecision= isApprove || isReject || isReturn;
+
+                            var actionLabel = isApprove ? "Approved" : isReject ? "Rejected" : isReturn ? "Returned to Applicant" : isResubmit ? "Resubmitted by Applicant" : isRevert ? "Reverted" : "Forwarded";
+                            var iconClass    = isApprove ? "fa-circle-check" : isReject ? "fa-circle-xmark" : isReturn ? "fa-arrow-rotate-left" : isResubmit ? "fa-paper-plane" : isRevert ? "fa-rotate-left" : "fa-share";
 
                             var receivedOn = i > 0 ? history[i - 1].ActionDate : submittedDate;
                             var forwardedOn = h.ActionDate;
@@ -311,20 +338,27 @@
                                     ? $"{(int)duration.TotalHours} hour{((int)duration.TotalHours == 1 ? "" : "s")}"
                                     : "under an hour";
 
-                            <div class="tl-history-item @(isRevert ? "tl-history-revert" : "")">
-                                <span class="tl-history-icon"><i class="fa-solid @(isRevert ? "fa-rotate-left" : "fa-share")"></i></span>
+                            <div class="tl-history-item @(isRevert || isDecision ? "tl-history-revert" : "")">
+                                <span class="tl-history-icon"><i class="fa-solid @iconClass"></i></span>
                                 <div class="tl-history-body">
                                     <div class="tl-history-action">
-                                        @(isRevert ? "Reverted" : "Forwarded")
+                                        @actionLabel
                                         @if (i == history.Count - 1)
                                         {
                                             <span class="tl-history-latest-tag">Latest</span>
                                         }
                                     </div>
-                                    <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @toName (@h.ToStage)</div>
+                                    @if (isDecision)
+                                    {
+                                        <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @actionLabel</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @toName (@h.ToStage)</div>
+                                    }
                                     <div class="tl-history-meta">
                                         Received: @receivedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
-                                        Forwarded: @forwardedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
+                                        @(isResubmit ? "Resubmitted:" : isDecision ? "Actioned:" : "Forwarded:") @forwardedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
                                         Time taken: @takenText
                                     </div>
                                     @if (!string.IsNullOrWhiteSpace(h.Remarks))
@@ -350,7 +384,10 @@
 
     <div class="tl-actions">
         <a class="btn btn-secondary" href="@Url.Action("Index")">&laquo; Back to Dashboard</a>
-        <button type="button" id="btnReturnToApplicant" class="btn btn-warning" style="@(ViewBag.HideReturnToApplicant == true ? "display:none;" : "")" @(paymentPendingBlock ? "disabled" : "")>Return to Applicant</button>
+        @if (!isDecided)
+        {
+            <button type="button" id="btnReturnToApplicant" class="btn btn-warning" style="@(ViewBag.HideReturnToApplicant == true ? "display:none;" : "")" @(paymentPendingBlock ? "disabled" : "")>Return to Applicant</button>
+        }
     </div>
 
 </div>

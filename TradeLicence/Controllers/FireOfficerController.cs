@@ -65,6 +65,19 @@ namespace TradeLicence.Controllers
         private static bool IsAdministrator(Officer officer) =>
             string.Equals(officer.Designation, "Admin", StringComparison.OrdinalIgnoreCase);
 
+        // An application is only actionable while it is "Submitted". Once it has
+        // been approved, rejected or returned to the applicant it is out of the
+        // officers' hands, and every mutating action below refuses it — this is
+        // what stops an approved NOC being pushed back into the workflow.
+        private static string? ActionBlockedReason(FireClearanceApplication app) =>
+            string.Equals(app.Status, "Submitted", StringComparison.OrdinalIgnoreCase)
+                ? null
+                : $"This application is '{app.Status}' and can no longer be actioned.";
+
+        private static bool IsDecided(FireClearanceApplication app) =>
+            string.Equals(app.Status, "Approved", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(app.Status, "Rejected", StringComparison.OrdinalIgnoreCase);
+
         // A Fire department officer may work a fire application — and so may an
         // Administrator, who approves it directly.
         private async Task<(Officer? Officer, FireClearanceApplication? App)> GetAuthorizedAsync(int id)
@@ -151,6 +164,10 @@ namespace TradeLicence.Controllers
             // "Final Approval" (Approve/Reject) panel is always available.
             ViewBag.IsFinalStage = engine.IsFinalStage(currentStage) || isAdmin;
             ViewBag.AdminOverride = isAdmin;
+            // Approved / Rejected = final. The workflow panel then shows a
+            // read-only decision card instead of action buttons.
+            ViewBag.IsDecided = IsDecided(app);
+            ViewBag.DecisionStatus = app.Status;
             ViewBag.ForwardableByStage = forwardableByStage;
             ViewBag.WorkflowHistory = history;
             ViewBag.OfficerNames = officerNames;
@@ -182,6 +199,9 @@ namespace TradeLicence.Controllers
             var (officer, app) = await GetAuthorizedAsync(id);
             if (officer == null || app == null) return Forbid();
 
+            var blocked = ActionBlockedReason(app);
+            if (blocked != null) return BadRequest(new { error = blocked });
+
             var result = await CreateEngine().ForwardToOfficerAsync(id, officerId, targetStage, remarks, officer.OfficerId);
             if (!result.Success) return BadRequest(new { error = result.Error });
 
@@ -196,6 +216,9 @@ namespace TradeLicence.Controllers
         {
             var (officer, app) = await GetAuthorizedAsync(id);
             if (officer == null || app == null) return Forbid();
+
+            var blocked = ActionBlockedReason(app);
+            if (blocked != null) return BadRequest(new { error = blocked });
 
             var result = await CreateEngine().RevertToPreviousOfficerAsync(id, remarks, officer.OfficerId);
             if (!result.Success) return BadRequest(new { error = result.Error });
@@ -214,7 +237,15 @@ namespace TradeLicence.Controllers
             var (officer, app) = await GetAuthorizedAsync(id);
             if (officer == null || app == null) return Forbid();
 
-            var result = await CreateEngine().ApproveApplicationAsync(id, remarks, allowAnyStage: IsAdministrator(officer));
+            var blocked = ActionBlockedReason(app);
+            if (blocked != null) return BadRequest(new { error = blocked });
+
+            var result = await CreateEngine().ApproveApplicationAsync(
+                id, remarks,
+                allowAnyStage: IsAdministrator(officer),
+                terminalStage: OfficerWorkflow.ApprovedStage,
+                actingOfficerId: officer.OfficerId,
+                recordHistory: true);
             if (!result.Success) return BadRequest(new { error = result.Error });
 
             TempData["OfficerActionMessage"] = result.Message;
@@ -229,7 +260,14 @@ namespace TradeLicence.Controllers
             var (officer, app) = await GetAuthorizedAsync(id);
             if (officer == null || app == null) return Forbid();
 
-            var result = await CreateEngine().RejectApplicationAsync(id, remarks, IsAdministrator(officer));
+            var blocked = ActionBlockedReason(app);
+            if (blocked != null) return BadRequest(new { error = blocked });
+
+            var result = await CreateEngine().RejectApplicationAsync(
+                id, remarks, IsAdministrator(officer),
+                terminalStage: OfficerWorkflow.RejectedStage,
+                actingOfficerId: officer.OfficerId,
+                recordHistory: true);
             if (!result.Success) return BadRequest(new { error = result.Error });
 
             TempData["OfficerActionMessage"] = result.Message;
@@ -244,7 +282,10 @@ namespace TradeLicence.Controllers
             var (officer, app) = await GetAuthorizedAsync(id);
             if (officer == null || app == null) return Forbid();
 
-            var result = await CreateEngine().ReturnToApplicantAsync(id, remarks, officer.OfficerId);
+            var blocked = ActionBlockedReason(app);
+            if (blocked != null) return BadRequest(new { error = blocked });
+
+            var result = await CreateEngine().ReturnToApplicantAsync(id, remarks, officer.OfficerId, recordHistory: true);
             if (!result.Success) return BadRequest(new { error = result.Error });
 
             TempData["OfficerActionMessage"] = result.Message;

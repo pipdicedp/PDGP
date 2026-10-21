@@ -25,17 +25,15 @@
     var nextStep = Model.Preview.Sections.FirstOrDefault(s => !s.HasRow)?.Step.Number
                    ?? FireFormMetadata.MinStep;
 
-    var isReturned = string.Equals(app.Status, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase);
+    var isReturned = FireStatusDisplay.IsReturned(app.Status);
     var isApproved = string.Equals(app.Status, "Approved", StringComparison.OrdinalIgnoreCase);
 
-    var statusBadge = app.Status switch
-    {
-        "Approved" => "text-bg-success",
-        "Rejected" => "text-bg-danger",
-        "ReturnedToApplicant" => "text-bg-warning",
-        "Submitted" => "text-bg-info",
-        _ => "text-bg-secondary"
-    };
+    // Status and stage both come from FireStatusDisplay, so the badge and the
+    // "Current Stage" row can never contradict each other (e.g. "Approved" next
+    // to "Initial Scrutiny").
+    var statusBadge = FireStatusDisplay.StatusBadge(app.Status);
+    var statusLabel = FireStatusDisplay.StatusLabel(app.Status);
+    var stageLabel = FireStatusDisplay.StageLabel(app.Status, app.CurrentStage);
 }
 
 @section Styles {
@@ -76,13 +74,13 @@
             <div class="col-md-4 mb-3">
                 <div class="caf-pv-label">Current Status</div>
                 <div class="caf-pv-value">
-                    <span class="badge @statusBadge">@Model.Application.Status</span>
+                    <span class="badge @statusBadge">@statusLabel</span>
                 </div>
             </div>
 
             <div class="col-md-4 mb-3">
                 <div class="caf-pv-label">Current Stage</div>
-                <div class="caf-pv-value">@Model.Application.CurrentStage</div>
+                <div class="caf-pv-value">@stageLabel</div>
             </div>
 
             <div class="col-md-4 mb-3">

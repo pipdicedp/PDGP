@@ -26,14 +26,10 @@
         SizeBytes = Model.DocumentSizes.TryGetValue(d.Column, out var len) ? len : null
     }).ToList();
 
-    var statusBadge = app.Status switch
-    {
-        "Approved" => "text-bg-success",
-        "Rejected" => "text-bg-danger",
-        "ReturnedToApplicant" => "text-bg-warning",
-        "Submitted" => "text-bg-info",
-        _ => "text-bg-secondary"
-    };
+    // Keep the raw values for any legacy uses, but prefer the readable labels.
+    var statusBadge  = TradeLicence.Helpers.FireStatusDisplay.StatusBadge(app.Status);
+    var statusLabel  = TradeLicence.Helpers.FireStatusDisplay.StatusLabel(app.Status);
+    var stageLabel   = TradeLicence.Helpers.FireStatusDisplay.StageLabel(app.Status, app.CurrentStage);
 }
 
 @section Styles {
@@ -52,8 +48,8 @@
                     <h3>@(string.IsNullOrEmpty(app.Name) ? "Fire NOC Application" : app.Name)</h3>
                     <p>
                         Fire NOC Ref. No. @(string.IsNullOrEmpty(app.ApplicationCode) ? app.Id.ToString() : app.ApplicationCode)
-                        &bull; Current stage: @app.CurrentStage
-                        &bull; Status: @app.Status
+                        &bull; Current stage: @stageLabel
+                        &bull; Status: @statusLabel
                     </p>
                 </div>
             </div>

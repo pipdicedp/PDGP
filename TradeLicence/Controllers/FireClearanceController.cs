@@ -137,6 +137,14 @@ namespace TradeLicence.Controllers
                 return RedirectToAction("Step", new { step = FireFormMetadata.MinStep });
             }
 
+            // A submitted / approved / rejected application is read-only. The GET
+            // action already guards this, but without the guard here a direct POST
+            // (or a stale form) could re-save the last step — and MarkSubmittedAsync
+            // would then silently flip an approved NOC's status back to "Submitted".
+            var existing = await _service.GetApplicationAsync(loginId.Value);
+            if (!IsEditable(existing?.Status))
+                return RedirectToAction("Index");
+
             if (stepDef.Key == "documents")
                 return await SaveDocumentsStepAsync(stepDef, loginId.Value, form, basicExists);
 
@@ -251,7 +259,7 @@ namespace TradeLicence.Controllers
             if (!string.Equals(app.Status, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase))
                 return RedirectToAction("Index");
 
-            var result = await CreateEngine().ResubmitAsync(app.Id, (int)loginId.Value);
+            var result = await CreateEngine().ResubmitAsync(app.Id, (int)loginId.Value, recordHistory: true);
             TempData["FireMessage"] = result.Success
                 ? "Application resubmitted to the officer successfully."
                 : (result.Error ?? "The application could not be resubmitted.");

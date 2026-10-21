@@ -257,11 +257,40 @@ namespace TradeLicence.Services
             return WorkflowActionResult.Ok($"Application reverted to {previousOfficer.FullName} ({revertTarget.FromStage}).");
         }
 
+        // Writes one audit row to the shared history table. Only called when the
+        // caller explicitly opts in (recordHistory), so no other service's
+        // behaviour changes.
+        private void AddDecisionHistory(int applicationId, int? fromOfficerId, string fromStage,
+            int? toOfficerId, string toStage, string actionType, string? remarks)
+        {
+            _sharedContext.WorkflowHistories.Add(new WorkflowHistory
+            {
+                ServiceType = _serviceType,
+                ApplicationId = applicationId,
+                FromOfficerId = fromOfficerId,
+                FromStage = fromStage,
+                ToOfficerId = toOfficerId,
+                ToStage = toStage,
+                ActionType = actionType,
+                Remarks = remarks,
+                ActionDate = DateTime.UtcNow
+            });
+        }
+
         // allowAnyStage lets an Administrator approve straight from Initial
         // Scrutiny without walking the DEO/Manager/Inspection chain first (used
         // by FireOfficerController's Admin "approve directly" path). Every
         // existing caller passes nothing, so their behaviour is unchanged.
-        public async Task<WorkflowActionResult> ApproveApplicationAsync(int applicationId, string? remarks, bool allowAnyStage = false)
+        //
+        // terminalStage / recordHistory are opt-in extras the Fire NOC uses:
+        //   • terminalStage moves CurrentStage to "Approved", so the stage stops
+        //     claiming "Initial Scrutiny" after the decision;
+        //   • recordHistory writes an "Approve" row to WorkflowHistories, so the
+        //     decision shows up in the forwarding history.
+        // Both default to off, so Water / Electricity / CAF are unchanged.
+        public async Task<WorkflowActionResult> ApproveApplicationAsync(
+            int applicationId, string? remarks, bool allowAnyStage = false,
+            string? terminalStage = null, int? actingOfficerId = null, bool recordHistory = false)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
@@ -269,17 +298,29 @@ namespace TradeLicence.Services
             var lastStage = TradeLicence.Models.OfficerWorkflow.Stages[^1];
             if (!allowAnyStage && application.CurrentStage != lastStage)
                 return WorkflowActionResult.Fail("This application hasn't reached the final approval stage yet.");
+
+            var fromStage = application.CurrentStage;
 
             application.Status = "Approved";
             application.OfficerRemarks = remarks;
             application.ModifiedDate = DateTime.UtcNow;
+            if (!string.IsNullOrEmpty(terminalStage))
+                application.CurrentStage = terminalStage;
+
+            if (recordHistory)
+                AddDecisionHistory(applicationId, application.AssignedOfficerId ?? actingOfficerId, fromStage,
+                    null, application.CurrentStage, "Approve", remarks);
 
             await _appContext.SaveChangesAsync();
+            await _sharedContext.SaveChangesAsync();
             return WorkflowActionResult.Ok("Application approved successfully.");
         }
 
-        // Same allowAnyStage escape hatch as ApproveApplicationAsync above.
-        public async Task<WorkflowActionResult> RejectApplicationAsync(int applicationId, string? remarks, bool allowAnyStage = false)
+        // Same allowAnyStage escape hatch as ApproveApplicationAsync above, and
+        // the same opt-in terminalStage / recordHistory extras.
+        public async Task<WorkflowActionResult> RejectApplicationAsync(
+            int applicationId, string? remarks, bool allowAnyStage = false,
+            string? terminalStage = null, int? actingOfficerId = null, bool recordHistory = false)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
@@ -288,11 +329,20 @@ namespace TradeLicence.Services
             if (!allowAnyStage && application.CurrentStage != lastStage)
                 return WorkflowActionResult.Fail("This application hasn't reached the final approval stage yet.");
 
+            var fromStage = application.CurrentStage;
+
             application.Status = "Rejected";
             application.OfficerRemarks = remarks;
             application.ModifiedDate = DateTime.UtcNow;
+            if (!string.IsNullOrEmpty(terminalStage))
+                application.CurrentStage = terminalStage;
+
+            if (recordHistory)
+                AddDecisionHistory(applicationId, application.AssignedOfficerId ?? actingOfficerId, fromStage,
+                    null, application.CurrentStage, "Reject", remarks);
 
             await _appContext.SaveChangesAsync();
+            await _sharedContext.SaveChangesAsync();
             return WorkflowActionResult.Ok("Application rejected.");
         }
 
@@ -302,7 +352,11 @@ namespace TradeLicence.Services
         // officer is pinned as AssignedOfficerId — so after the applicant
         // resubmits it lands back with THAT officer, not any officer sharing
         // the designation.
-        public async Task<WorkflowActionResult> ReturnToApplicantAsync(int applicationId, string? remarks, int? actingOfficerId = null)
+        //
+        // recordHistory (opt-in) writes a "Return" row so the applicant's
+        // correction request is visible in the forwarding history.
+        public async Task<WorkflowActionResult> ReturnToApplicantAsync(
+            int applicationId, string? remarks, int? actingOfficerId = null, bool recordHistory = false)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
@@ -313,18 +367,28 @@ namespace TradeLicence.Services
             if (application.AssignedOfficerId == null && actingOfficerId.HasValue)
                 application.AssignedOfficerId = actingOfficerId;
 
+            var fromStage = application.CurrentStage;
+
             application.Status = "ReturnedToApplicant";
             application.OfficerRemarks = remarks;
             application.ModifiedDate = DateTime.UtcNow;
 
+            if (recordHistory)
+                AddDecisionHistory(applicationId, actingOfficerId, fromStage,
+                    application.AssignedOfficerId, fromStage, "Return", remarks);
+
             await _appContext.SaveChangesAsync();
+            await _sharedContext.SaveChangesAsync();
             return WorkflowActionResult.Ok("Application returned to the applicant successfully.");
         }
 
         // Citizen-initiated — applicant fixed what the officer asked for and
         // sends it back. CurrentStage and AssignedOfficerId are deliberately
         // untouched, so it reappears in the same officer's queue.
-        public async Task<WorkflowActionResult> ResubmitAsync(int applicationId, int? requestingUserId)
+        //
+        // recordHistory (opt-in) writes a "Resubmit" row so the officer can see
+        // that the applicant has responded.
+        public async Task<WorkflowActionResult> ResubmitAsync(int applicationId, int? requestingUserId, bool recordHistory = false)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
@@ -335,10 +399,17 @@ namespace TradeLicence.Services
             if (application.Status != "ReturnedToApplicant")
                 return WorkflowActionResult.Fail("This application hasn't been returned for correction.");
 
+            var stage = application.CurrentStage;
+
             application.Status = "Submitted";
             application.ModifiedDate = DateTime.UtcNow;
 
+            if (recordHistory)
+                AddDecisionHistory(applicationId, null, stage,
+                    application.AssignedOfficerId, stage, "Resubmit", null);
+
             await _appContext.SaveChangesAsync();
+            await _sharedContext.SaveChangesAsync();
             return WorkflowActionResult.Ok("Application resubmitted to the officer successfully.");
         }
 
