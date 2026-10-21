@@ -1,0 +1,42 @@
+@model TradeLicence.Models.OfficerQueueStats
+@{
+    // Status breakdown for the officer dashboard and the register/report
+    // pages. One partial so every count shown anywhere in the officer portal
+    // is rendered identically — and always from the officer's WHOLE register,
+    // not just the queue below it.
+    var stats = Model ?? new TradeLicence.Models.OfficerQueueStats();
+}
+
+<div class="status-stats">
+    <div class="stat-card stat-card-total">
+        <div class="stat-label">Total Applications</div>
+        <div class="stat-value">@stats.Total</div>
+    </div>
+    <div class="stat-card stat-card-submitted">
+        <div class="stat-label">Awaiting Scrutiny</div>
+        <div class="stat-value">@stats.Pending</div>
+    </div>
+    <div class="stat-card stat-card-progress">
+        <div class="stat-label">In Progress</div>
+        <div class="stat-value">@stats.InProgress</div>
+    </div>
+    <div class="stat-card stat-card-approved">
+        <div class="stat-label">Approved</div>
+        <div class="stat-value">@stats.Approved</div>
+    </div>
+    <div class="stat-card stat-card-rejected">
+        <div class="stat-label">Rejected</div>
+        <div class="stat-value">@stats.Rejected</div>
+    </div>
+    <div class="stat-card stat-card-returned">
+        <div class="stat-label">Returned</div>
+        <div class="stat-value">@stats.Returned</div>
+    </div>
+    @if (stats.Draft > 0)
+    {
+        <div class="stat-card stat-card-draft">
+            <div class="stat-label">Draft</div>
+            <div class="stat-value">@stats.Draft</div>
+        </div>
+    }
+</div>

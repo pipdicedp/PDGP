@@ -23,12 +23,14 @@ namespace TradeLicence.Controllers
         private readonly ElectricityApplicationDbContext _electricityContext;
         private readonly ICafFormService _cafService;
         private readonly ICafDepartmentProvider _cafDepartments;
+        private readonly IOfficerRegisterService _register;
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
-        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext, ICafFormService cafService, ICafDepartmentProvider cafDepartments)
+        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext, ICafFormService cafService, ICafDepartmentProvider cafDepartments, IOfficerRegisterService register)
         {
             _cafService = cafService;
             _cafDepartments = cafDepartments;
+            _register = register;
             _context = context;
             _service = service;
             _encryption = encryption;
@@ -73,6 +75,7 @@ namespace TradeLicence.Controllers
                 {
                     ApplicationId = a.Id,
                     ServiceType = "CAF",
+                    HistoryServiceType = CafWorkflowConfig.ServiceType,
                     DisplayName = s?.UnitName ?? s?.PromoterName ?? "-",
                     Contact = s?.Mobile ?? "-",
                     CurrentStage = a.CurrentStage,
@@ -83,11 +86,40 @@ namespace TradeLicence.Controllers
             }).ToList();
         }
 
-        public async Task<IActionResult> Index()
+        // Fire NOC applications visible to a Fire department officer (same visibility rule as every
+        // other service: unassigned at one of their stages, or assigned to them by name).
+        private async Task<List<OfficerQueueItem>> BuildFireQueueItemsAsync(Officer officer)
         {
-            var currentOfficerId = GetCurrentOfficerId();
+            var engine = new WorkflowEngineService<FireClearanceApplication>(
+                _context, _context, FireWorkflowConfig.ServiceType, FireWorkflowConfig.Department);
+            var apps = await engine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+            return apps.Select(a => new OfficerQueueItem
+            {
+                ApplicationId = a.Id,
+                ServiceType = "Fire NOC",
+                HistoryServiceType = FireWorkflowConfig.ServiceType,
+                AssignedOfficerId = a.AssignedOfficerId,
+                DisplayName = a.Name ?? "-",
+                Contact = a.MobileNo ?? "-",
+                CurrentStage = a.CurrentStage,
+                Status = a.Status,
+                SubmittedDate = a.SubmittedDate ?? DateTime.UtcNow,
+                ViewUrl = Url.Action("ViewApplication", "FireOfficer", new { id = a.Id })!
+            }).ToList();
+        }
+
+        public async Task<IActionResult> Index()
+        {            var currentOfficerId = GetCurrentOfficerId();
             var officer = await _context.Officers.FindAsync(currentOfficerId);
             if (officer == null) return Forbid();
+
+            // Status breakdown for the stat cards at the top of both officer
+            // dashboards (Index.cshtml for Trade Licence, SharedQueue.cshtml for
+            // every other service). Built from the whole register, so Approved /
+            // Rejected rows are counted even though the queue below only lists
+            // the ones this officer can act on right now.
+            ViewBag.Stats = await _register.GetStatsAsync(officer);
 
             // Every officer lands on THIS action after login now (see
             // AccountController.OfficerLogin) — Department routes them from
@@ -151,6 +183,15 @@ namespace TradeLicence.Controllers
                 ViewBag.Designation = officer.Designation;
                 ViewBag.Department = officer.Department;
                 return View("SharedQueue", electricityItems);
+            }
+
+            // ---------------- Fire NOC / Fire Safety Clearance ----------------
+            // Fire Service Department officers work the Fire NOC queue (FireOfficerController).
+            if (string.Equals(officer.Department, FireWorkflowConfig.Department, StringComparison.OrdinalIgnoreCase))
+            {
+                ViewBag.Designation = officer.Designation;
+                ViewBag.Department = officer.Department;
+                return View("SharedQueue", await BuildFireQueueItemsAsync(officer));
             }
 
             // Any other department CAF can be forwarded to (Town & Country Planning, Factory & Boiler,
@@ -593,6 +634,118 @@ namespace TradeLicence.Controllers
             TempData["OfficerActionType"] = "approve";
             return RedirectToAction("Index");
         }
+
+        // ---------------- Nav-menu pages ----------------
+        // Every item in OfficerMenuProvider that used to 404 lands on one of
+        // these. Each is "the officer's register, filtered" — see
+        // OfficerRegisterService.GetFilteredAsync for what each kind means —
+        // rendered through the same SharedQueue view the dashboard uses.
+
+        [HttpGet]
+        public async Task<IActionResult> All()
+        {
+            var officer = await LoadOfficerOrForbidAsync();
+            if (officer == null) return Forbid();
+
+            return await RegisterPageAsync(officer, "all",
+                "All Applications",
+                "Every application of the services you manage, whatever its status.");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Assigned()
+        {
+            var officer = await LoadOfficerOrForbidAsync();
+            if (officer == null) return Forbid();
+
+            return await RegisterPageAsync(officer, "assigned",
+                "Assigned Applications",
+                "Applications specifically forwarded to you by name.");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Forwarded()
+        {
+            var officer = await LoadOfficerOrForbidAsync();
+            if (officer == null) return Forbid();
+
+            return await RegisterPageAsync(officer, "forwarded",
+                "Forwarded Applications",
+                "Applications you have already forwarded on to the next stage.");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> History()
+        {
+            var officer = await LoadOfficerOrForbidAsync();
+            if (officer == null) return Forbid();
+
+            return await RegisterPageAsync(officer, "history",
+                "My Workflow History",
+                "Every application you have sent on, received or acted on.");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Approvals()
+        {
+            var officer = await LoadOfficerOrForbidAsync();
+            if (officer == null) return Forbid();
+
+            return await RegisterPageAsync(officer, "approvals",
+                "Final Approvals",
+                "Applications sitting at the Approval stage, awaiting sign-off.");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Inspections()
+        {
+            var officer = await LoadOfficerOrForbidAsync();
+            if (officer == null) return Forbid();
+
+            return await RegisterPageAsync(officer, "inspections",
+                "Site Inspections",
+                "Applications at the Inspection stage, oldest first.");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> InspectionSchedule()
+        {
+            var officer = await LoadOfficerOrForbidAsync();
+            if (officer == null) return Forbid();
+
+            return await RegisterPageAsync(officer, "inspections",
+                "Inspection Schedule",
+                "Your site inspections in the order they were submitted.");
+        }
+
+        private async Task<Officer?> LoadOfficerOrForbidAsync() =>
+            await _context.Officers.FindAsync(GetCurrentOfficerId());
+
+        // Shared body of every nav-menu page above: filter the register, give
+        // each row its service-specific "View" link, and render SharedQueue
+        // with a page-specific title plus the stat cards for these rows.
+        private async Task<IActionResult> RegisterPageAsync(Officer officer, string kind, string title, string subtitle)
+        {
+            var items = await _register.GetFilteredAsync(officer, kind);
+
+            foreach (var item in items)
+                item.ViewUrl = BuildViewUrl(item);
+
+            ViewBag.Designation = officer.Designation;
+            ViewBag.Department = officer.Department;
+            ViewBag.QueueTitle = title;
+            ViewBag.QueueSubtitle = subtitle;
+            // Whole-register breakdown (not just these rows) so the cards mean
+            // the same thing on every officer page — see OfficerRegisterService.
+            ViewBag.Stats = await _register.GetStatsAsync(officer);
+
+            return View("SharedQueue", items);
+        }
+
+        // OfficerQueueItem is service-agnostic on purpose; the "where do I view
+        // this row" decision is shared with ReportsController — see
+        // Helpers/OfficerViewLink.
+        private string BuildViewUrl(OfficerQueueItem item) => OfficerViewLink.Resolve(item, Url);
 
         // ---------------- Admin: Officer (User) Creation ----------------
         // Admin-only "User Creation" page. Creates a row in the Officers

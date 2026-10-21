@@ -1,0 +1,225 @@
+@model TradeLicence.Models.OfficerReportViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+
+    var stats = Model.Stats;
+
+    string StatusClass(string? status) => (status ?? "").ToUpperInvariant() switch
+    {
+        "DRAFT" => "myapps-status-draft",
+        "SUBMITTED" => "myapps-status-submitted",
+        "APPROVED" => "myapps-status-approved",
+        "REJECTED" => "myapps-status-rejected",
+        "RETURNEDTOAPPLICANT" => "myapps-status-rejected",
+        _ => "myapps-status-draft"
+    };
+
+    string StatusText(string? status, string? stage) => (status ?? "").ToUpperInvariant() switch
+    {
+        "SUBMITTED" => string.Equals(stage, "Initial Scrutiny", StringComparison.OrdinalIgnoreCase)
+            ? "Submitted"
+            : $"In Progress — {stage}",
+        "RETURNEDTOAPPLICANT" => "Returned for Correction",
+        _ => status ?? "—"
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/report.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-body">
+
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">📊</span>
+                <div>
+                    <h3>@Model.Title</h3>
+                    <p>@Model.Subtitle</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="report-meta">
+            <span><i class="fa-solid fa-user-tie"></i> <strong>@Model.OfficerName</strong>@(string.IsNullOrWhiteSpace(Model.Designation) ? "" : $" · {Model.Designation}")@(string.IsNullOrWhiteSpace(Model.Department) ? "" : $" · {Model.Department}")</span>
+            <span><i class="fa-regular fa-clock"></i> Generated @Model.GeneratedOn.ToString("dd-MM-yyyy hh:mm tt")</span>
+        </div>
+
+        <!-- ===== Portfolio summary ===== -->
+        <div class="status-stats">
+            <div class="stat-card stat-card-total">
+                <div class="stat-label">Total Applications</div>
+                <div class="stat-value">@stats.Total</div>
+            </div>
+            <div class="stat-card stat-card-submitted">
+                <div class="stat-label">Awaiting Scrutiny</div>
+                <div class="stat-value">@stats.Pending</div>
+            </div>
+            <div class="stat-card stat-card-progress">
+                <div class="stat-label">In Progress</div>
+                <div class="stat-value">@stats.InProgress</div>
+            </div>
+            <div class="stat-card stat-card-approved">
+                <div class="stat-label">Approved</div>
+                <div class="stat-value">@stats.Approved</div>
+            </div>
+            <div class="stat-card stat-card-rejected">
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value">@stats.Rejected</div>
+            </div>
+            <div class="stat-card stat-card-returned">
+                <div class="stat-label">Returned</div>
+                <div class="stat-value">@stats.Returned</div>
+            </div>
+            @if (stats.Draft > 0)
+            {
+                <div class="stat-card stat-card-draft">
+                    <div class="stat-label">Draft</div>
+                    <div class="stat-value">@stats.Draft</div>
+                </div>
+            }
+        </div>
+
+        <!-- ===== Breakdown tables ===== -->
+        <div class="report-grid">
+
+            <div class="report-card">
+                <h4><i class="fa-solid fa-circle-half-stroke"></i> By Status</h4>
+                @if (Model.ByStatus.Count == 0)
+                {
+                    <p class="report-empty">No data.</p>
+                }
+                else
+                {
+                    <table class="report-breakdown">
+                        <tbody>
+                            @foreach (var row in Model.ByStatus)
+                            {
+                                <tr>
+                                    <td><span class="myapps-status-badge @StatusClass(row.Label)">@StatusText(row.Label, null)</span></td>
+                                    <td class="report-count">@row.Count</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            <div class="report-card">
+                <h4><i class="fa-solid fa-diagram-project"></i> By Stage</h4>
+                @if (Model.ByStage.Count == 0)
+                {
+                    <p class="report-empty">No data.</p>
+                }
+                else
+                {
+                    <table class="report-breakdown">
+                        <tbody>
+                            @foreach (var row in Model.ByStage)
+                            {
+                                <tr>
+                                    <td>@row.Label</td>
+                                    <td class="report-count">@row.Count</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+            <div class="report-card">
+                <h4><i class="fa-solid fa-layer-group"></i> By Service</h4>
+                @if (Model.ByService.Count == 0)
+                {
+                    <p class="report-empty">No data.</p>
+                }
+                else
+                {
+                    <table class="report-breakdown">
+                        <tbody>
+                            @foreach (var row in Model.ByService)
+                            {
+                                <tr>
+                                    <td>@row.Label</td>
+                                    <td class="report-count">@row.Count</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+
+        </div>
+
+        <!-- ===== Detail rows for this report ===== -->
+        <div class="status-controls-card">
+            <div class="status-table-controls">
+                <strong>@Model.Title — @Model.Rows.Count application@(Model.Rows.Count == 1 ? "" : "s")</strong>
+                <div class="status-search">
+                    Search: <input type="text" id="statusSearchBox" placeholder="Search rows..." />
+                </div>
+            </div>
+
+            @if (Model.Rows.Count == 0)
+            {
+                <p class="tl-note">Nothing to show for this report right now.</p>
+            }
+            else
+            {
+                <div class="status-table-scroll">
+                    <table class="status-apps-table" id="statusTable">
+                        <thead>
+                            <tr>
+                                <th>Sl No.</th>
+                                <th>Application ID</th>
+                                <th>Service</th>
+                                <th>Applicant Name</th>
+                                <th>Contact</th>
+                                <th>Date</th>
+                                <th>Stage</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int slNo = 1; }
+                            @foreach (var item in Model.Rows)
+                            {
+                                <tr>
+                                    <td>@slNo</td>
+                                    <td>@item.ApplicationId</td>
+                                    <td>@item.ServiceType</td>
+                                    <td>@(string.IsNullOrEmpty(item.DisplayName) ? "—" : item.DisplayName)</td>
+                                    <td>@(string.IsNullOrEmpty(item.Contact) ? "—" : item.Contact)</td>
+                                    <td>@item.SubmittedDate.ToString("dd-MM-yyyy")</td>
+                                    <td>@(string.IsNullOrEmpty(item.CurrentStage) ? "—" : item.CurrentStage)</td>
+                                    <td><span class="myapps-status-badge @StatusClass(item.Status)">@StatusText(item.Status, item.CurrentStage)</span></td>
+                                    <td>
+                                        @if (string.IsNullOrEmpty(item.ViewUrl))
+                                        {
+                                            <span class="report-empty">—</span>
+                                        }
+                                        else
+                                        {
+                                            <a class="myapps-btn myapps-btn-view" href="@item.ViewUrl">View</a>
+                                        }
+                                    </td>
+                                </tr>
+                                slNo++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/tl_js/tl_status.js" asp-append-version="true"></script>
+}

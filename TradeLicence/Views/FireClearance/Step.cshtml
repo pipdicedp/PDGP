@@ -1,0 +1,317 @@
+@model TradeLicence.Models.Caf.CafStepViewModel
+@using System.Linq
+@using TradeLicence.Models.Caf
+@using TradeLicence.Helpers
+
+@*
+    Fire NOC wizard step — one page per step of FireFormMetadata. Same
+    metadata-driven rendering as Views/CommonApplicationForm/Step.cshtml, but the
+    step/field/document definitions come from FireFormMetadata and every step
+    writes the same row of dbo.FireClearanceApplications (see FireFormService).
+*@
+
+@{
+    ViewData["Title"] = "Fire NOC Application - " + Model.Current.Title;
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    // Fields of the current step, grouped into fieldsets by Section,
+    // in the order each Section first appears in FireFormMetadata.
+    var sections = Model.Current.Fields
+        .GroupBy(f => f.Section)
+        .ToList();
+
+    string FileSize(long b) =>
+        b >= 1048576 ? $"{b / 1048576.0:0.0} MB" : $"{Math.Max(1, b / 1024)} KB";
+
+    string Val(string name) =>
+        Model.Values.TryGetValue(name, out var v) ? (v ?? "") : "";
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/caf_css/caf.css"
+          asp-append-version="true" />
+}
+
+<div class="caf-wrapper">
+
+    <div class="caf-header">
+        <h2>Fire NOC Application</h2>
+        <p>Government of Puducherry — Fire Service Department</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success caf-alert alert-dismissible fade show" role="alert">
+            @Model.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger caf-alert alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Stepper -->
+    <div class="caf-stepper">
+        @foreach (var s in Model.AllSteps)
+        {
+            var state = s.Number == Model.Current.Number
+                ? "caf-step-current"
+                : (s.Number < Model.Current.Number || Model.BasicDetailsExist
+                    ? "caf-step-done"
+                    : "caf-step-locked");
+
+            <a class="caf-step @state"
+               href="@(Url.Action("Step", new { step = s.Number }))">
+
+                <span class="caf-step-circle">
+                    @s.Number
+                </span>
+
+                <span class="caf-step-label">
+                    @s.Title
+                </span>
+            </a>
+        }
+    </div>
+
+    <form method="post"
+          action="@(Url.Action("SaveStep", new { step = Model.Current.Number }))"
+          id="fireStepForm"
+          enctype="@(Model.Documents.Any() ? "multipart/form-data" : null)">
+
+        @Html.AntiForgeryToken()
+
+        @foreach (var group in sections)
+        {
+            <fieldset class="tl-section">
+
+                <legend>
+                    @group.Key
+                </legend>
+
+                <div class="tl-grid-2">
+
+                    @foreach (var f in group)
+                    {
+                        <div class="form-group">
+
+                            <label for="fire_@f.Name">
+                                @f.Label
+                                @if (f.Required)
+                                {
+                                    <span class="caf-required">*</span>
+                                }
+                            </label>
+
+                            @switch (f.Type)
+                            {
+                                case CafFieldType.TextArea:
+
+                                    <textarea id="fire_@f.Name"
+                                              name="@f.Name"
+                                              class="form-control"
+                                              rows="3"
+                                              maxlength="@f.MaxLength"
+                                              @(f.Required ? "required" : null)>@Val(f.Name)</textarea>
+
+                                    break;
+
+                                case CafFieldType.Number:
+
+                                    <input id="fire_@f.Name"
+                                           name="@f.Name"
+                                           type="number"
+                                           step="1"
+                                           class="form-control"
+                                           value="@Val(f.Name)"
+                                           @(f.Required ? "required" : null) />
+
+                                    break;
+
+                                case CafFieldType.Decimal:
+
+                                    <input id="fire_@f.Name"
+                                           name="@f.Name"
+                                           type="number"
+                                           step="@f.DecimalStep"
+                                           class="form-control"
+                                           value="@Val(f.Name)"
+                                           @(f.Required ? "required" : null) />
+
+                                    break;
+
+                                case CafFieldType.Date:
+
+                                    <input id="fire_@f.Name"
+                                           name="@f.Name"
+                                           type="date"
+                                           class="form-control"
+                                           value="@Val(f.Name)"
+                                           @(f.Required ? "required" : null) />
+
+                                    break;
+
+                                case CafFieldType.Email:
+
+                                    <input id="fire_@f.Name"
+                                           name="@f.Name"
+                                           type="email"
+                                           maxlength="@f.MaxLength"
+                                           class="form-control"
+                                           value="@Val(f.Name)"
+                                           @(f.Required ? "required" : null) />
+
+                                    break;
+
+                                case CafFieldType.Select:
+                                case CafFieldType.YesNo:
+
+                                    var current = Val(f.Name);
+
+                                    <select id="fire_@f.Name"
+                                            name="@f.Name"
+                                            class="form-control"
+                                            @(f.Required ? "required" : null)>
+
+                                        <option value="">
+                                            -- Please Select --
+                                        </option>
+
+                                        @foreach (var opt in f.Options ?? Array.Empty<string>())
+                                        {
+                                            var pipe = opt.IndexOf('|');
+
+                                            var optValue = pipe >= 0
+                                                ? opt[..pipe]
+                                                : opt;
+
+                                            var optLabel = pipe >= 0
+                                                ? opt[(pipe + 1)..]
+                                                : opt;
+
+                                            if (optValue == current)
+                                            {
+                                                <option value="@optValue" selected>
+                                                    @optLabel
+                                                </option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@optValue">
+                                                    @optLabel
+                                                </option>
+                                            }
+                                        }
+
+                                    </select>
+
+                                    break;
+
+                                default:
+
+                                    <input id="fire_@f.Name"
+                                           name="@f.Name"
+                                           type="text"
+                                           class="form-control"
+                                           maxlength="@f.MaxLength"
+                                           value="@Val(f.Name)"
+                                           @(f.Required ? "required" : null) />
+
+                                    break;
+                            }
+
+                        </div>
+                    }
+
+                </div>
+
+            </fieldset>
+        }
+
+        @if (Model.Documents.Any())
+        {
+            <fieldset class="tl-section caf-documents">
+
+                <legend>
+                    Upload Documents
+                </legend>
+
+                <p class="tl-note">
+                    Accepted: PDF, JPG or PNG, up to 5 MB per file. A document you uploaded
+                    earlier is kept unless you choose a new file for it. Saving this step
+                    submits the application.
+                </p>
+
+                <div class="tl-grid-2">
+
+                    @foreach (var d in Model.Documents)
+                    {
+                        <div class="form-group caf-doc">
+
+                            <label for="fire_doc_@d.Def.Column">
+                                @d.Def.Label
+                                @if (d.Def.Required)
+                                {
+                                    <span class="caf-required">*</span>
+                                }
+                            </label>
+
+                            <input id="fire_doc_@d.Def.Column"
+                                   name="@d.Def.Column"
+                                   type="file"
+                                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                   class="form-control caf-file-input" />
+
+                            <div class="caf-doc-status">
+                                @if (d.HasFile)
+                                {
+                                    <span class="caf-doc-uploaded">
+                                        &#10003; Uploaded (@FileSize(d.SizeBytes!.Value))
+                                    </span>
+                                    <a href="@Url.Action("Document", new { column = d.Def.Column })" target="_blank">View</a>
+                                }
+                                else
+                                {
+                                    <span class="caf-doc-missing">Not uploaded</span>
+                                }
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+
+            </fieldset>
+        }
+
+        <div class="caf-actions">
+
+            @if (Model.Current.Number > FireFormMetadata.MinStep)
+            {
+                <a class="btn btn-secondary"
+                   href="@(Url.Action("Step", new { step = Model.Current.Number - 1 }))">
+                    &laquo; Back
+                </a>
+            }
+
+            <button type="submit"
+                    class="btn btn-primary">
+                @(Model.Current.Key == "documents" ? "Submit Application" : "Save & Next")
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="~/js/caf_js/caf.js" asp-append-version="true"></script>
+}

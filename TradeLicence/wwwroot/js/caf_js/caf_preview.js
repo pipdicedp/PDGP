@@ -1,10 +1,10 @@
 /*
  * Collapsible sections in the officers' CAF preview.
  *
- * Every section starts collapsed (the server renders .caf-pv-step-collapsed);
- * clicking — or pressing Enter / Space on — a section heading opens or closes
- * it, and "Expand all" / "Collapse all" do every section at once. The
- * applicant's own preview is not collapsible and is not touched by this file.
+ * Sections start expanded (so an officer sees the whole application at once);
+ * clicking — or pressing Enter / Space on — a section heading collapses or
+ * re-opens it, and "Expand all" / "Collapse all" do every section at once.
+ * The applicant's own preview is not collapsible and is not touched by this file.
  */
 (function () {
     'use strict';

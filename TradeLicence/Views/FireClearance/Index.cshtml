@@ -1,0 +1,179 @@
+@model TradeLicence.Models.FireApplicationVm
+@using System.Linq
+@using TradeLicence.Models.Caf
+@using TradeLicence.Helpers
+
+@*
+    The applicant's Fire NOC landing / status page (FireClearanceController.Index).
+    With nothing saved yet the controller redirects to Step 1; otherwise this
+    shows where the application stands and what the applicant can do next.
+*@
+
+@{
+    ViewData["Title"] = "Fire NOC Application";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    var app = Model.Application;
+    var preview = Model.Preview;
+
+    var docs = FireFormMetadata.AllDocuments.Select(d => new CafDocumentVm
+    {
+        Def = d,
+        SizeBytes = Model.DocumentSizes.TryGetValue(d.Column, out var len) ? len : null
+    }).ToList();
+
+    var nextStep = Model.Preview.Sections.FirstOrDefault(s => !s.HasRow)?.Step.Number
+                   ?? FireFormMetadata.MinStep;
+
+    var isReturned = string.Equals(app.Status, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase);
+    var isApproved = string.Equals(app.Status, "Approved", StringComparison.OrdinalIgnoreCase);
+
+    var statusBadge = app.Status switch
+    {
+        "Approved" => "text-bg-success",
+        "Rejected" => "text-bg-danger",
+        "ReturnedToApplicant" => "text-bg-warning",
+        "Submitted" => "text-bg-info",
+        _ => "text-bg-secondary"
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet"
+          href="~/css/caf_css/caf.css"
+          asp-append-version="true" />
+}
+
+<div class="caf-wrapper">
+
+    <div class="caf-header">
+        <h2>Fire NOC Application</h2>
+        <p>Government of Puducherry — Fire Service Department</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.Preview.SuccessMessage))
+    {
+        <div class="alert alert-success caf-alert alert-dismissible fade show" role="alert">
+            @Model.Preview.SuccessMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <fieldset class="tl-section">
+
+        <legend>
+            <i class="fa-solid fa-fire-flame-curved"></i>
+            Application Status
+        </legend>
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+                <div class="caf-pv-label">Application Number</div>
+                <div class="caf-pv-value">@(string.IsNullOrEmpty(Model.Application.ApplicationCode) ? "—" : Model.Application.ApplicationCode)</div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="caf-pv-label">Current Status</div>
+                <div class="caf-pv-value">
+                    <span class="badge @statusBadge">@Model.Application.Status</span>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="caf-pv-label">Current Stage</div>
+                <div class="caf-pv-value">@Model.Application.CurrentStage</div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="caf-pv-label">Submitted On</div>
+                <div class="caf-pv-value">
+                    @(Model.Application.SubmittedDate.HasValue
+                        ? Model.Application.SubmittedDate.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+                        : "Not submitted yet")
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="caf-pv-label">Applicant</div>
+                <div class="caf-pv-value">@(string.IsNullOrEmpty(Model.Application.Name) ? "—" : Model.Application.Name)</div>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <div class="caf-pv-label">Mobile</div>
+                <div class="caf-pv-value">@(string.IsNullOrEmpty(Model.Application.MobileNo) ? "—" : Model.Application.MobileNo)</div>
+            </div>
+
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Application.OfficerRemarks))
+        {
+            <div class="alert @(isReturned ? "alert-warning" : "alert-info") caf-alert mb-0">
+                <strong>Remarks from the Fire Department:</strong>
+                "@Model.Application.OfficerRemarks"
+            </div>
+        }
+
+    </fieldset>
+
+    <div class="caf-actions">
+
+        @if (Model.Preview.AllowEdit)
+        {
+            <a class="btn btn-primary"
+               href="@Url.Action("Step", new { step = nextStep })">
+                @(Model.Application.Status == "Draft" ? "Continue Application" : "Edit Application")
+            </a>
+
+            <a class="btn btn-secondary"
+               href="@Url.Action("Preview")">
+                Preview &amp; Submit
+            </a>
+
+            @if (isReturned)
+            {
+                <form method="post"
+                      action="@Url.Action("Resubmit")"
+                      onsubmit="return confirm('Resubmit this application to the Fire Department?');">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-paper-plane"></i> Resubmit to Officer
+                    </button>
+
+                </form>
+            }
+        }
+        else
+        {
+            <a class="btn btn-secondary"
+               href="@Url.Action("Preview")">
+                View Submitted Application
+            </a>
+
+            <a class="btn btn-primary"
+               href="@Url.Action("Acknowledgement")">
+                <i class="fa-solid fa-file-arrow-down"></i> Download Acknowledgement
+            </a>
+
+            @if (isApproved)
+            {
+                <a class="btn btn-success"
+                   href="@Url.Action("Noc")">
+                    <i class="fa-solid fa-certificate"></i> Download Fire Safety NOC
+                </a>
+            }
+        }
+
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <partial name="_FireDocuments" model="docs" />
+        </div>
+    </div>
+
+    <partial name="~/Views/CommonApplicationForm/_CafPreviewSections.cshtml" model="Model.Preview" />
+
+</div>

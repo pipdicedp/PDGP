@@ -2,8 +2,6 @@
 @{
     ViewData["Title"] = "Officer Dashboard";
     Layout = "~/Views/Shared/_OfficerLayout.cshtml";
-
-    int submittedCount = Model.Count;
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
@@ -24,12 +22,7 @@
             </div>
         </div>
 
-        <div class="status-stats">
-            <div class="stat-card stat-card-submitted">
-                <div class="stat-label">Waiting for Review</div>
-                <div class="stat-value">@submittedCount</div>
-            </div>
-        </div>
+        @await Html.PartialAsync("_OfficerStats", (ViewBag.Stats as TradeLicence.Models.OfficerQueueStats) ?? new TradeLicence.Models.OfficerQueueStats())
 
         <div class="status-controls-card">
             <div class="status-table-controls">

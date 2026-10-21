@@ -257,13 +257,17 @@ namespace TradeLicence.Services
             return WorkflowActionResult.Ok($"Application reverted to {previousOfficer.FullName} ({revertTarget.FromStage}).");
         }
 
-        public async Task<WorkflowActionResult> ApproveApplicationAsync(int applicationId, string? remarks)
+        // allowAnyStage lets an Administrator approve straight from Initial
+        // Scrutiny without walking the DEO/Manager/Inspection chain first (used
+        // by FireOfficerController's Admin "approve directly" path). Every
+        // existing caller passes nothing, so their behaviour is unchanged.
+        public async Task<WorkflowActionResult> ApproveApplicationAsync(int applicationId, string? remarks, bool allowAnyStage = false)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
 
             var lastStage = TradeLicence.Models.OfficerWorkflow.Stages[^1];
-            if (application.CurrentStage != lastStage)
+            if (!allowAnyStage && application.CurrentStage != lastStage)
                 return WorkflowActionResult.Fail("This application hasn't reached the final approval stage yet.");
 
             application.Status = "Approved";
@@ -274,13 +278,14 @@ namespace TradeLicence.Services
             return WorkflowActionResult.Ok("Application approved successfully.");
         }
 
-        public async Task<WorkflowActionResult> RejectApplicationAsync(int applicationId, string? remarks)
+        // Same allowAnyStage escape hatch as ApproveApplicationAsync above.
+        public async Task<WorkflowActionResult> RejectApplicationAsync(int applicationId, string? remarks, bool allowAnyStage = false)
         {
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
 
             var lastStage = TradeLicence.Models.OfficerWorkflow.Stages[^1];
-            if (application.CurrentStage != lastStage)
+            if (!allowAnyStage && application.CurrentStage != lastStage)
                 return WorkflowActionResult.Fail("This application hasn't reached the final approval stage yet.");
 
             application.Status = "Rejected";

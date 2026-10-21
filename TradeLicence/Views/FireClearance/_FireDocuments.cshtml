@@ -1,0 +1,54 @@
+@model List<TradeLicence.Models.Caf.CafDocumentVm>
+@using System.Linq
+@using TradeLicence.Models.Caf
+
+@*
+    Read-only list of the applicant's uploaded documents, with download links.
+    Shared by the applicant's own status/preview pages and the Fire officer's
+    "View Application" page: when ViewBag.OfficerApplicationId is set the links
+    point at FireOfficerController.Document(id, column); when it isn't they point
+    at FireClearanceController.Document(column) for the signed-in applicant.
+*@
+
+@{
+    string FileSize(long b) =>
+        b >= 1048576 ? $"{b / 1048576.0:0.0} MB" : $"{Math.Max(1, b / 1024)} KB";
+
+    var uploaded = Model.Where(d => d.HasFile).ToList();
+}
+
+<fieldset class="tl-section">
+
+    <legend>
+        <i class="fa-solid fa-paperclip"></i>
+        Uploaded Documents (@uploaded.Count of @Model.Count)
+    </legend>
+
+    @if (uploaded.Count == 0)
+    {
+        <p class="tl-note">No documents have been uploaded yet.</p>
+    }
+    else
+    {
+        <div class="row">
+
+            @foreach (var d in uploaded)
+            {
+                <div class="col-md-6 mb-3">
+
+                    <div class="caf-pv-label">@d.Def.Label</div>
+
+                    <div class="caf-doc-status">
+                        <span class="caf-doc-uploaded">&#10003; @FileSize(d.SizeBytes!.Value)</span>
+                        <a href="@Url.Action("Document", new { column = d.Def.Column, id = ViewBag.OfficerApplicationId })"
+                           target="_blank"
+                           rel="noopener">Download</a>
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</fieldset>

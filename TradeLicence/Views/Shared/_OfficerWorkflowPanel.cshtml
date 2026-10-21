@@ -266,7 +266,14 @@
 
                 <fieldset class="tl-section tl-card-green">
                     <legend><i class="fa-solid fa-stamp"></i> Final Approval</legend>
-                    <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, return it to the applicant if something needs correcting, or reject it outright.</p>
+                    @if (ViewBag.AdminOverride == true)
+                    {
+                        <p class="tl-note">You're signed in as an Administrator, so you can approve or reject this application at any stage.</p>
+                    }
+                    else
+                    {
+                        <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, return it to the applicant if something needs correcting, or reject it outright.</p>
+                    }
                     <div class="tl-officer-actions-group">
                         <button type="button" id="btnApprove" class="btn btn-success">Approve Application</button>
                         <button type="button" id="btnReject" class="btn btn-danger">Reject Application</button>

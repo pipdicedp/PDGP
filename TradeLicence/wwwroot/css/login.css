@@ -2793,9 +2793,9 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 	z-index: 0;
 	pointer-events: none;
 	background:
-		radial-gradient(125% 115% at 50% 40%, rgba(30,74,110,0.26) 0%, rgba(7,22,38,0.82) 58%, rgba(3,10,18,0.96) 100%),
-		linear-gradient(180deg, rgba(6,20,36,0.58) 0%, rgba(5,17,30,0.66) 55%, rgba(3,11,20,0.84) 100%);
-	box-shadow: inset 0 0 170px 45px rgba(2,8,15,0.62);
+		radial-gradient(120% 100% at 16% 4%, rgba(46,100,142,0.40) 0%, rgba(8,26,44,0.58) 55%, rgba(3,11,20,0.85) 100%),
+		linear-gradient(104deg, rgba(5,17,30,0.70) 0%, rgba(10,32,52,0.38) 48%, rgba(4,13,23,0.76) 100%);
+	box-shadow: inset 0 0 170px 45px rgba(2,8,15,0.55);
 }
 
 /* keep both panels transparent so the single backdrop reads edge-to-edge */
@@ -2823,4 +2823,248 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 
 @media (prefers-reduced-motion: reduce) {
 	.tl-lx2-shell::before { animation: none; }
+}
+
+/* =====================================================================
+   OFFICER LOGIN — officer-only polish
+   Scoped to .tl-lx-page.tl-lx-officer, a hook present ONLY on
+   Views/Account/OfficerLogin.cshtml — the citizen Login page is untouched.
+   Appended after the recovered theme; nothing above is overwritten.
+===================================================================== */
+
+/* ---------- 1. an "Official Use" seal pinned to the sign-in card ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-card::before {
+	content: "\f3ed"; /* fa-shield-halved */
+	font-family: "Font Awesome 6 Free";
+	font-weight: 900;
+	position: absolute;
+	top: -20px;
+	right: 24px;
+	width: 46px;
+	height: 46px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: radial-gradient(circle at 34% 28%, #F6DC93 0%, #D4A017 55%, #A0750A 100%);
+	color: #0A2136;
+	font-size: 1.08rem;
+	box-shadow:
+		0 12px 26px rgba(0,0,0,0.5),
+		0 0 0 4px rgba(10,33,54,0.9);
+	z-index: 3;
+}
+
+/* ---------- 2. the sign-in label becomes a solid "OFFICIAL ACCESS" chip ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-signin-label {
+	display: inline-block;
+	padding: 5px 12px;
+	border-radius: 999px;
+	background: linear-gradient(135deg, #E8B923, #C28F0C);
+	color: #10293F;
+	box-shadow: 0 6px 16px rgba(212,160,23,0.35);
+}
+
+/* ---------- 3. a gold rule under the heading ties the card together ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-heading::after {
+	content: "";
+	display: block;
+	width: 46px;
+	height: 3px;
+	border-radius: 2px;
+	margin-top: 10px;
+	background: linear-gradient(90deg, #E8B923, rgba(232,185,35,0));
+}
+
+/* ---------- 4. the security note reads as a verified badge, not grey fine print ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-secure {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	width: fit-content;
+	margin: 16px auto 0;
+	padding: 7px 14px;
+	border-radius: 999px;
+	background: rgba(27,127,59,0.12);
+	border: 1px solid rgba(27,127,59,0.35);
+	color: #A9D6B8;
+	font-weight: 600;
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-secure i {
+	margin-right: 0;
+	color: #38C172;
+}
+
+/* ---------- 5. hero eyebrow gains a live "restricted" dot ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-eyebrow::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: #38C172;
+	box-shadow: 0 0 0 0 rgba(56,193,114,0.7);
+	animation: tl-lx-officer-pulse 2.4s ease-out infinite;
+}
+
+@keyframes tl-lx-officer-pulse {
+	0%   { box-shadow: 0 0 0 0 rgba(56,193,114,0.6); }
+	70%  { box-shadow: 0 0 0 9px rgba(56,193,114,0); }
+	100% { box-shadow: 0 0 0 0 rgba(56,193,114,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx-page.tl-lx-officer .tl-lx2-eyebrow::before { animation: none; }
+}
+
+/* =====================================================================
+   AUROVILLE BACKDROPS — one photograph per audience
+   ---------------------------------------------------------------------
+   Appended only; nothing above is rewritten. Both login pages share the
+   .tl-lx2-shell backdrop, but they now carry DIFFERENT photographs, so the
+   image does a job instead of being generic decoration:
+     • citizen  (Views/Account/Login.cshtml)        -> Matrimandir
+     • officer  (Views/Account/OfficerLogin.cshtml) -> Auroville Town Hall
+   The officer page is told apart by the .tl-lx-officer hook on .tl-lx-page.
+   Each photo is also labelled by a placard (.tl-lx2-landmark) that names the
+   building and says what it is — see part 6.
+
+   Assets — both licence-clean, no attribution duty on the department:
+     Images/Matrimandir_Auroville.jpg  3200x1800  CC0
+       "Auroville" by Ramya Srivastav
+       https://commons.wikimedia.org/wiki/File:Auroville.jpg
+     Images/Auroville_Town_Hall.jpg    3200x2134  Public domain
+       "Town Hall of Auroville" by Kaspar Konrad
+       https://commons.wikimedia.org/wiki/File:Town_Hall_of_Auroville.jpg
+   Both are DOWNSCALED by `cover` at every width (never upscaled), so they
+   stay sharp. Full provenance: Images/CREDITS.md.
+
+   Every re-sampling trick from the base theme stays switched off:
+     • filter: none    — no blur(17px);
+     • transform: none — no 1.06-1.19 zoom;
+     • animation: none — no drift (which forces constant re-sampling).
+   ===================================================================== */
+
+/* ---------- 1. base field: solid navy (also retires the old 960x540 file) ---------- */
+.tl-lx-page,
+.tl-lx2-shell {
+	background: #071A2C;
+	background-image: none;
+}
+
+/* ---------- 2. citizen photograph, painted 1:1 — no blur, no zoom, no drift ---------- */
+.tl-lx2-shell::before {
+	inset: 0;
+	background: #071A2C url('../Images/Matrimandir_Auroville.jpg') center 45% / cover no-repeat;
+	filter: none;      /* the base theme's blur(17px) is what buried the photo */
+	transform: none;   /* the 1.06-1.19 scale re-sampled it on every frame */
+	animation: none;   /* the drift forced constant re-sampling */
+	will-change: auto;
+}
+
+/* ---------- 3. officer login swaps in the civic photograph ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-shell::before {
+	background-image: url('../Images/Auroville_Town_Hall.jpg');
+}
+
+/* ---------- 4. navy scrim: dark where the copy sits, clear through the middle ---------- */
+.tl-lx2-shell::after {
+	background:
+		radial-gradient(135% 110% at 60% 30%, rgba(6,20,36,0.00) 0%, rgba(6,20,36,0.16) 50%, rgba(3,11,20,0.70) 100%),
+		linear-gradient(96deg, rgba(4,14,26,0.78) 0%, rgba(6,22,38,0.34) 44%, rgba(5,16,28,0.16) 66%, rgba(4,13,23,0.60) 100%);
+	box-shadow: inset 0 0 130px 24px rgba(2,8,15,0.38);
+}
+
+/* ---------- 5. STACKED LAYOUT: show the whole photograph ----------
+   Below 1000px the shell collapses to one column and its backdrop box
+   becomes a ~900x1500 portrait strip, so `cover` used to zoom ~2.8x into
+   the middle of the picture. Here the photograph moves onto the photo
+   panel instead (a normal landscape box, so ~82% of the scene width stays
+   visible) and the sign-in column gets a clean navy field. */
+@media (max-width: 1000px) {
+	.tl-lx2-shell {
+		background: #071A2C;
+	}
+
+	.tl-lx2-shell::before {
+		background-image: none;
+	}
+
+	/* ...including on the officer page: its desktop rule (part 3) is MORE
+	   SPECIFIC than the plain `.tl-lx2-shell::before` above, so without this
+	   the town hall would still paint across the whole stacked page as well
+	   as on the panel below. */
+	.tl-lx-page.tl-lx-officer .tl-lx2-shell::before {
+		background-image: none;
+	}
+
+	.tl-lx2-shell::after {
+		background: none;
+		box-shadow: none;
+	}
+
+	.tl-lx2-photo {
+		background: #071A2C url('../Images/Matrimandir_Auroville.jpg') center 45% / cover no-repeat;
+	}
+
+	/* the officer page keeps its own photograph when stacked */
+	.tl-lx-page.tl-lx-officer .tl-lx2-photo {
+		background-image: url('../Images/Auroville_Town_Hall.jpg');
+	}
+
+	/* the panel's own copy needs its own scrim once the shell one is off */
+	.tl-lx2-photo::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: linear-gradient(180deg, rgba(4,14,26,0.74) 0%, rgba(5,17,30,0.36) 40%, rgba(4,13,23,0.66) 100%);
+	}
+}
+
+/* ---------- 6. the placard: tells the visitor what the photograph is ----------
+   Sits as the last line of the photo panel, under the footline. The panel
+   is a flex column whose footline already owns `margin-top: auto`, so this
+   simply trails it. Below 1000px the footline is hidden and the placard
+   becomes the bottom line instead. */
+.tl-lx2-landmark {
+	margin: 14px 0 0;
+	display: flex;
+	align-items: flex-start;
+	gap: 9px;
+	max-width: 430px;
+	text-shadow: 0 1px 3px rgba(2,10,20,0.72);
+}
+
+.tl-lx2-landmark > i {
+	flex: 0 0 auto;
+	margin-top: 2px;
+	color: #D4A017;
+	font-size: 0.78rem;
+}
+
+.tl-lx2-landmark-name {
+	display: block;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #EEF3F8;
+}
+
+.tl-lx2-landmark-note {
+	display: block;
+	margin-top: 3px;
+	font-size: 0.69rem;
+	line-height: 1.5;
+	color: rgba(203,220,236,0.74);
+}
+
+/* ---------- 7. hero copy stays crisp over the backdrop ---------- */
+.tl-lx2-hero-title,
+.tl-lx2-hero-text,
+.tl-lx2-crest-govt,
+.tl-lx2-crest-dept {
+	text-shadow: 0 1px 3px rgba(2,10,20,0.78), 0 2px 14px rgba(2,10,20,0.68);
 }

@@ -33,6 +33,7 @@ namespace TradeLicence.Models.Caf
 
         /// <summary>HTML input "step" attribute for Decimal fields (default "0.01").</summary>
         public string DecimalStep { get; init; } = "0.01";
+        public bool Required { get; set; }
     }
 
     /// <summary>

@@ -1,0 +1,128 @@
+@model TradeLicence.Models.OfficerWorkflowViewModel
+@{
+    ViewData["Title"] = "Workflow Settings";
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/officer_css/officer.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="dashboard-body">
+
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">🧭</span>
+                <div>
+                    <h3>Workflow Settings</h3>
+                    <p>Every application moves through these four stages, in order. Each stage is worked by one officer designation.</p>
+                </div>
+            </div>
+        </div>
+
+        <ol class="tl-wf-pipeline">
+            @{ var stageNo = 1; }
+            @foreach (var stage in Model.Stages)
+            {
+                <li class="tl-wf-stage">
+                    <div class="tl-wf-stage-head">
+                        <span class="tl-wf-stage-no">@stageNo</span>
+                        <div>
+                            <h4>@stage.Stage</h4>
+                            <span class="tl-wf-chip"><i class="fa-solid fa-user-tie"></i> @stage.Designation</span>
+                        </div>
+                    </div>
+
+                    @if (stage.Officers.Count == 0)
+                    {
+                        <p class="tl-wf-empty"><i class="fa-solid fa-triangle-exclamation"></i> No active officer with this designation.</p>
+                    }
+                    else
+                    {
+                        <ul class="tl-wf-officers">
+                            @foreach (var o in stage.Officers)
+                            {
+                                <li class="@(o.IsLocked ? "is-locked" : "")">
+                                    <i class="fa-solid @(o.IsLocked ? "fa-user-lock" : "fa-circle-user")"></i>
+                                    <span class="tl-wf-officer-name">@(string.IsNullOrEmpty(o.FullName) ? o.Username : o.FullName)</span>
+                                    <span class="tl-wf-officer-meta">@o.Username@(string.IsNullOrEmpty(o.Department) ? "" : $" · {o.Department}")</span>
+                                    @if (o.IsLocked)
+                                    {
+                                        <span class="tl-wf-badge-locked">Inactive</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </li>
+                stageNo++;
+            }
+        </ol>
+
+        <div class="status-controls-card">
+            <div class="status-table-controls">
+                <strong><i class="fa-solid fa-user-shield"></i> Administrators (@Model.AdminOfficers.Count)</strong>
+                <span class="tl-note" style="margin:0;">Admins sit outside the four stages — they can act on any stage.</span>
+            </div>
+
+            @if (Model.AdminOfficers.Count == 0)
+            {
+                <p class="tl-note">No administrator accounts.</p>
+            }
+            else
+            {
+                <div class="status-table-scroll">
+                    <table class="status-apps-table">
+                        <thead>
+                            <tr>
+                                <th>Sl No.</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Department</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int slNo = 1; }
+                            @foreach (var o in Model.AdminOfficers)
+                            {
+                                <tr>
+                                    <td>@slNo</td>
+                                    <td>@o.Username</td>
+                                    <td>@(string.IsNullOrEmpty(o.FullName) ? "—" : o.FullName)</td>
+                                    <td>@(string.IsNullOrEmpty(o.Department) ? "—" : o.Department)</td>
+                                    <td>
+                                        <span class="myapps-status-badge @(o.IsLocked ? "myapps-status-rejected" : "myapps-status-approved")">
+                                            @(o.IsLocked ? "Inactive" : "Active")
+                                        </span>
+                                    </td>
+                                </tr>
+                                slNo++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+        <div class="status-controls-card">
+            <p class="tl-note" style="margin:0 0 12px;">
+                The stage-to-designation mapping is defined in code (<code>Models/OfficerWorkflow.cs</code>).
+                To change who works a stage, edit that file — every screen reads from it. To add or remove
+                officers, use <strong>Manage Officers</strong>.
+            </p>
+            <div class="tl-actions" style="text-align:left; border-top:none; padding-top:0;">
+                <a class="btn btn-primary" href="@Url.Action("ExistingOfficers", "Officer")">
+                    <i class="fa-solid fa-users-gear"></i> Manage Officers
+                </a>
+                <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Reports")">
+                    <i class="fa-solid fa-chart-pie"></i> Open Reports
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>

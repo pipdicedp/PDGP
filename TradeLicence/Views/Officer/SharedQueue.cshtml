@@ -1,9 +1,18 @@
 ﻿@model List<TradeLicence.Models.OfficerQueueItem>
 @{
-    ViewData["Title"] = "Officer Dashboard";
     Layout = "~/Views/Shared/_OfficerLayout.cshtml";
 
-    int submittedCount = Model.Count;
+    // Register/menu pages (Officer/All, /Assigned, ...) pass a page-specific
+    // title + subtitle; the dashboard itself leaves them blank and keeps the
+    // "Officer Dashboard — <designation> (<department>)" heading.
+    var queueTitle = ViewBag.QueueTitle as string;
+    var queueSubtitle = ViewBag.QueueSubtitle as string;
+    var deptSuffix = (string.IsNullOrEmpty(ViewBag.Designation as string) ? "" : $" — {ViewBag.Designation}")
+                   + (string.IsNullOrEmpty(ViewBag.Department as string) ? "" : $" ({ViewBag.Department})");
+    var heading = string.IsNullOrEmpty(queueTitle) ? $"Officer Dashboard{deptSuffix}" : queueTitle;
+    var subtitleText = string.IsNullOrEmpty(queueSubtitle) ? "Submitted Applications — awaiting review" : queueSubtitle;
+
+    ViewData["Title"] = heading;
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
@@ -18,18 +27,13 @@
             <div class="dashboard-banner-text">
                 <span class="dashboard-banner-icon">🗃️</span>
                 <div>
-                    <h3>Officer Dashboard@(string.IsNullOrEmpty(ViewBag.Designation) ? "" : $" — {ViewBag.Designation}")@(string.IsNullOrEmpty(ViewBag.Department) ? "" : $" ({ViewBag.Department})")</h3>
-                    <p>Submitted Applications — awaiting review</p>
+                    <h3>@heading</h3>
+                    <p>@subtitleText</p>
                 </div>
             </div>
         </div>
 
-        <div class="status-stats">
-            <div class="stat-card stat-card-submitted">
-                <div class="stat-label">Waiting for Review</div>
-                <div class="stat-value">@submittedCount</div>
-            </div>
-        </div>
+        @await Html.PartialAsync("_OfficerStats", (ViewBag.Stats as TradeLicence.Models.OfficerQueueStats) ?? new TradeLicence.Models.OfficerQueueStats())
 
         <div class="status-controls-card">
             <div class="status-table-controls">

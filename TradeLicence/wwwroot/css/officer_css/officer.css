@@ -1,3 +1,18 @@
+/* ==== Officer dashboard additions ==== */
+.officer-banner-subtitle {
+    margin-top: 4px;
+    font-size: 0.92rem;
+    opacity: 0.92;
+}
+
+.stat-card-total {
+    background: linear-gradient(135deg, #1a3a52, #0f2438);
+}
+
+.stat-card-returned {
+    background: linear-gradient(135deg, #8a4a12, #6b3710);
+}
+
 /* ============================================================
    Officer Workflow — full stylesheet for Officer/ViewApplication.cshtml
    Covers the officer panel shell, Forward/Revert/Approve/Return actions,
@@ -1000,4 +1015,205 @@
         padding: 10px 16px;
         font-size: 0.88rem;
     }
+
+/* ============================================================================
+   OFFICER NAV — icons + active state
+   _OfficerLayout prepends a Font Awesome <i> and a <span> to each menu link.
+   Site-wide .tl-nav-menu rules stay untouched; only the officer portal (this
+   stylesheet loads only under _OfficerLayout) is adjusted here.
+   ============================================================================ */
+.tl-nav-menu > li > a > i,
+.tl-nav-menu .dropdown-menu a > i {
+    margin-right: 7px;
+    font-size: 0.82em;
+    opacity: 0.85;
+}
+
+.tl-nav-menu .dropdown-menu a {
+    display: flex;
+    align-items: center;
+}
+
+/* Active top-level page: gold text + underline that fits the slate nav bar. */
+.tl-nav-menu > li.active > a {
+    color: #ffd24a;
+    position: relative;
+}
+
+.tl-nav-menu > li.active > a::after {
+    content: "";
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 4px;
+    height: 2px;
+    border-radius: 2px;
+    background: #ffd24a;
+}
+
+/* Active dropdown child sits on a white menu, so use a tinted row + left bar. */
+.tl-nav-menu .dropdown-menu a.active {
+    color: #123a5e;
+    background: #eef4fb;
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 #123a5e;
+}
+
+/* ============================================================================
+   WORKFLOW SETTINGS (OfficerManagement/Workflow)
+   ============================================================================ */
+.tl-wf-pipeline {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin: 0 0 22px;
+    padding: 0;
+}
+
+.tl-wf-stage {
+    position: relative;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-top: 4px solid #123a5e;
+    border-radius: 10px;
+    padding: 16px 16px 14px;
+    box-shadow: 0 1px 3px rgba(15, 36, 56, 0.08);
+}
+
+/* Arrow between stages (hidden on the last one / when the grid wraps). */
+.tl-wf-stage:not(:last-child)::after {
+    content: "\f105";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    right: -13px;
+    transform: translateY(-50%);
+    color: #9fb3c8;
+    font-size: 1.1rem;
+    z-index: 1;
+}
+
+.tl-wf-stage-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.tl-wf-stage-no {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #123a5e;
+    color: #ffd24a;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tl-wf-stage-head h4 {
+    margin: 0 0 4px;
+    font-size: 1rem;
+    color: #123a5e;
+}
+
+.tl-wf-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #0f5132;
+    background: #d1e7dd;
+    border-radius: 999px;
+    padding: 2px 9px;
+}
+
+.tl-wf-officers {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.tl-wf-officers li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 2px 8px;
+    font-size: 0.86rem;
+    padding: 6px 0;
+    border-top: 1px dashed #eef2f7;
+}
+
+.tl-wf-officers li:first-child {
+    border-top: none;
+}
+
+.tl-wf-officers li > i {
+    color: #4a6b8a;
+}
+
+.tl-wf-officers li.is-locked {
+    opacity: 0.62;
+}
+
+.tl-wf-officer-name {
+    font-weight: 600;
+    color: #1f2d3d;
+}
+
+.tl-wf-officer-meta {
+    grid-column: 2 / 4;
+    font-size: 0.75rem;
+    color: #6b7c93;
+}
+
+.tl-wf-badge-locked {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    font-size: 0.64rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #842029;
+    background: #f8d7da;
+    border-radius: 999px;
+    padding: 1px 7px;
+}
+
+.tl-wf-empty {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #b02a37;
+    background: #fdf0f1;
+    border: 1px dashed #f1b0b7;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+@media (max-width: 992px) {
+    .tl-wf-pipeline {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tl-wf-stage:not(:last-child)::after {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .tl-wf-pipeline {
+        grid-template-columns: 1fr;
+    }
+}
      
