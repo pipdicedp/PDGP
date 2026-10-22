@@ -20,6 +20,19 @@
         .GroupBy(f => f.Section)
         .ToList();
 
+    // Sections are numbered across the whole application, not per page, so
+    // "Section 3" means the same thing on every step and on the preview.
+    var allSections = FireFormMetadata.Steps
+        .SelectMany(s => s.Fields)
+        .Select(f => f.Section)
+        .Where(s => !string.IsNullOrWhiteSpace(s))
+        .Distinct()
+        .ToList();
+
+    int SectionNo(string title) => allSections.IndexOf(title) + 1;
+
+    var documentsSectionNo = allSections.Count + 1;
+
     string FileSize(long b) =>
         b >= 1048576 ? $"{b / 1048576.0:0.0} MB" : $"{Math.Max(1, b / 1024)} KB";
 
@@ -35,10 +48,30 @@
 
 <div class="caf-wrapper">
 
-    <div class="caf-header">
-        <h2>Fire NOC Application</h2>
-        <p>Government of Puducherry — Fire Service Department</p>
-    </div>
+    <header class="tl-form-masthead">
+
+        <div class="tl-form-masthead-main">
+            <p class="tl-form-govt">Government of Puducherry</p>
+            <h1 class="tl-form-dept">Fire Service Department</h1>
+            <p class="tl-form-doc">FORM OF APPLICATION FOR FIRE SAFETY CLEARANCE</p>
+        </div>
+
+        <dl class="tl-form-meta">
+            <div>
+                <dt>Application No.</dt>
+                <dd>@(string.IsNullOrWhiteSpace(Model.ApplicationNo) ? "Not yet assigned" : Model.ApplicationNo)</dd>
+            </div>
+            <div>
+                <dt>Application Date</dt>
+                <dd>@(Model.AppliedOn?.ToString("dd-MM-yyyy") ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Status</dt>
+                <dd><span class="tl-form-status">@FireStatusDisplay.StatusLabel(Model.ApplicationStatus ?? "Draft")</span></dd>
+            </div>
+        </dl>
+
+    </header>
 
     @if (!string.IsNullOrEmpty(Model.SuccessMessage))
     {
@@ -80,27 +113,77 @@
         }
     </div>
 
-    <form method="post"
-          action="@(Url.Action("SaveStep", new { step = Model.Current.Number }))"
-          id="fireStepForm"
-          enctype="@(Model.Documents.Any() ? "multipart/form-data" : null)">
+    @{
+        var progressPct = (int)System.Math.Round(Model.Current.Number * 100.0 / FireFormMetadata.MaxStep);
+    }
+
+    <div class="caf-progress">
+        <div class="caf-progress-track"
+             role="progressbar"
+             aria-valuenow="@progressPct"
+             aria-valuemin="0"
+             aria-valuemax="100">
+            <span style="width:@(progressPct)%"></span>
+        </div>
+        <p class="caf-progress-note">
+            Step @Model.Current.Number of @FireFormMetadata.MaxStep
+            <span class="caf-progress-sep">&middot;</span>
+            <strong>@Model.Current.Title</strong>
+        </p>
+    </div>
+
+    <div class="tl-form-sheet">
+
+        <p class="tl-form-instructions">
+            Sections are numbered in the order they appear in the application.
+            Fields marked <span class="caf-required">*</span> are mandatory.
+            Use <strong>Save as Draft</strong> to keep your progress at any time &mdash;
+            nothing is sent to the Fire Department until you submit.
+        </p>
+
+        <form method="post"
+              action="@(Url.Action("SaveStep", new { step = Model.Current.Number }))"
+              id="fireStepForm"
+              enctype="@(Model.Documents.Any() ? "multipart/form-data" : null)">
 
         @Html.AntiForgeryToken()
 
         @foreach (var group in sections)
         {
-            <fieldset class="tl-section">
+            var fieldList = group.ToList();
+            var secNo = SectionNo(group.Key);
+
+            <fieldset class="tl-form-section">
 
                 <legend>
-                    @group.Key
+                    <span class="tl-form-section-no">@secNo</span>
+                    <span>@group.Key</span>
                 </legend>
 
-                <div class="tl-grid-2">
+                @for (var i = 0; i < fieldList.Count; i++)
+                {
+                    var f = fieldList[i];
 
-                    @foreach (var f in group)
-                    {
-                        <div class="form-group">
+                    var compact = f.Type != CafFieldType.TextArea && f.Type != CafFieldType.MultiSelect;
 
+                    <div class="tl-form-row">
+
+                        <span class="tl-form-no">@(secNo + "." + (i + 1))</span>
+
+                        @if (f.Type == CafFieldType.Radio || f.Type == CafFieldType.MultiSelect)
+                        {
+                            @* A radio group / checkbox group is not a labelable control,
+                               so its caption is a span rather than a <label for="...">. *@
+                            <span class="caf-group-label">
+                                @f.Label
+                                @if (f.Required)
+                                {
+                                    <span class="caf-required">*</span>
+                                }
+                            </span>
+                        }
+                        else
+                        {
                             <label for="fire_@f.Name">
                                 @f.Label
                                 @if (f.Required)
@@ -108,6 +191,9 @@
                                     <span class="caf-required">*</span>
                                 }
                             </label>
+                        }
+
+                        <div class="tl-form-control @(compact ? "tl-form-control-compact" : null)">
 
                             @switch (f.Type)
                             {
@@ -166,6 +252,66 @@
                                            class="form-control"
                                            value="@Val(f.Name)"
                                            @(f.Required ? "required" : null) />
+
+                                    break;
+
+                                case CafFieldType.Radio:
+
+                                    var radioCurrent = Val(f.Name);
+                                    var radioOptions = f.Options ?? Array.Empty<string>();
+
+                                    <div class="caf-choice-row" role="radiogroup">
+
+                                        @foreach (var opt in radioOptions)
+                                        {
+                                            var rPipe = opt.IndexOf('|');
+                                            var rValue = rPipe >= 0 ? opt[..rPipe] : opt;
+                                            var rLabel = rPipe >= 0 ? opt[(rPipe + 1)..] : opt;
+                                            var rChecked = string.Equals(rValue, radioCurrent, StringComparison.OrdinalIgnoreCase);
+
+                                            <label class="caf-choice">
+                                                <input type="radio"
+                                                       name="@f.Name"
+                                                       value="@rValue"
+                                                       checked="@rChecked"
+                                                       required="@f.Required" />
+                                                <span>@rLabel</span>
+                                            </label>
+                                        }
+
+                                    </div>
+
+                                    break;
+
+                                case CafFieldType.MultiSelect:
+
+                                    var multiCurrent = Val(f.Name);
+                                    var multiSelected = multiCurrent
+                                        .Split(',')
+                                        .Select(v => v.Trim())
+                                        .Where(v => v.Length > 0)
+                                        .ToList();
+
+                                    <div class="caf-check-grid">
+
+                                        @foreach (var opt in f.Options ?? Array.Empty<string>())
+                                        {
+                                            var mPipe = opt.IndexOf('|');
+                                            var mValue = mPipe >= 0 ? opt[..mPipe] : opt;
+                                            var mLabel = mPipe >= 0 ? opt[(mPipe + 1)..] : opt;
+
+                                            <label class="caf-check">
+                                                <input type="checkbox"
+                                                       name="@f.Name"
+                                                       value="@mValue"
+                                                       checked="@multiSelected.Contains(mValue)" />
+                                                <span>@mLabel</span>
+                                            </label>
+                                        }
+
+                                    </div>
+
+                                    <p class="caf-check-hint">Tick every fire-fighting system available at the premises.</p>
 
                                     break;
 
@@ -240,19 +386,20 @@
                             }
 
                         </div>
-                    }
 
-                </div>
+                    </div>
+                }
 
             </fieldset>
         }
 
         @if (Model.Documents.Any())
         {
-            <fieldset class="tl-section caf-documents">
+            <fieldset class="tl-form-section caf-documents">
 
                 <legend>
-                    Upload Documents
+                    <span class="tl-form-section-no">@documentsSectionNo</span>
+                    <span>Upload Documents</span>
                 </legend>
 
                 <p class="tl-note">
@@ -337,6 +484,33 @@
             </fieldset>
         }
 
+        @if (Model.Current.Key == "documents")
+        {
+            <section class="tl-form-declaration">
+
+                <h3>Declaration</h3>
+
+                <p class="tl-declaration-text">
+                    I hereby declare that the particulars furnished in this application are true,
+                    complete and correct to the best of my knowledge and belief, and that the
+                    building and its fire protection arrangements comply with the National Building
+                    Code of India (NBC-2016) and the rules in force. I understand that any false
+                    statement or suppression of fact may lead to rejection of this application,
+                    cancellation of the clearance and action under the law.
+                </p>
+
+                <label class="caf-check">
+                    <input type="checkbox" name="declaration" value="yes" required />
+                    <span>I have read and agree to the declaration above.</span>
+                </label>
+
+                <p class="tl-form-signature">
+                    Date: <strong>@DateTime.Now.ToString("dd-MM-yyyy")</strong>
+                </p>
+
+            </section>
+        }
+
         <div class="caf-actions">
 
             @if (Model.Current.Number > FireFormMetadata.MinStep)
@@ -347,14 +521,27 @@
                 </a>
             }
 
+            @* Order matters for the keyboard: "Save & Next" is the first submit
+               button, so pressing Enter in a field advances the wizard. The draft
+               button is last in the DOM and pulled to its left with flexbox. *@
             <button type="submit"
-                    class="btn btn-primary">
+                    class="btn btn-primary caf-next-btn">
                 @(Model.Current.Key == "documents" ? "Submit Application" : "Save & Next")
+            </button>
+
+            <button type="submit"
+                    name="saveMode"
+                    value="draft"
+                    class="btn btn-outline-primary caf-draft-btn"
+                    formnovalidate>
+                <i class="fa-regular fa-floppy-disk"></i> Save as Draft
             </button>
 
         </div>
 
-    </form>
+        </form>
+
+    </div>
 
 </div>
 

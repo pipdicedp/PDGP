@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace TradeLicence.Models.Caf
@@ -12,7 +13,9 @@ namespace TradeLicence.Models.Caf
         Date,
         Select,     // free-text column, but offered as a dropdown of sensible values
         YesNo,      // free-text column storing "Yes"/"No"
-        Email
+        Email,
+        Radio,      // a handful of options shown as radio buttons (e.g. Registration / Renewal)
+        MultiSelect // options shown as checkboxes; the ticked values are stored comma-separated
     }
 
     /// <summary>
@@ -141,5 +144,14 @@ namespace TradeLicence.Models.Caf
 
         public string? SuccessMessage { get; set; }
         public string? ErrorMessage { get; set; }
+
+        // ---- Application header (printed at the top of the Fire NOC form) ----
+
+        /// <summary>Official reference (FIRE/2026/00042). Null until the application is submitted.</summary>
+        public string? ApplicationNo { get; set; }
+
+        public string? ApplicationStatus { get; set; }
+
+        public DateTime? AppliedOn { get; set; }
     }
 }

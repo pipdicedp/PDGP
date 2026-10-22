@@ -69,7 +69,7 @@
                         {
                             var shown = CafFormMetadata.DisplayValue(f, section.Values.GetValueOrDefault(f.Name));
 
-                            <div class="caf-pv-field @(f.Type == CafFieldType.TextArea ? "caf-pv-field-wide" : "")">
+                            <div class="caf-pv-field @(f.Type == CafFieldType.TextArea || f.Type == CafFieldType.MultiSelect ? "caf-pv-field-wide" : "")">
                                 <span class="caf-pv-label">@f.Label</span>
 
                                 @if (shown == null)

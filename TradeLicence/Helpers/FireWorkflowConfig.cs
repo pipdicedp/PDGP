@@ -53,7 +53,7 @@ namespace TradeLicence.Helpers
             "Rejected" => "Rejected",
             "ReturnedToApplicant" => "Sent back for correction",
             "Submitted" => "Submitted — in process",
-            "Draft" => "Draft",
+            "Draft" => "Draft — not submitted",
             _ => string.IsNullOrWhiteSpace(status) ? "—" : status
         };
 
@@ -77,6 +77,7 @@ namespace TradeLicence.Helpers
             "Approved" => "Process complete",
             "Rejected" => "Application closed",
             "ReturnedToApplicant" => "With you — correct and resubmit",
+            "Draft" => "Not submitted to the Department",
             _ => string.IsNullOrWhiteSpace(stage) ? "—" : stage
         };
 

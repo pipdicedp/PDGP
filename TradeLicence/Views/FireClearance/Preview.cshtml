@@ -28,6 +28,8 @@
     // anything else means the file has left their hands.
     var editable = Model.AllowEdit;
     var locked = !editable;
+    var appStatus = ViewBag.ApplicationStatus as string ?? "Draft";
+    var isDraft = string.Equals(appStatus, "Draft", StringComparison.OrdinalIgnoreCase);
 }
 
 @section Styles {
@@ -73,6 +75,14 @@
         <div class="alert alert-info caf-alert">
             <strong>Application submitted.</strong>
             This is a read-only copy of what was submitted; it can no longer be edited here.
+        </div>
+    }
+    else if (isDraft)
+    {
+        <div class="alert alert-secondary caf-alert">
+            <strong>Draft &mdash; not submitted.</strong>
+            Use <em>Edit</em> next to any section to change it. Nothing goes to the Fire
+            Department until you click <strong>Submit Application</strong>.
         </div>
     }
     else if (!Model.IsComplete)

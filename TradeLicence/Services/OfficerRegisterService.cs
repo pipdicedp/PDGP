@@ -145,6 +145,8 @@ namespace TradeLicence.Services
         private async Task<List<OfficerQueueItem>> BuildFireAsync()
         {
             var apps = await _context.FireClearanceApplications
+                // Unsubmitted drafts stay out of the officer register.
+                .Where(a => a.Status == null || a.Status != "Draft")
                 .OrderByDescending(a => a.Id)
                 .ToListAsync();
 

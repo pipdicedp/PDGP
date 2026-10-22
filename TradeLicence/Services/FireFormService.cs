@@ -170,7 +170,8 @@ namespace TradeLicence.Services
                 if (exists)
                 {
                     var setClauses = step.Fields.Select((f, i) => $"[{f.Name}] = @f{i}");
-                    var sql = $"UPDATE dbo.[{FireFormMetadata.MainTable}] SET {string.Join(", ", setClauses)} WHERE [loginid] = @loginid";
+                    var sql = $"UPDATE dbo.[{FireFormMetadata.MainTable}] SET {string.Join(", ", setClauses)}, " +
+                              "[modifieddate] = GETDATE() WHERE [loginid] = @loginid";
 
                     using var cmd = new SqlCommand(sql, conn);
                     cmd.Parameters.Add(LoginIdParam(loginId));
@@ -206,6 +207,11 @@ namespace TradeLicence.Services
                         paramNames.Add($"@f{i}");
                     }
 
+                    // Every save stamps "last saved", which the draft summary on
+                    // the applicant's status page shows.
+                    columns.Add("[modifieddate]");
+                    paramNames.Add("GETDATE()");
+
                     var sql = $"INSERT INTO dbo.[{FireFormMetadata.MainTable}] ({string.Join(", ", columns)}) VALUES ({string.Join(", ", paramNames)})";
 
                     using var cmd = new SqlCommand(sql, conn);
@@ -226,6 +232,21 @@ namespace TradeLicence.Services
                         cmd.Parameters.Add(MakeParam($"@f{i}", step.Fields[i], postedValues.GetValueOrDefault(step.Fields[i].Name)));
 
                     await cmd.ExecuteNonQueryAsync();
+                }
+
+                // dbo.FireClearanceApplications.[name] is the denormalised title the
+                // officer queues and lists show. The department's form has no separate
+                // applicant-name field — its "name" column *is* the premises name — so
+                // keep the display column in step with what the applicant typed.
+                if (step.Key == "applicant")
+                {
+                    using var syncName = new SqlCommand(
+                        $"UPDATE dbo.[{FireFormMetadata.MainTable}] " +
+                        "SET [name] = LEFT(COALESCE(NULLIF(LTRIM(RTRIM([premisesname])), ''), [name]), 150) " +
+                        "WHERE [loginid] = @loginid",
+                        conn);
+                    syncName.Parameters.Add(LoginIdParam(loginId));
+                    await syncName.ExecuteNonQueryAsync();
                 }
             }
             finally { CloseIfWeOpenedIt(conn, opened); }

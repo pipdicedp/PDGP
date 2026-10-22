@@ -28,6 +28,8 @@
 
     var isReturned = FireStatusDisplay.IsReturned(app.Status);
     var isApproved = string.Equals(app.Status, "Approved", StringComparison.OrdinalIgnoreCase);
+    var isDraft = string.IsNullOrEmpty(app.Status)
+                  || string.Equals(app.Status, "Draft", StringComparison.OrdinalIgnoreCase);
 
     // Status and stage both come from FireStatusDisplay, so the badge and the
     // "Current Stage" row can never contradict each other (e.g. "Approved" next
@@ -58,6 +60,15 @@
         </div>
     }
 
+    @if (isDraft)
+    {
+        <div class="alert alert-secondary caf-alert">
+            <strong>Draft &mdash; not submitted.</strong>
+            This application is still open. Continue where you left off and submit it
+            when every section and the compulsory documents are complete.
+        </div>
+    }
+
     <fieldset class="tl-section">
 
         <legend>
@@ -69,7 +80,7 @@
 
             <div class="col-md-4 mb-3">
                 <div class="caf-pv-label">Application Number</div>
-                <div class="caf-pv-value">@(string.IsNullOrEmpty(Model.Application.ApplicationCode) ? "—" : Model.Application.ApplicationCode)</div>
+                <div class="caf-pv-value">@(string.IsNullOrEmpty(Model.Application.ApplicationCode) ? "Not assigned yet" : Model.Application.ApplicationCode)</div>
             </div>
 
             <div class="col-md-4 mb-3">
@@ -92,6 +103,14 @@
                         : "Not submitted yet")
                 </div>
             </div>
+
+            @if (isDraft && Model.Application.ModifiedDate.HasValue)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="caf-pv-label">Last Saved</div>
+                    <div class="caf-pv-value">@Model.Application.ModifiedDate.Value.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")</div>
+                </div>
+            }
 
             <div class="col-md-4 mb-3">
                 <div class="caf-pv-label">Applicant</div>
@@ -121,12 +140,13 @@
         {
             <a class="btn btn-primary"
                href="@Url.Action("Step", new { step = nextStep })">
-                @(Model.Application.Status == "Draft" ? "Continue Application" : "Edit Application")
+                <i class="fa-solid fa-pen-to-square"></i>
+                @(isDraft ? "Continue / Edit Draft" : "Edit Application")
             </a>
 
             <a class="btn btn-secondary"
                href="@Url.Action("Preview")">
-                Preview &amp; Submit
+                @(isDraft ? "Preview Draft" : "Preview & Submit")
             </a>
 
             @if (isReturned)

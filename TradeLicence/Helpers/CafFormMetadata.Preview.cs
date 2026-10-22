@@ -36,6 +36,7 @@ namespace TradeLicence.Helpers
             switch (field.Type)
             {
                 case CafFieldType.Select:
+                case CafFieldType.Radio:
                     var match = field.Options?.FirstOrDefault(o =>
                         string.Equals(o.Split('|')[0].Trim(), raw, StringComparison.OrdinalIgnoreCase));
                     if (!string.IsNullOrEmpty(match))
@@ -44,6 +45,21 @@ namespace TradeLicence.Helpers
                         return pipe >= 0 ? match[(pipe + 1)..].Trim() : match;
                     }
                     return raw;
+
+                case CafFieldType.MultiSelect:
+                    // Checkbox groups are stored as a comma-separated list.
+                    var chosen = raw.Split(',')
+                        .Select(v => v.Trim())
+                        .Where(v => v.Length > 0)
+                        .Select(v =>
+                        {
+                            var opt = field.Options?.FirstOrDefault(o =>
+                                string.Equals(o.Split('|')[0].Trim(), v, StringComparison.OrdinalIgnoreCase));
+                            if (string.IsNullOrEmpty(opt)) return v;
+                            var p = opt.IndexOf('|');
+                            return p >= 0 ? opt[(p + 1)..].Trim() : opt;
+                        });
+                    return string.Join(", ", chosen);
 
                 case CafFieldType.Decimal:
                     return decimal.TryParse(raw, NumberStyles.Number, CultureInfo.InvariantCulture, out var d)

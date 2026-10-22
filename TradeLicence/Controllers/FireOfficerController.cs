@@ -116,6 +116,9 @@ namespace TradeLicence.Controllers
             if (officer == null || !IsAdministrator(officer)) return Forbid();
 
             var apps = await _context.FireClearanceApplications
+                // Drafts are the applicant's private work-in-progress; they only
+                // enter the officer's world when the applicant submits them.
+                .Where(a => a.Status == null || a.Status != "Draft")
                 .OrderByDescending(a => a.Id)
                 .ToListAsync();
 

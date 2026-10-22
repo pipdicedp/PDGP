@@ -73,6 +73,9 @@ namespace TradeLicence.Models
 
         public DateTime? ModifiedDate { get; set; }
 
+        /// <summary>When the application was started (dbo.appliedon).</summary>
+        public DateTime? AppliedOn { get; set; }
+
         /// <summary>When the applicant submitted (the officer queue orders on this).</summary>
         public DateTime? SubmittedDate { get; set; }
     }

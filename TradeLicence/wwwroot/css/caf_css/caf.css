@@ -1,5 +1,5 @@
-/* ============================================================
-   Common Application Form (CAF) — citizen-facing 5-step wizard.
+﻿/* ============================================================
+   Common Application Form (CAF) â€” citizen-facing 5-step wizard.
    Loaded only on Views/CommonApplicationForm/Step.cshtml.
    Reuses the same navy (#1a3a52) / gold (#D4A017) palette as the
    rest of the citizen site (see wwwroot/css/tl_css/site.css) so this
@@ -208,7 +208,7 @@
 .caf-doc-missing  { color: #6b7280; }
 
 /* =====================================================================
-   CAF / Fire NOC — read-only preview component (.caf-pv-*)
+   CAF / Fire NOC â€” read-only preview component (.caf-pv-*)
    ---------------------------------------------------------------------
    Emitted by Views/CommonApplicationForm/_CafPreviewSections.cshtml and shown on
    the Fire NOC applicant pages, the Fire NOC officer "View Application" page
@@ -216,8 +216,8 @@
    the project, so every label/value pair collapsed into a run of inline text,
    the sub-tables lost their framing, and "collapsed" sections did not actually
    collapse. This block gives the component a document look: each section is a
-   card, and each field is a real two-column table row — label in a fixed left
-   column, value in the right column — so every value starts on the same
+   card, and each field is a real two-column table row â€” label in a fixed left
+   column, value in the right column â€” so every value starts on the same
    vertical line.
    ===================================================================== */
 
@@ -396,7 +396,7 @@
    .caf-pv-grid is a two-column grid and each .caf-pv-field is
    `display: contents`, so its label and value drop straight into those two
    columns. Result: one label column at a single shared width, one value
-   column, every value left-aligned at the same x-position — a real table.
+   column, every value left-aligned at the same x-position â€” a real table.
    (Selectors below are descendants, not children: with display:contents the
    label/value stay children of .caf-pv-field in the DOM.)
    ===================================================================== */
@@ -634,3 +634,400 @@
         flex-basis: auto;
     }
 }
+
+
+/* ==================================================================
+   FIRE NOC - radio pairs and multi-select checklists
+   (Application Type, Fire Fighting Arrangements Available)
+   ================================================================== */
+
+.caf-field-wide {
+    grid-column: 1 / -1;
+}
+
+.caf-choice-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding-top: 4px;
+}
+
+.caf-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 9px 18px;
+    border: 1px solid #cfd8dc;
+    border-radius: 999px;
+    background: #fff;
+    font-weight: 500;
+    color: #23313b;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+}
+
+    .caf-choice:hover {
+        border-color: #0d6b5b;
+    }
+
+    .caf-choice input {
+        margin: 0;
+        accent-color: #0d6b5b;
+    }
+
+    .caf-choice:has(input:checked) {
+        background: #e7f5ef;
+        border-color: #0d6b5b;
+        box-shadow: inset 0 0 0 1px #0d6b5b;
+    }
+
+.caf-check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 8px 14px;
+    padding-top: 4px;
+}
+
+.caf-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid #dfe6e9;
+    border-radius: 8px;
+    background: #fbfdfc;
+    font-weight: 400;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+}
+
+    .caf-check:hover {
+        border-color: #0d6b5b;
+        background: #f4faf8;
+    }
+
+    .caf-check input {
+        margin: 0;
+        accent-color: #0d6b5b;
+    }
+
+    .caf-check:has(input:checked) {
+        background: #e7f5ef;
+        border-color: #0d6b5b;
+        font-weight: 600;
+    }
+
+.caf-check-hint {
+    margin: 6px 0 0;
+    font-size: .82rem;
+    color: #64748b;
+}
+
+/* ------------------------------------------------------------------
+   Wizard progress bar (Fire NOC)
+   ------------------------------------------------------------------ */
+
+.caf-progress {
+    margin: 0 0 18px;
+}
+
+.caf-progress-track {
+    height: 6px;
+    border-radius: 999px;
+    background: #e3e9ec;
+    overflow: hidden;
+}
+
+    .caf-progress-track > span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #0d6b5b, #35a86b);
+        transition: width .35s ease;
+    }
+
+.caf-progress-note {
+    margin: 8px 0 0;
+    font-size: .85rem;
+    color: #64748b;
+}
+
+    .caf-progress-note strong {
+        color: #1f3b39;
+        font-weight: 600;
+    }
+
+.caf-progress-sep {
+    margin: 0 6px;
+    color: #c3ccd2;
+}
+
+.caf-group-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+/* =====================================================================
+   FIRE NOC - standard application form layout
+   ---------------------------------------------------------------------
+   Official-document structure: masthead with application number / date /
+   status, a white "sheet", numbered sections and numbered fields whose
+   captions and controls share fixed grid columns so every row lines up.
+   ===================================================================== */
+
+.tl-form-masthead {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px 32px;
+    background: #fff;
+    border: 1px solid #e2e8ec;
+    border-top: 4px solid #1a3a52;
+    border-radius: 12px;
+    padding: 18px 24px;
+    margin-bottom: 18px;
+}
+
+.tl-form-govt {
+    margin: 0;
+    font-size: .76rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #6b7c8a;
+}
+
+.tl-form-dept {
+    margin: 2px 0 6px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #1a3a52;
+    line-height: 1.2;
+}
+
+.tl-form-doc {
+    margin: 0;
+    font-size: .88rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: #33505f;
+}
+
+.tl-form-meta {
+    margin: 0;
+    display: grid;
+    gap: 6px;
+    min-width: 250px;
+    flex: 0 1 320px;
+}
+
+    .tl-form-meta > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        font-size: .84rem;
+        border-bottom: 1px dotted #dfe6ea;
+        padding-bottom: 4px;
+    }
+
+    .tl-form-meta dt {
+        margin: 0;
+        font-weight: 500;
+        color: #6b7c8a;
+    }
+
+    .tl-form-meta dd {
+        margin: 0;
+        font-weight: 600;
+        color: #1f3b39;
+        text-align: right;
+    }
+
+.tl-form-status {
+    display: inline-block;
+    background: #e7f5ef;
+    color: #0d6b5b;
+    border-radius: 999px;
+    padding: 1px 10px;
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+.tl-form-sheet {
+    background: #fff;
+    border: 1px solid #e2e8ec;
+    border-radius: 12px;
+    padding: 18px 24px 24px;
+    box-shadow: 0 2px 14px rgba(15, 35, 50, .05);
+}
+
+.tl-form-instructions {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    background: #f5f8f9;
+    border-left: 3px solid #1a3a52;
+    border-radius: 0 6px 6px 0;
+    font-size: .85rem;
+    color: #4b5d69;
+}
+
+/* ---- numbered sections ---- */
+
+.tl-form-section {
+    border: none;
+    margin: 0 0 28px;
+    padding: 0;
+    min-width: 0;
+}
+
+    .tl-form-section > legend {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0 0 4px;
+        padding: 0 0 8px;
+        border-bottom: 2px solid #1a3a52;
+        border-radius: 0;
+        background: none;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a3a52;
+    }
+
+.tl-form-section-no {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 26px;
+    border-radius: 6px;
+    background: #1a3a52;
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+/* ---- numbered field rows: no. | caption | control ---- */
+
+.tl-form-row {
+    display: grid;
+    grid-template-columns: 46px 260px minmax(0, 1fr);
+    grid-template-areas: "no label control";
+    column-gap: 16px;
+    align-items: start;
+    padding: 10px 0;
+    border-bottom: 1px dashed #e6ebee;
+}
+
+    .tl-form-row:last-of-type {
+        border-bottom: none;
+    }
+
+.tl-form-no {
+    grid-area: no;
+    padding-top: 10px;
+    font-size: .78rem;
+    font-weight: 700;
+    color: #93a2ad;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.tl-form-row > label,
+.tl-form-row > .caf-group-label {
+    grid-area: label;
+    display: block;
+    margin: 0;
+    padding-top: 9px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: #22323f;
+}
+
+.tl-form-control {
+    grid-area: control;
+    min-width: 0;
+}
+
+.tl-form-control-compact {
+    max-width: 380px;
+}
+
+/* ---- declaration ---- */
+
+.tl-form-declaration {
+    margin: 4px 0 0;
+    padding: 18px 20px;
+    background: #f8fafb;
+    border: 1px solid #e2e8ec;
+    border-left: 4px solid #1a3a52;
+    border-radius: 10px;
+}
+
+    .tl-form-declaration h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1a3a52;
+    }
+
+.tl-declaration-text {
+    font-size: .9rem;
+    line-height: 1.55;
+    color: #33454f;
+    margin: 0 0 14px;
+}
+
+.tl-form-signature {
+    margin: 16px 0 0;
+    font-size: .88rem;
+    color: #33454f;
+}
+
+@media (max-width: 860px) {
+    .tl-form-row {
+        grid-template-columns: 34px minmax(0, 1fr);
+        grid-template-areas:
+            "no label"
+            ". control";
+        row-gap: 4px;
+        padding: 12px 0;
+    }
+
+    .tl-form-no {
+        padding-top: 1px;
+    }
+
+    .tl-form-row > label,
+    .tl-form-row > .caf-group-label {
+        padding-top: 0;
+    }
+
+    .tl-form-control-compact {
+        max-width: 100%;
+    }
+
+    .tl-form-meta {
+        flex-basis: 100%;
+        min-width: 0;
+    }
+
+    .tl-form-sheet {
+        padding: 16px 14px 20px;
+    }
+}
+
+/* ---------- Fire NOC: Save as Draft ----------
+   The draft button is the last submit button in the form so that pressing
+   Enter in a field still triggers "Save & Next"; flexbox puts it back on the
+   left of the primary action where users expect a secondary button. */
+.caf-actions .caf-draft-btn { order: 1; }
+.caf-actions .caf-next-btn  { order: 2; }
+

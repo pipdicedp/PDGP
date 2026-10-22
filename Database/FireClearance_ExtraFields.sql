@@ -126,3 +126,21 @@ GO
 
 PRINT 'Fire NOC extra fields + document upload slots are ready.';
 GO
+
+/* ----------------------------------------------------------------------------
+   4. Column widths that must match the control used on the form
+   ----------------------------------------------------------------------------
+   "Total No. of Staff / Student / Workers in the Building" is a text area in
+   the department's form (it holds free text, not a single number), so the
+   column is widened from 50 to 200 characters. Idempotent.
+   ---------------------------------------------------------------------------- */
+IF OBJECT_ID('dbo.FireClearanceApplications', 'U') IS NOT NULL
+   AND (SELECT CHARACTER_MAXIMUM_LENGTH
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = 'dbo'
+          AND TABLE_NAME   = 'FireClearanceApplications'
+          AND COLUMN_NAME  = 'staff') < 200
+BEGIN
+    ALTER TABLE dbo.FireClearanceApplications ALTER COLUMN [staff] NVARCHAR(200) NULL;
+END
+GO

@@ -87,7 +87,7 @@ BEGIN
         [setbackdetail]      NVARCHAR(400)   NULL,
         [purpose]            NVARCHAR(200)   NULL,
         [businessnature]     NVARCHAR(200)   NULL,
-        [staff]              NVARCHAR(50)    NULL,
+        [staff]              NVARCHAR(200)   NULL,
         [hazard]             NVARCHAR(20)    NULL,
         [fireescape]         NVARCHAR(400)   NULL,
         [canteen]            NVARCHAR(400)   NULL,

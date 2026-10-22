@@ -146,17 +146,25 @@ namespace TradeLicence.Controllers
             if (!IsEditable(existing?.Status))
                 return RedirectToAction("Index");
 
+            // "Save as Draft" (button name=saveMode value=draft) stores whatever has
+            // been typed so far and never validates the mandatory fields, so the
+            // applicant can stop half-way and come back later.
+            var saveAsDraft = string.Equals(form["saveMode"].ToString(), "draft", StringComparison.OrdinalIgnoreCase);
+
             if (stepDef.Key == "documents")
-                return await SaveDocumentsStepAsync(stepDef, loginId.Value, form, basicExists);
+                return await SaveDocumentsStepAsync(stepDef, loginId.Value, form, basicExists, saveAsDraft);
 
             var posted = stepDef.Fields.ToDictionary(f => f.Name, f => (string?)form[f.Name].ToString());
 
             var missing = new List<string>();
-            foreach (var f in stepDef.Fields.Where(x => x.Required))
+            if (!saveAsDraft)
             {
-                var v = posted.TryGetValue(f.Name, out var sv) ? sv : null;
-                if (string.IsNullOrWhiteSpace(v))
-                    missing.Add(f.Label);
+                foreach (var f in stepDef.Fields.Where(x => x.Required))
+                {
+                    var v = posted.TryGetValue(f.Name, out var sv) ? sv : null;
+                    if (string.IsNullOrWhiteSpace(v))
+                        missing.Add(f.Label);
+                }
             }
             if (missing.Count > 0)
             {
@@ -179,6 +187,12 @@ namespace TradeLicence.Controllers
                 errVm.Values = posted;
                 errVm.ErrorMessage = $"Could not save {stepDef.Title} (database error {ex.Number}). Please check the values entered and try again.";
                 return View("Step", errVm);
+            }
+
+            if (saveAsDraft)
+            {
+                TempData["FireMessage"] = $"{stepDef.Title} saved as a draft. Nothing has been submitted yet.";
+                return RedirectToAction("Step", new { step });
             }
 
             if (step == FireFormMetadata.MaxStep)
@@ -206,6 +220,10 @@ namespace TradeLicence.Controllers
             var vm = await _service.LoadPreviewAsync(loginId.Value);
             vm.AllowEdit = IsEditable(app?.Status);
             vm.Collapsible = false;
+
+            // Lets the view tell a saved draft apart from an application the
+            // officer sent back for correction (both are editable).
+            ViewBag.ApplicationStatus = app?.Status ?? "Draft";
 
             if (TempData["FireJustSubmitted"] is string just && just == "1") vm.JustSubmitted = true;
             if (TempData["FireMessage"] is string msg) vm.SuccessMessage = msg;
@@ -283,7 +301,7 @@ namespace TradeLicence.Controllers
             return null;
         }
 
-        private async Task<IActionResult> SaveDocumentsStepAsync(CafStepDef stepDef, long loginId, IFormCollection form, bool basicExists)
+        private async Task<IActionResult> SaveDocumentsStepAsync(CafStepDef stepDef, long loginId, IFormCollection form, bool basicExists, bool saveAsDraft)
         {
             var toSave = new Dictionary<string, byte[]>();
             var problems = new List<string>();
@@ -324,9 +342,14 @@ namespace TradeLicence.Controllers
                 if (toSave.Count > 0)
                     await _service.SaveDocumentsAsync(loginId, toSave);
 
-                var onFile = await _service.GetDocumentSizesAsync(loginId);
-                foreach (var doc in stepDef.Documents.Where(d => d.Required && !onFile.ContainsKey(d.Column)))
-                    problems.Add($"{doc.Label}: this document is required.");
+                // A draft only stores what has been uploaded so far; the
+                // compulsory-document check belongs to the final submission.
+                if (!saveAsDraft)
+                {
+                    var onFile = await _service.GetDocumentSizesAsync(loginId);
+                    foreach (var doc in stepDef.Documents.Where(d => d.Required && !onFile.ContainsKey(d.Column)))
+                        problems.Add($"{doc.Label}: this document is required.");
+                }
             }
             catch (SqlException ex)
             {
@@ -339,8 +362,16 @@ namespace TradeLicence.Controllers
                 var errVm = await BuildViewModelAsync(stepDef, loginId, basicExists);
                 if (toSave.Count > 0)
                     errVm.SuccessMessage = $"{toSave.Count} document(s) uploaded.";
-                errVm.ErrorMessage = "The application was not submitted. " + string.Join(" ", problems);
+                errVm.ErrorMessage = (saveAsDraft ? "Draft not saved. " : "The application was not submitted. ") + string.Join(" ", problems);
                 return View("Step", errVm);
+            }
+
+            if (saveAsDraft)
+            {
+                TempData["FireMessage"] = toSave.Count > 0
+                    ? $"{toSave.Count} document(s) saved as a draft. Nothing has been submitted yet."
+                    : "Draft saved. Nothing has been submitted yet.";
+                return RedirectToAction("Step", new { step = stepDef.Number });
             }
 
             await _service.MarkSubmittedAsync(loginId);
@@ -409,11 +440,16 @@ namespace TradeLicence.Controllers
 
         private async Task<CafStepViewModel> BuildViewModelAsync(CafStepDef stepDef, long loginId, bool basicExists)
         {
+            var app = await _service.GetApplicationAsync(loginId);
+
             var vm = new CafStepViewModel
             {
                 AllSteps = FireFormMetadata.Steps,
                 Current = stepDef,
                 BasicDetailsExist = basicExists,
+                ApplicationNo = app?.ApplicationCode,
+                ApplicationStatus = app?.Status,
+                AppliedOn = app?.AppliedOn,
                 Values = stepDef.Documents.Count > 0
                     ? new Dictionary<string, string?>()
                     : await _service.LoadMainRowAsync(stepDef, loginId)
