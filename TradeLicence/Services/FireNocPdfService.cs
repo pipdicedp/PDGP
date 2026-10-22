@@ -32,6 +32,7 @@ namespace TradeLicence.Services
                 ?? throw new InvalidOperationException("Fire NOC application not found.");
 
             var details = await BuildDetailsAsync(loginId);
+            var uploadedDocs = await BuildDocumentListAsync(loginId);
 
             var document = Document.Create(container =>
             {
@@ -77,6 +78,12 @@ namespace TradeLicence.Services
 
                         col.Item().Text("Application Details").Bold().FontSize(12).FontColor("#1a3a52");
                         col.Item().Element(c => AddDetailTable(c, details));
+
+                        if (uploadedDocs.Count > 0)
+                        {
+                            col.Item().PaddingTop(10).Text("Uploaded Documents").Bold().FontSize(12).FontColor("#1a3a52");
+                            col.Item().Element(c => AddDocumentTable(c, uploadedDocs));
+                        }
 
                         col.Item().PaddingTop(15).Background("#FFF8E6").Padding(10).Text(
                             "Please keep this acknowledgement for your records. You can track the status of " +
@@ -230,6 +237,46 @@ namespace TradeLicence.Services
                 {
                     table.Cell().Background("#f5f9fa").Padding(5).Text(label).SemiBold();
                     table.Cell().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(value ?? "-");
+                }
+            });
+        }
+
+        /// <summary>Labels and sizes of the documents the applicant actually uploaded.</summary>
+        private async Task<List<(string Label, long Bytes)>> BuildDocumentListAsync(long loginId)
+        {
+            var sizes = await _forms.GetDocumentSizesAsync(loginId);
+            var rows = new List<(string, long)>();
+
+            foreach (var def in FireFormMetadata.AllDocuments)
+            {
+                if (sizes.TryGetValue(def.Column, out var bytes) && bytes > 0)
+                    rows.Add((def.Label, bytes));
+            }
+
+            return rows;
+        }
+
+        private static void AddDocumentTable(IContainer container, List<(string Label, long Bytes)> rows)
+        {
+            container.Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(3);
+                    columns.RelativeColumn(1);
+                });
+
+                table.Cell().Background("#eef4f8").Padding(5).Text("Document").SemiBold();
+                table.Cell().Background("#eef4f8").Padding(5).AlignRight().Text("Size").SemiBold();
+
+                foreach (var (label, bytes) in rows)
+                {
+                    var size = bytes >= 1048576
+                        ? (bytes / 1048576.0).ToString("0.0") + " MB"
+                        : Math.Max(1, bytes / 1024) + " KB";
+
+                    table.Cell().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).Text(label);
+                    table.Cell().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(5).AlignRight().Text(size);
                 }
             });
         }

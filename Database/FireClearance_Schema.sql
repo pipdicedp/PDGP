@@ -18,6 +18,11 @@
    Idempotent: safe to run more than once. Nothing is dropped.
    Run against NewEODB, e.g.:
        sqlcmd -S "192.168.1.13,1433\SQLEXPRESS" -U pipdic -P pipdic@123 -d NewEODB -i FireClearance_Schema.sql
+
+   NOTE: this file is the "create from scratch" script. A database created
+   before the extra Building / Fire-Safety / document fields were added must
+   also run FireClearance_ExtraFields.sql (idempotent ALTERs that add the
+   missing columns).
    ============================================================================ */
 
 SET ANSI_NULLS ON;
@@ -54,6 +59,8 @@ BEGIN
         [mobileno]           NVARCHAR(20)    NULL,
 
         /* ---- Step 1: Applicant & Owner Details ---- */
+        [premisesname]       NVARCHAR(200)   NULL,
+        [registrationtype]   NVARCHAR(20)    NULL,
         [address]            NVARCHAR(400)   NULL,
         [email]              NVARCHAR(150)   NULL,
         [phno]               NVARCHAR(20)    NULL,
@@ -70,6 +77,9 @@ BEGIN
         [areacovered]        NUMERIC(18,2)   NULL,
         [buildingstorage]    NVARCHAR(200)   NULL,
         [basementdetail]     NVARCHAR(400)   NULL,
+        [yearofconstruction] INT             NULL,
+        [typeofconstruction] NVARCHAR(50)    NULL,
+        [builtuparea]        NUMERIC(18,2)   NULL,
 
         /* ---- Step 3: Occupancy & Business Details ---- */
         [occupencydetail]    NVARCHAR(400)   NULL,
@@ -79,8 +89,8 @@ BEGIN
         [businessnature]     NVARCHAR(200)   NULL,
         [staff]              NVARCHAR(50)    NULL,
         [hazard]             NVARCHAR(20)    NULL,
-        [fireescape]         NVARCHAR(20)    NULL,
-        [canteen]            NVARCHAR(20)    NULL,
+        [fireescape]         NVARCHAR(400)   NULL,
+        [canteen]            NVARCHAR(400)   NULL,
         [noofbed]            NVARCHAR(50)    NULL,
         [noofrooms]          NVARCHAR(50)    NULL,
 
@@ -90,6 +100,25 @@ BEGIN
         [firefighting]       NVARCHAR(400)   NULL,
         [watersource]        NVARCHAR(200)   NULL,
         [firesought]         NVARCHAR(50)    NULL,
+
+        /* ---- Step 4: installed fire-fighting systems (Yes / No) ---- */
+        [fireextinguishers]  NVARCHAR(20)    NULL,
+        [firehydrant]        NVARCHAR(20)    NULL,
+        [firesprinkler]      NVARCHAR(20)    NULL,
+        [firealarm]          NVARCHAR(20)    NULL,
+
+        /* ---- Step 4: means of escape ---- */
+        [emergencyexit]      NVARCHAR(20)    NULL,
+        [fireexit]           NVARCHAR(20)    NULL,
+
+        /* ---- Step 4: other equipment ---- */
+        [lift]               NVARCHAR(20)    NULL,
+        [generator]          NVARCHAR(20)    NULL,
+        [transformer]        NVARCHAR(20)    NULL,
+
+        /* ---- Step 4: previous Fire licence (renewals) ---- */
+        [licenseno]          NVARCHAR(100)   NULL,
+        [licensedate]        DATE            NULL,
 
         /* ---- service stamps ---- */
         [apptype]            NVARCHAR(20)    NULL,
@@ -137,16 +166,28 @@ BEGIN
         [uploadedon]    DATETIME2(0)      NULL,
 
         [buildingdoc]   VARBINARY(MAX)    NULL,   -- Building Plan
+        [siteplancdoc]  VARBINARY(MAX)    NULL,   -- Site Plan / Layout Plan
         [landdoc]       VARBINARY(MAX)    NULL,   -- Land / Ownership Document
-        [firedoc]       VARBINARY(MAX)    NULL,   -- Fire Certificate
-        [commodoc]      VARBINARY(MAX)    NULL,   -- Commodities / Goods Details
+        [taxreceiptdoc] VARBINARY(MAX)    NULL,   -- Property Tax Receipt
+        [idproofdoc]    VARBINARY(MAX)    NULL,   -- ID Proof of Applicant / Owner
+        [occupancycertdoc] VARBINARY(MAX) NULL,   -- Occupancy Certificate
         [statutorydoc]  VARBINARY(MAX)    NULL,   -- Statutory Approval
-        [insurancedoc]  VARBINARY(MAX)    NULL,   -- Insurance Document
-        [othersdoc]     VARBINARY(MAX)    NULL,   -- Other Document
-        [schooldoc]     VARBINARY(MAX)    NULL,   -- School / Institution Certificate
+        [otherauthoritydoc] VARBINARY(MAX) NULL,  -- NOC from Other Authorities
+        [firedoc]       VARBINARY(MAX)    NULL,   -- Existing Fire Certificate
+        [firesafetydoc] VARBINARY(MAX)    NULL,   -- Fire Safety Certificate
+        [fireauditreportdoc] VARBINARY(MAX) NULL, -- Third Party Fire Safety Audit Report
+        [firetrainingdoc] VARBINARY(MAX)  NULL,   -- Fire Drill / Training Record
         [stabilitydoc]  VARBINARY(MAX)    NULL,   -- Structural Stability Certificate
         [strengthdoc]   VARBINARY(MAX)    NULL,   -- Structural Strength Certificate
-        [firesafetydoc] VARBINARY(MAX)    NULL,   -- Fire Safety Certificate
+        [electricalnocdoc] VARBINARY(MAX) NULL,   -- Electrical Inspector NOC
+        [liftcertdoc]   VARBINARY(MAX)    NULL,   -- Lift / Elevator Inspection Certificate
+        [commodoc]      VARBINARY(MAX)    NULL,   -- Commodities / Goods Details
+        [hazardlicencedoc] VARBINARY(MAX) NULL,   -- Hazardous Material Licence
+        [schooldoc]     VARBINARY(MAX)    NULL,   -- School / Institution Certificate
+        [staffstrengthdoc] VARBINARY(MAX) NULL,   -- Staff and Student Strength Details
+        [insurancedoc]  VARBINARY(MAX)    NULL,   -- Insurance Document
+        [sitephotodoc]  VARBINARY(MAX)    NULL,   -- Photographs of the Building / Site
+        [othersdoc]     VARBINARY(MAX)    NULL,   -- Other Document
 
         CONSTRAINT [PK_FireClearanceDocuments] PRIMARY KEY CLUSTERED ([Id])
     );

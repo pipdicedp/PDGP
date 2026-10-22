@@ -3,16 +3,27 @@
 @using TradeLicence.Models.Caf
 
 @*
-    Read-only list of the applicant's uploaded documents, with download links.
-    Shared by the applicant's own status/preview pages and the Fire officer's
-    "View Application" page: when ViewBag.OfficerApplicationId is set the links
-    point at FireOfficerController.Document(id, column); when it isn't they point
-    at FireClearanceController.Document(column) for the signed-in applicant.
+    Read-only list of the applicant's uploaded documents, with previews and
+    download links. Shared by the applicant's own status/preview pages and the
+    Fire officer's "View Application" page: when ViewBag.OfficerApplicationId is
+    set the links point at FireOfficerController.Document(id, column); when it
+    isn't they point at FireClearanceController.Document(column) for the
+    signed-in applicant. Image uploads (JPG/PNG) show a thumbnail.
 *@
 
 @{
     string FileSize(long b) =>
         b >= 1048576 ? $"{b / 1048576.0:0.0} MB" : $"{Math.Max(1, b / 1024)} KB";
+
+    var officerId = ViewBag.OfficerApplicationId;
+
+    string OpenUrl(string column) => officerId != null
+        ? Url.Action("Document", new { id = officerId, column = column })!
+        : Url.Action("Document", new { column = column })!;
+
+    string? DownloadUrl(string column) => officerId != null
+        ? Url.Action("DownloadDocument", new { id = officerId, column = column })
+        : null;
 
     var uploaded = Model.Where(d => d.HasFile).ToList();
 }
@@ -30,25 +41,63 @@
     }
     else
     {
-        <div class="row">
+        @foreach (var group in uploaded.GroupBy(d => string.IsNullOrWhiteSpace(d.Def.Group) ? "Documents" : d.Def.Group))
+        {
+            <div class="caf-pv-group-title">
+                @group.Key
+                <span class="caf-pv-chip caf-pv-chip-ok">@group.Count()</span>
+            </div>
 
-            @foreach (var d in uploaded)
-            {
-                <div class="col-md-6 mb-3">
+            <div class="row">
 
-                    <div class="caf-pv-label">@d.Def.Label</div>
+                @foreach (var d in group)
+                {
+                    var url = OpenUrl(d.Def.Column);
+                    var download = DownloadUrl(d.Def.Column);
 
-                    <div class="caf-doc-status">
-                        <span class="caf-doc-uploaded">&#10003; @FileSize(d.SizeBytes!.Value)</span>
-                        <a href="@Url.Action("Document", new { column = d.Def.Column, id = ViewBag.OfficerApplicationId })"
-                           target="_blank"
-                           rel="noopener">Download</a>
+                    <div class="col-md-6 mb-3">
+
+                        <div class="caf-doc-card">
+
+                            @if (d.IsImage)
+                            {
+                                <a class="caf-doc-thumb" href="@url" target="_blank" rel="noopener">
+                                    <img src="@url" alt="@d.Def.Label" loading="lazy" />
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="caf-doc-thumb caf-doc-thumb-file">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </span>
+                            }
+
+                            <div class="caf-doc-card-body">
+
+                                <div class="caf-pv-label">@d.Def.Label</div>
+
+                                <div class="caf-doc-status">
+                                    <span class="caf-doc-uploaded">&#10003; @FileSize(d.SizeBytes!.Value)</span>
+
+                                    <a href="@url" target="_blank" rel="noopener">
+                                        @(d.IsImage ? "View" : "Open")
+                                    </a>
+
+                                    @if (download != null)
+                                    {
+                                        <a href="@download">Download</a>
+                                    }
+                                </div>
+
+                            </div>
+
+                        </div>
+
                     </div>
+                }
 
-                </div>
-            }
-
-        </div>
+            </div>
+        }
     }
 
 </fieldset>

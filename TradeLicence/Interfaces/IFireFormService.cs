@@ -28,6 +28,14 @@ namespace TradeLicence.Interfaces
         /// <summary>Size in bytes of each document already uploaded (column name -> bytes).</summary>
         Task<Dictionary<string, long>> GetDocumentSizesAsync(long loginId);
 
+        /// <summary>
+        /// Content type of each uploaded document (column name -> "application/pdf",
+        /// "image/jpeg", "image/png", or "application/octet-stream"), detected from
+        /// the stored bytes rather than the upload header. Used to decide whether a
+        /// document can be shown as an inline image preview.
+        /// </summary>
+        Task<Dictionary<string, string>> GetDocumentTypesAsync(long loginId);
+
         /// <summary>Upserts the given documents (column name -> file bytes).</summary>
         Task SaveDocumentsAsync(long loginId, Dictionary<string, byte[]> files);
 

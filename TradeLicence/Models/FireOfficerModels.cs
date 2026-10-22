@@ -17,5 +17,8 @@ namespace TradeLicence.Models
 
         /// <summary>Uploaded document sizes in bytes, keyed by document column name.</summary>
         public Dictionary<string, long> DocumentSizes { get; set; } = new();
+
+        /// <summary>Detected content type per document column, for inline image previews.</summary>
+        public Dictionary<string, string> DocumentTypes { get; set; } = new();
     }
 }

@@ -19,7 +19,8 @@
     var docs = FireFormMetadata.AllDocuments.Select(d => new CafDocumentVm
     {
         Def = d,
-        SizeBytes = Model.DocumentSizes.TryGetValue(d.Column, out var len) ? len : null
+        SizeBytes = Model.DocumentSizes.TryGetValue(d.Column, out var len) ? len : null,
+        ContentType = Model.DocumentTypes.TryGetValue(d.Column, out var type) ? type : null
     }).ToList();
 
     var nextStep = Model.Preview.Sections.FirstOrDefault(s => !s.HasRow)?.Step.Number

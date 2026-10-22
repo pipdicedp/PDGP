@@ -265,6 +265,39 @@ namespace TradeLicence.Services
             return result;
         }
 
+        public async Task<Dictionary<string, string>> GetDocumentTypesAsync(long loginId)
+        {
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var cols = FireFormMetadata.AllDocuments.Select(d => d.Column).ToList();
+            if (cols.Count == 0) return result;
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                // Only the first 8 bytes are needed to recognise PDF / JPEG / PNG.
+                var select = string.Join(", ", cols.Select(c => $"SUBSTRING([{c}], 1, 8) AS [{c}]"));
+                using var cmd = new SqlCommand(
+                    $"SELECT {select} FROM dbo.[{FireFormMetadata.DocumentTable}] WHERE [loginid] = @loginid", conn);
+                cmd.Parameters.Add(LoginIdParam(loginId));
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    foreach (var c in cols)
+                    {
+                        var idx = reader.GetOrdinal(c);
+                        if (reader.IsDBNull(idx)) continue;
+
+                        var head = (byte[])reader.GetValue(idx);
+                        var detected = EBDocumentHelper.DetectFile(head);
+                        if (detected != null) result[c] = detected.Value.ContentType;
+                    }
+                }
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+            return result;
+        }
+
         public async Task SaveDocumentsAsync(long loginId, Dictionary<string, byte[]> files)
         {
             var cols = files.Keys

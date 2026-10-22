@@ -82,7 +82,8 @@ namespace TradeLicence.Controllers
             {
                 Application = app!,
                 Preview = preview,
-                DocumentSizes = await _service.GetDocumentSizesAsync(loginId.Value)
+                DocumentSizes = await _service.GetDocumentSizesAsync(loginId.Value),
+                DocumentTypes = await _service.GetDocumentTypesAsync(loginId.Value)
             });
         }
 
@@ -210,6 +211,7 @@ namespace TradeLicence.Controllers
             if (TempData["FireMessage"] is string msg) vm.SuccessMessage = msg;
 
             ViewBag.DocumentSizes = await _service.GetDocumentSizesAsync(loginId.Value);
+            ViewBag.DocumentTypes = await _service.GetDocumentTypesAsync(loginId.Value);
             return View("Preview", vm);
         }
 
@@ -232,6 +234,7 @@ namespace TradeLicence.Controllers
                 vm.ErrorMessage = "Please save every section before submitting the application.";
                 vm.AllowEdit = true;
                 ViewBag.DocumentSizes = await _service.GetDocumentSizesAsync(loginId.Value);
+                ViewBag.DocumentTypes = await _service.GetDocumentTypesAsync(loginId.Value);
                 return View("Preview", vm);
             }
 
@@ -419,12 +422,14 @@ namespace TradeLicence.Controllers
             if (stepDef.Documents.Count > 0)
             {
                 var sizes = await _service.GetDocumentSizesAsync(loginId);
+                var types = await _service.GetDocumentTypesAsync(loginId);
                 foreach (var doc in stepDef.Documents)
                 {
                     vm.Documents.Add(new CafDocumentVm
                     {
                         Def = doc,
-                        SizeBytes = sizes.TryGetValue(doc.Column, out var len) ? len : null
+                        SizeBytes = sizes.TryGetValue(doc.Column, out var len) ? len : null,
+                        ContentType = types.TryGetValue(doc.Column, out var type) ? type : null
                     });
                 }
             }

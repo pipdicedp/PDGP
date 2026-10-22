@@ -183,6 +183,19 @@
                                             -- Please Select --
                                         </option>
 
+                                        @{
+                                            var optionValues = (f.Options ?? Array.Empty<string>())
+                                                .Select(o => o.IndexOf('|') >= 0 ? o[..o.IndexOf('|')] : o)
+                                                .ToList();
+                                        }
+
+                                        @* A value saved before the option list changed must not
+                                           silently disappear from the dropdown. *@
+                                        @if (!string.IsNullOrWhiteSpace(current) && !optionValues.Contains(current))
+                                        {
+                                            <option value="@current" selected>@current (saved)</option>
+                                        }
+
                                         @foreach (var opt in f.Options ?? Array.Empty<string>())
                                         {
                                             var pipe = opt.IndexOf('|');
@@ -246,46 +259,80 @@
                     Accepted: PDF, JPG or PNG, up to 5 MB per file. A document you uploaded
                     earlier is kept unless you choose a new file for it. Saving this step
                     submits the application.
+                    @{
+                        var requiredLabels = Model.Documents.Where(d => d.Def.Required).Select(d => d.Def.Label).ToList();
+                    }
+                    @if (requiredLabels.Count == 1)
+                    {
+                        <text>Only <strong>@requiredLabels[0]</strong> is compulsory.</text>
+                    }
+                    else if (requiredLabels.Count > 1)
+                    {
+                        <text>Compulsory: <strong>@string.Join(" and ", requiredLabels)</strong>.</text>
+                    }
                 </p>
 
-                <div class="tl-grid-2">
+                @foreach (var docGroup in Model.Documents.GroupBy(d => string.IsNullOrWhiteSpace(d.Def.Group) ? "Documents" : d.Def.Group))
+                {
+                    var groupDocs = docGroup.ToList();
+                    var groupDone = groupDocs.Count(d => d.HasFile);
 
-                    @foreach (var d in Model.Documents)
-                    {
-                        <div class="form-group caf-doc">
+                    <div class="caf-pv-group-title">
+                        @docGroup.Key
+                        <span class="caf-pv-chip @(groupDone == groupDocs.Count ? "caf-pv-chip-ok" : "caf-pv-chip-missing")">
+                            @groupDone of @groupDocs.Count
+                        </span>
+                    </div>
 
-                            <label for="fire_doc_@d.Def.Column">
-                                @d.Def.Label
-                                @if (d.Def.Required)
+                    <div class="tl-grid-2">
+
+                        @foreach (var d in groupDocs)
+                        {
+                            <div class="form-group caf-doc">
+
+                                <label for="fire_doc_@d.Def.Column">
+                                    @d.Def.Label
+                                    @if (d.Def.Required)
+                                    {
+                                        <span class="caf-required">*</span>
+                                    }
+                                </label>
+
+                                <input id="fire_doc_@d.Def.Column"
+                                       name="@d.Def.Column"
+                                       type="file"
+                                       accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                       class="form-control caf-file-input" />
+
+                                <div class="caf-doc-status">
+                                    @if (d.HasFile)
+                                    {
+                                        <span class="caf-doc-uploaded">
+                                            &#10003; Uploaded (@FileSize(d.SizeBytes!.Value))
+                                        </span>
+                                        <a href="@Url.Action("Document", new { column = d.Def.Column })" target="_blank">View</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="caf-doc-missing">Not uploaded</span>
+                                    }
+                                </div>
+
+                                @if (d.IsImage)
                                 {
-                                    <span class="caf-required">*</span>
+                                    <a class="caf-doc-thumb caf-doc-thumb-inline"
+                                       href="@Url.Action("Document", new { column = d.Def.Column })"
+                                       target="_blank" rel="noopener">
+                                        <img src="@Url.Action("Document", new { column = d.Def.Column })"
+                                             alt="@d.Def.Label" loading="lazy" />
+                                    </a>
                                 }
-                            </label>
 
-                            <input id="fire_doc_@d.Def.Column"
-                                   name="@d.Def.Column"
-                                   type="file"
-                                   accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                                   class="form-control caf-file-input" />
-
-                            <div class="caf-doc-status">
-                                @if (d.HasFile)
-                                {
-                                    <span class="caf-doc-uploaded">
-                                        &#10003; Uploaded (@FileSize(d.SizeBytes!.Value))
-                                    </span>
-                                    <a href="@Url.Action("Document", new { column = d.Def.Column })" target="_blank">View</a>
-                                }
-                                else
-                                {
-                                    <span class="caf-doc-missing">Not uploaded</span>
-                                }
                             </div>
+                        }
 
-                        </div>
-                    }
-
-                </div>
+                    </div>
+                }
 
             </fieldset>
         }

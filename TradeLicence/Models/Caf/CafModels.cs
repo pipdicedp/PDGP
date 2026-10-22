@@ -62,6 +62,14 @@ namespace TradeLicence.Models.Caf
 
         /// <summary>When true the applicant cannot submit until this document is uploaded.</summary>
         public bool Required { get; init; }
+
+        /// <summary>
+        /// Optional sub-heading this document is filed under (e.g. "Building &amp;
+        /// Ownership", "Fire Safety"). Empty = no grouping. The Fire NOC upload
+        /// step uses it to render the document slots as named sections instead of
+        /// one long flat list.
+        /// </summary>
+        public string Group { get; init; } = string.Empty;
     }
 
     /// <summary>
@@ -94,7 +102,18 @@ namespace TradeLicence.Models.Caf
     {
         public CafDocumentDef Def { get; set; } = null!;
         public long? SizeBytes { get; set; }
+
+        /// <summary>
+        /// Detected content type of the stored file ("image/jpeg", "application/pdf"
+        /// …), or null when nothing is uploaded. Lets the review pages show a
+        /// thumbnail for image uploads without guessing from the file name.
+        /// </summary>
+        public string? ContentType { get; set; }
+
         public bool HasFile => SizeBytes.HasValue && SizeBytes.Value > 0;
+
+        public bool IsImage => HasFile && ContentType != null &&
+                               ContentType.StartsWith("image/", System.StringComparison.OrdinalIgnoreCase);
     }
 
     public class CafSubTableVm

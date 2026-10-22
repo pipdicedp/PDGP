@@ -555,3 +555,82 @@
         align-items: flex-start;
     }
 }
+
+/* =====================================================================
+   UPLOADED-DOCUMENT CARDS  (_FireDocuments.cshtml)
+   Each uploaded file is a small card: a thumbnail for images (or a PDF
+   glyph), the document label, the file size and the open/download links.
+   ===================================================================== */
+.caf-doc-card {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    height: 100%;
+    padding: 10px;
+    border: 1px solid #e3e9ee;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.caf-doc-thumb {
+    flex: 0 0 84px;
+    width: 84px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #f3f6f8;
+    border: 1px solid #e3e9ee;
+}
+
+.caf-doc-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.caf-doc-thumb-file {
+    font-size: 28px;
+    color: #b91c1c;
+}
+
+/* The thumbnail shown under an already-uploaded image on the wizard step. */
+.caf-doc-thumb-inline {
+    margin-top: 8px;
+    width: 96px;
+    height: 72px;
+    flex-basis: auto;
+}
+
+.caf-doc-card-body {
+    min-width: 0;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+}
+
+.caf-doc-card-body .caf-pv-label {
+    margin: 0;
+    word-break: break-word;
+}
+
+.caf-doc-card-body .caf-doc-status a {
+    margin-right: 10px;
+}
+
+@media (max-width: 575px) {
+    .caf-doc-card {
+        flex-direction: column;
+    }
+
+    .caf-doc-thumb {
+        width: 100%;
+        height: 140px;
+        flex-basis: auto;
+    }
+}

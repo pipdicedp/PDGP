@@ -102,10 +102,9 @@ namespace TradeLicence.Controllers
         public IActionResult Index() => RedirectToAction("Index", "Officer");
 
         /// <summary>
-        /// Administrator's Fire NOC queue: every submitted fire application,
-        /// whatever stage it's at, so an admin can open one and approve it
-        /// directly (the 4-stage DEO/Manager/Inspection chain is skipped).
-        /// Reuses the shared officer queue view.
+        /// Administrator's Fire NOC queue: shows all fire applications so the
+        /// admin can track pending, returned, approved and rejected ones in one
+        /// place. Submitted apps can be approved directly from here.
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> AdminQueue()
@@ -117,7 +116,6 @@ namespace TradeLicence.Controllers
             if (officer == null || !IsAdministrator(officer)) return Forbid();
 
             var apps = await _context.FireClearanceApplications
-                .Where(a => a.Status == "Submitted")
                 .OrderByDescending(a => a.Id)
                 .ToListAsync();
 
@@ -125,11 +123,13 @@ namespace TradeLicence.Controllers
             {
                 ApplicationId = a.Id,
                 ServiceType = "Fire NOC",
+                HistoryServiceType = FireWorkflowConfig.ServiceType,
                 DisplayName = a.Name ?? "-",
                 Contact = a.MobileNo ?? "-",
                 CurrentStage = a.CurrentStage,
                 Status = a.Status,
-                SubmittedDate = a.SubmittedDate ?? DateTime.UtcNow,
+                AssignedOfficerId = a.AssignedOfficerId,
+                SubmittedDate = a.SubmittedDate ?? a.ModifiedDate ?? DateTime.UtcNow,
                 ViewUrl = Url.Action("ViewApplication", "FireOfficer", new { id = a.Id })!
             }).ToList();
 
@@ -186,7 +186,8 @@ namespace TradeLicence.Controllers
             {
                 Application = app,
                 Preview = preview,
-                DocumentSizes = await _fireService.GetDocumentSizesAsync(app.LoginId)
+                DocumentSizes = await _fireService.GetDocumentSizesAsync(app.LoginId),
+                DocumentTypes = await _fireService.GetDocumentTypesAsync(app.LoginId)
             });
         }
 
@@ -377,8 +378,31 @@ namespace TradeLicence.Controllers
             var bytes = await _fireService.GetDocumentAsync(app.LoginId, def.Column);
             if (bytes == null) return NotFound();
 
+            // The content type comes from the file's own signature, never from the
+            // upload header, so an "image" can never be served back as HTML. Images
+            // render inline in the officer's browser; PDFs open in the new tab.
+            var type = EBDocumentHelper.DetectFile(bytes)?.ContentType ?? "application/octet-stream";
             Response.Headers["X-Content-Type-Options"] = "nosniff";
-            return File(bytes, "application/octet-stream");
+            return File(bytes, type);
+        }
+
+        /// <summary>Same document as above, but as a download with a sensible file name.</summary>
+        [HttpGet]
+        public async Task<IActionResult> DownloadDocument(int id, string column)
+        {
+            var (officer, app) = await GetAuthorizedAsync(id);
+            if (officer == null || app == null) return Forbid();
+
+            var def = FireFormMetadata.DocumentByColumn(column);
+            if (def == null) return NotFound();
+
+            var bytes = await _fireService.GetDocumentAsync(app.LoginId, def.Column);
+            if (bytes == null) return NotFound();
+
+            var detected = EBDocumentHelper.DetectFile(bytes);
+            var fileName = $"Fire-{app.ApplicationCode?.Replace('/', '-') ?? app.Id.ToString()}-{def.Column}{detected?.Extension ?? ""}";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+            return File(bytes, detected?.ContentType ?? "application/octet-stream", fileName);
         }
 
         /// <summary>The Fire Safety Clearance certificate, for an approved application.</summary>

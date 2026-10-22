@@ -15,11 +15,13 @@
     Layout = "~/Views/Shared/_UserLayout.cshtml";
 
     var documentSizes = ViewBag.DocumentSizes as Dictionary<string, long> ?? new Dictionary<string, long>();
+    var documentTypes = ViewBag.DocumentTypes as Dictionary<string, string> ?? new Dictionary<string, string>();
 
     var docs = FireFormMetadata.AllDocuments.Select(d => new CafDocumentVm
     {
         Def = d,
-        SizeBytes = documentSizes.TryGetValue(d.Column, out var len) ? len : null
+        SizeBytes = documentSizes.TryGetValue(d.Column, out var len) ? len : null,
+        ContentType = documentTypes.TryGetValue(d.Column, out var type) ? type : null
     }).ToList();
 
     // Draft and "returned for correction" are still the applicant's to edit;

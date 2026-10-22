@@ -32,24 +32,34 @@ namespace TradeLicence.Helpers
         public static readonly List<CafStepDef> Steps = new()
         {
             // ============================================================
-            // STEP 1 — Applicant & Owner Details
+            // STEP 1 — Premises & Owner Details
+            // Mirrors page 1 of the department's printed form:
+            // Premises Name / Owner Name / Mobile / Region / Registration or
+            // Renewal / addresses / land line / e-mail / purpose / survey no.
             // ============================================================
             new CafStepDef
             {
                 Number = 1,
                 Key = "applicant",
-                Title = "Applicant & Owner Details",
+                Title = "Premises & Owner Details",
                 TableName = "FireClearanceApplications",
                 Fields = new List<CafField>
                 {
-                    new() { Name = "name",         Label = "Name of Applicant",   Type = CafFieldType.Text,     MaxLength = 150, Section = "Applicant Details", Required = true },
-                    new() { Name = "address",      Label = "Address of Applicant", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Applicant Details", Required = true },
-                    new() { Name = "email",        Label = "Email Address",       Type = CafFieldType.Email,    MaxLength = 150, Section = "Applicant Details", Required = true },
-                    new() { Name = "mobileno",     Label = "Mobile Number",       Type = CafFieldType.Text,     MaxLength = 20,  Section = "Applicant Details", Required = true },
-                    new() { Name = "phno",         Label = "Phone Number",        Type = CafFieldType.Text,     MaxLength = 20,  Section = "Applicant Details" },
+                    new() { Name = "premisesname",  Label = "Premises Name",       Type = CafFieldType.Text,     MaxLength = 200, Section = "Premises Details", Required = true },
+                    new() { Name = "address",       Label = "Premises Address",    Type = CafFieldType.TextArea, MaxLength = 400, Section = "Premises Details", Required = true },
+                    new() { Name = "surveyno",      Label = "Premises Survey No.", Type = CafFieldType.Text,     MaxLength = 50,  Section = "Premises Details" },
+                    new() { Name = "distcode",      Label = "Region",              Type = CafFieldType.Select,   MaxLength = 20,  Section = "Premises Details",
+                            Options = new[] { "1|Puducherry", "2|Karaikal", "3|Mahe", "4|Yanam" }, Required = true },
+                    new() { Name = "registrationtype", Label = "Registration / Renewal", Type = CafFieldType.Select, MaxLength = 20, Section = "Premises Details",
+                            Options = new[] { "Registration", "Renewal" }, Required = true },
+                    new() { Name = "purpose",       Label = "Purpose",             Type = CafFieldType.Text,     MaxLength = 200, Section = "Premises Details", Required = true },
 
-                    new() { Name = "ownername",    Label = "Name of Owner",       Type = CafFieldType.Text,     MaxLength = 150, Section = "Owner Details", Required = true },
-                    new() { Name = "owneraddress", Label = "Address of Owner",    Type = CafFieldType.TextArea, MaxLength = 400, Section = "Owner Details" },
+                    new() { Name = "ownername",     Label = "Owner Name",          Type = CafFieldType.Text,     MaxLength = 150, Section = "Owner Details", Required = true },
+                    new() { Name = "owneraddress",  Label = "Owner Address",       Type = CafFieldType.TextArea, MaxLength = 400, Section = "Owner Details" },
+                    new() { Name = "mobileno",      Label = "Mobile No.",          Type = CafFieldType.Text,     MaxLength = 20,  Section = "Owner Details", Required = true },
+                    new() { Name = "phno",          Label = "Land Line No.",       Type = CafFieldType.Text,     MaxLength = 20,  Section = "Owner Details" },
+                    new() { Name = "email",         Label = "E-mail",              Type = CafFieldType.Email,    MaxLength = 150, Section = "Owner Details", Required = true },
+                    new() { Name = "name",          Label = "Name of Applicant",   Type = CafFieldType.Text,     MaxLength = 150, Section = "Owner Details", Required = true },
                 }
             },
 
@@ -64,16 +74,19 @@ namespace TradeLicence.Helpers
                 TableName = "FireClearanceApplications",
                 Fields = new List<CafField>
                 {
-                    new() { Name = "buildingclass",   Label = "Building Class",            Type = CafFieldType.Text,     MaxLength = 50, Section = "Building Details", Required = true },
-                    new() { Name = "floortype",       Label = "Type of Floor / Roof",      Type = CafFieldType.Select,   MaxLength = 50, Section = "Building Details", Options = new[] { "RCC", "Madras Terrace", "Tiled", "Thatched", "Others" }, Required = true },
-                    new() { Name = "ht",              Label = "Height of Building (Mtr)",  Type = CafFieldType.Decimal,  Section = "Building Details", Required = true },
-                    new() { Name = "plotarea",         Label = "Plot Area (Sq.Mtr)",        Type = CafFieldType.Decimal,  Section = "Building Details", Required = true },
-                    new() { Name = "plintharea",      Label = "Plinth Area (Sq.Mtr)",      Type = CafFieldType.Decimal,  Section = "Building Details", Required = true },
-                    new() { Name = "nooffloor",       Label = "Number of Floors",          Type = CafFieldType.Number,   Section = "Building Details", Required = true },
-                    new() { Name = "areacovered",     Label = "Area Covered (Sq.Mtr)",     Type = CafFieldType.Decimal,  Section = "Building Details", Required = true },
-                    new() { Name = "buildingstorage", Label = "Building / Storage Description", Type = CafFieldType.Text, MaxLength = 200, Section = "Building Details", Required = true },
+                    new() { Name = "buildingclass",   Label = "Building Classification",       Type = CafFieldType.Text,     MaxLength = 50, Section = "Building Details", Required = true },
+                    new() { Name = "floortype",       Label = "Type of Floor / Roof",          Type = CafFieldType.Select,   MaxLength = 50, Section = "Building Details", Options = new[] { "RCC", "Madras Terrace", "Tiled", "Thatched", "Others" }, Required = true },
+                    new() { Name = "ht",              Label = "Height Including Stilt Floor (M)", Type = CafFieldType.Decimal, Section = "Building Details", Required = true },
+                    new() { Name = "plotarea",        Label = "Plot Area (Sq.M)",              Type = CafFieldType.Decimal,  Section = "Building Details", Required = true },
+                    new() { Name = "plintharea",      Label = "Plinth Area (Sq.M)",            Type = CafFieldType.Decimal,  Section = "Building Details", Required = true },
+                    new() { Name = "nooffloor",       Label = "No. of Floors",                 Type = CafFieldType.Number,   Section = "Building Details", Required = true },
+                    new() { Name = "areacovered",     Label = "Total Covered Area (Sq.M)",      Type = CafFieldType.Decimal,  Section = "Building Details", Required = true },
+                    new() { Name = "buildingstorage", Label = "Building Storage",              Type = CafFieldType.Text,     MaxLength = 200, Section = "Building Details", Required = true },
+                    new() { Name = "yearofconstruction", Label = "Year of Construction",       Type = CafFieldType.Number,   Section = "Building Details" },
+                    new() { Name = "typeofconstruction", Label = "Type of Construction",       Type = CafFieldType.Select,   MaxLength = 50, Section = "Building Details", Options = new[] { "Load Bearing", "RCC Frame Structure", "Steel Structure", "Composite", "Others" } },
+                    new() { Name = "builtuparea",     Label = "Built Up Area (Sq.M)",           Type = CafFieldType.Decimal,  Section = "Building Details" },
 
-                    new() { Name = "basementdetail",  Label = "Basement Details",          Type = CafFieldType.TextArea, MaxLength = 400, Section = "Basement Details" },
+                    new() { Name = "basementdetail",  Label = "Basement / Stilt Details",       Type = CafFieldType.TextArea, MaxLength = 400, Section = "Basement / Stilt" },
                 }
             },
 
@@ -88,18 +101,18 @@ namespace TradeLicence.Helpers
                 TableName = "FireClearanceApplications",
                 Fields = new List<CafField>
                 {
-                    new() { Name = "occupencydetail",    Label = "Occupancy Details",          Type = CafFieldType.TextArea, MaxLength = 400, Section = "Occupancy Details", Required = true },
-                    new() { Name = "muloccupencydetail", Label = "Multiple Occupancy Details", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Occupancy Details" },
-                    new() { Name = "setbackdetail",      Label = "Setback Details",            Type = CafFieldType.TextArea, MaxLength = 400, Section = "Occupancy Details" },
-                    new() { Name = "purpose",            Label = "Purpose of Building",        Type = CafFieldType.Text,     MaxLength = 200, Section = "Occupancy Details", Required = true },
+                    new() { Name = "occupencydetail",    Label = "Floor-wise Occupancy Details",           Type = CafFieldType.TextArea, MaxLength = 400, Section = "Occupancy Details", Required = true },
+                    new() { Name = "muloccupencydetail", Label = "Details in Case of Multiple Occupancy",  Type = CafFieldType.TextArea, MaxLength = 400, Section = "Occupancy Details" },
+                    new() { Name = "setbackdetail",      Label = "Setback Details (All Sides) for Each Building / Block", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Occupancy Details" },
 
-                    new() { Name = "businessnature", Label = "Nature of Business / Trade", Type = CafFieldType.Text,   MaxLength = 200, Section = "Business Details", Required = true },
-                    new() { Name = "staff",          Label = "Number of Staff",            Type = CafFieldType.Text,   MaxLength = 50,  Section = "Business Details", Required = true },
-                    new() { Name = "hazard",         Label = "Hazardous Process Involved", Type = CafFieldType.YesNo,  MaxLength = 20,  Section = "Business Details", Options = YesNo, Required = true },
-                    new() { Name = "fireescape",     Label = "Fire Escape Provided",       Type = CafFieldType.YesNo,  MaxLength = 20,  Section = "Business Details", Options = YesNo, Required = true },
-                    new() { Name = "canteen",        Label = "Canteen Facility Available", Type = CafFieldType.YesNo,  MaxLength = 20,  Section = "Business Details", Options = YesNo },
-                    new() { Name = "noofbed",        Label = "Number of Beds",             Type = CafFieldType.Text,   MaxLength = 50,  Section = "Business Details" },
-                    new() { Name = "noofrooms",      Label = "Number of Rooms",            Type = CafFieldType.Text,   MaxLength = 50,  Section = "Business Details" },
+                    new() { Name = "businessnature", Label = "Nature of Business",                    Type = CafFieldType.Text,   MaxLength = 200, Section = "Business Details", Required = true },
+                    new() { Name = "staff",          Label = "Total No. of Staff / Students / Workers", Type = CafFieldType.Text, MaxLength = 50,  Section = "Business Details", Required = true },
+                    new() { Name = "hazard",         Label = "Degree of Hazard in Case of Industry as per NBC-2016 (Annexure-B)", Type = CafFieldType.Select, MaxLength = 20, Section = "Business Details",
+                            Options = new[] { "Low Hazard", "Moderate Hazard", "High Hazard", "Not Applicable" }, Required = true },
+                    new() { Name = "fireescape",     Label = "Details of Fire Escape and Internal Staircase, Lifts, Ramps, Escalator, Corridors, Exits", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Business Details" },
+                    new() { Name = "canteen",        Label = "Details of Canteen / Cooking Facility with LPG Cylinders Available", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Business Details" },
+                    new() { Name = "noofbed",        Label = "No. of Beds (Hospital / Clinic / Nursing Home)", Type = CafFieldType.Text, MaxLength = 50, Section = "Business Details" },
+                    new() { Name = "noofrooms",      Label = "Total No. of Rooms (Lodging House)",    Type = CafFieldType.Text,   MaxLength = 50,  Section = "Business Details" },
                 }
             },
 
@@ -114,13 +127,20 @@ namespace TradeLicence.Helpers
                 TableName = "FireClearanceApplications",
                 Fields = new List<CafField>
                 {
-                    new() { Name = "surveyno",     Label = "Survey / R.S. No.",     Type = CafFieldType.Text, MaxLength = 50, Section = "Site Details", Required = true },
-                    new() { Name = "distcode",     Label = "District",              Type = CafFieldType.Select, MaxLength = 20, Section = "Site Details",
-                            Options = new[] { "1|Puducherry", "2|Karaikal", "3|Mahe", "4|Yanam" }, Required = true },
-
-                    new() { Name = "firefighting", Label = "Fire Fighting Arrangements", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Fire Safety Arrangements", Required = true },
-                    new() { Name = "watersource",  Label = "Water Source for Fire Fighting", Type = CafFieldType.Text, MaxLength = 200, Section = "Fire Safety Arrangements", Required = true },
-                    new() { Name = "firesought",   Label = "Fire Safety Licence Sought For", Type = CafFieldType.Select, MaxLength = 50, Section = "Fire Safety Arrangements", Options = new[] { "New|New Licence", "Renewal|Renewal of Licence" }, Required = true },
+                    new() { Name = "firefighting", Label = "Details of Fire Fighting Arrangement Available", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Fire Safety Arrangements", Required = true },
+                    new() { Name = "watersource",  Label = "Details of Water Source",           Type = CafFieldType.Text, MaxLength = 200, Section = "Fire Safety Arrangements", Required = true },
+                    new() { Name = "firesought",   Label = "Fire Clearance Sought For",         Type = CafFieldType.Select, MaxLength = 50, Section = "Fire Safety Arrangements", Options = new[] { "New|New Fire Clearance", "Renewal|Renewal of Fire Clearance" }, Required = true },
+                    new() { Name = "fireextinguishers", Label = "Fire Extinguishers Provided", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Fire Fighting System", Options = YesNo },
+                    new() { Name = "firehydrant", Label = "Fire Hydrant System", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Fire Fighting System", Options = YesNo },
+                    new() { Name = "firesprinkler", Label = "Automatic Sprinkler System", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Fire Fighting System", Options = YesNo },
+                    new() { Name = "firealarm", Label = "Fire Alarm System", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Fire Fighting System", Options = YesNo },
+                    new() { Name = "emergencyexit", Label = "Emergency Exits Provided", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Means of Escape", Options = YesNo },
+                    new() { Name = "fireexit", Label = "Fire Escape Staircase", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Means of Escape", Options = YesNo },
+                    new() { Name = "lift", Label = "Lift / Elevator", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Other Details", Options = YesNo },
+                    new() { Name = "generator", Label = "Generator / DG Set", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Other Details", Options = YesNo },
+                    new() { Name = "transformer", Label = "Transformer", Type = CafFieldType.YesNo, MaxLength = 20, Section = "Other Details", Options = YesNo },
+                    new() { Name = "licenseno", Label = "Previous Fire Licence No.", Type = CafFieldType.Text, MaxLength = 100, Section = "Previous Licence Details" },
+                    new() { Name = "licensedate", Label = "Previous Licence Date", Type = CafFieldType.Date, Section = "Previous Licence Details" },
                 }
             },
 
@@ -136,17 +156,42 @@ namespace TradeLicence.Helpers
                 TableName = "FireClearanceDocuments",
                 Documents = new List<CafDocumentDef>
                 {
-                    new() { Column = "buildingdoc",   Label = "Building Plan", Required = true },
-                    new() { Column = "landdoc",       Label = "Land / Ownership Document", Required = true },
-                    new() { Column = "firedoc",       Label = "Fire Certificate" },
-                    new() { Column = "commodoc",      Label = "Commodities / Goods Details" },
-                    new() { Column = "statutorydoc",  Label = "Statutory Approval" },
-                    new() { Column = "insurancedoc",  Label = "Insurance Document" },
-                    new() { Column = "othersdoc",     Label = "Other Document" },
-                    new() { Column = "schooldoc",     Label = "School / Institution Certificate" },
-                    new() { Column = "stabilitydoc",  Label = "Structural Stability Certificate" },
-                    new() { Column = "strengthdoc",   Label = "Structural Strength Certificate" },
-                    new() { Column = "firesafetydoc", Label = "Fire Safety Certificate" }
+                    // ---- building / ownership ----
+                    new() { Column = "buildingdoc",     Label = "Approved Building Plan for All Floors and Dimensions", Required = true, Group = "Building & Ownership" },
+                    new() { Column = "landdoc",         Label = "Land Document with Self-Attestation (Compulsory)",     Required = true, Group = "Building & Ownership" },
+                    new() { Column = "siteplancdoc",    Label = "Site Plan / Layout Plan",          Group = "Building & Ownership" },
+                    new() { Column = "taxreceiptdoc",   Label = "Property Tax Receipt",             Group = "Building & Ownership" },
+                    new() { Column = "idproofdoc",      Label = "ID Proof of Applicant / Owner",    Group = "Building & Ownership" },
+
+                    // ---- fire safety ----
+                    new() { Column = "firedoc",         Label = "Fire Certificate Previously Obtained", Group = "Fire Safety" },
+                    new() { Column = "firesafetydoc",   Label = "Fire Safety Certificate",          Group = "Fire Safety" },
+                    new() { Column = "fireauditreportdoc", Label = "Third Party Fire Safety Audit Report", Group = "Fire Safety" },
+                    new() { Column = "firetrainingdoc", Label = "Fire Drill / Training Record",     Group = "Fire Safety" },
+                    new() { Column = "stabilitydoc",    Label = "Building Stability Certificate",   Group = "Fire Safety" },
+                    new() { Column = "strengthdoc",     Label = "Structural Strength Certificate",  Group = "Fire Safety" },
+
+                    // ---- occupancy / statutory approvals ----
+                    new() { Column = "occupancycertdoc", Label = "Occupancy Certificate",           Group = "Occupancy & Statutory Approvals" },
+                    new() { Column = "statutorydoc",    Label = "Statutory Licence Obtained for Carrying On Business", Group = "Occupancy & Statutory Approvals" },
+                    new() { Column = "otherauthoritydoc", Label = "NOC from Other Authorities",      Group = "Occupancy & Statutory Approvals" },
+
+                    // ---- installations ----
+                    new() { Column = "electricalnocdoc", Label = "Electrical Inspector NOC",        Group = "Installations" },
+                    new() { Column = "liftcertdoc",     Label = "Lift / Elevator Inspection Certificate", Group = "Installations" },
+
+                    // ---- nature of premises ----
+                    new() { Column = "commodoc",        Label = "Commodities / Business Already Licensed with Quantities", Group = "Nature of Premises" },
+                    new() { Column = "hazardlicencedoc", Label = "Hazardous Material Licence",      Group = "Nature of Premises" },
+                    new() { Column = "schooldoc",       Label = "Last Year School Registration",    Group = "Nature of Premises" },
+                    new() { Column = "staffstrengthdoc", Label = "Staff and Student Strength Details", Group = "Nature of Premises" },
+                    new() { Column = "insurancedoc",    Label = "Valid Insurance Policy / Vehicle Registration Certificate", Group = "Nature of Premises" },
+
+                    // ---- photographs (image uploads) ----
+                    new() { Column = "sitephotodoc",    Label = "Photographs of the Building / Site", Group = "Photographs" },
+
+                    // ---- anything else ----
+                    new() { Column = "othersdoc",       Label = "Any Other Related Documents",      Group = "Other" }
                 }
             }
         };

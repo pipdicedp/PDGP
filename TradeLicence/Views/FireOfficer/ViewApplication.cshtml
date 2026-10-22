@@ -23,7 +23,8 @@
     var docs = FireFormMetadata.AllDocuments.Select(d => new CafDocumentVm
     {
         Def = d,
-        SizeBytes = Model.DocumentSizes.TryGetValue(d.Column, out var len) ? len : null
+        SizeBytes = Model.DocumentSizes.TryGetValue(d.Column, out var len) ? len : null,
+        ContentType = Model.DocumentTypes.TryGetValue(d.Column, out var type) ? type : null
     }).ToList();
 
     // Keep the raw values for any legacy uses, but prefer the readable labels.
