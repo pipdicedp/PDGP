@@ -142,4 +142,86 @@
             });
         });
     });
+
+    // ------------------------------------------------------------------
+    // Application Preview — "Submit Application" button.
+    // (caf.js is also loaded on the data-entry steps, so everything is
+    //  null-guarded: on those pages these elements simply don't exist.)
+    // ------------------------------------------------------------------
+    var previewPage = document.getElementById('cafPreviewPage');
+    var submitForm = document.getElementById('cafSubmitForm');
+    var submitBtn = document.getElementById('cafSubmitBtn');
+
+    // After a successful submit the server redirects back to the preview with data-just-submitted="true".
+    if (previewPage && previewPage.getAttribute('data-just-submitted') === 'true') {
+        var statusUrl = previewPage.getAttribute('data-status-url');
+        if (window.Swal) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Application submitted',
+                text: 'Your application has been sent to the Industry Department.',
+                confirmButtonText: 'Track Status',
+                confirmButtonColor: '#1D6E3E',
+                allowOutsideClick: false
+            }).then(function () { window.location.href = statusUrl; });
+        } else {
+            alert('Application submitted.');
+            window.location.href = statusUrl;
+        }
+    }
+
+    if (submitForm && submitBtn) {
+        var sendSubmit = function () {
+            submitBtn.disabled = true; // no double submit
+            submitForm.submit();
+        };
+
+        submitBtn.addEventListener('click', function () {
+            if (submitBtn.disabled) return;
+
+            if (window.Swal) {
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Submit this application?',
+                    text: 'Once submitted it cannot be edited unless the Industry Department returns it.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, Submit',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#1D6E3E',
+                    cancelButtonColor: '#6B7280',
+                    reverseButtons: true
+                }).then(function (result) {
+                    if (result.isConfirmed) sendSubmit();
+                });
+            } else if (window.confirm('Submit this application? It cannot be edited afterwards.')) {
+                sendSubmit();
+            }
+        });
+    }
+
+    /* ---------- Step 6: quick client-side check of chosen documents ----------
+   The server re-checks everything (size, extension, and the file's real
+   type); this only saves the applicant a round trip. */
+    (function () {
+        var MAX_BYTES = 5 * 1024 * 1024;
+        var OK_EXT = /\.(pdf|jpe?g|png)$/i;
+
+        document.querySelectorAll('.caf-file-input').forEach(function (input) {
+            input.addEventListener('change', function () {
+                var file = input.files && input.files[0];
+                if (!file) return;
+
+                var problem = null;
+                if (!OK_EXT.test(file.name)) problem = 'Only PDF, JPG or PNG files are accepted.';
+                else if (file.size > MAX_BYTES) problem = 'This file is larger than 5 MB.';
+
+                if (problem) {
+                    input.value = '';
+                    if (window.Swal) Swal.fire({ icon: 'warning', title: 'Cannot use this file', text: problem });
+                    else alert(problem);
+                }
+            });
+        });
+    })();
+
 })();
