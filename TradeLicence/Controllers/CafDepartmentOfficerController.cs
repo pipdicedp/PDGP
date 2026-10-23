@@ -85,7 +85,8 @@ namespace TradeLicence.Controllers
             var (stageDocuments, stageDocOfficerNames) = await engine.GetStageDocumentsAsync(id);
 
             var summary = (await _cafService.GetSubmittedSummariesAsync(new[] { app.LoginId })).FirstOrDefault();
-            var preview = await _cafService.LoadPreviewAsync(app.LoginId);
+            // Basic Details + this department's own section + the documents — not the other departments' sections.
+            var preview = await _cafService.LoadPreviewAsync(app.LoginId, CafDepartmentSections.StepKeysFor(app.Department));
             preview.AllowEdit = false;
             preview.Collapsible = true;
             preview.DocumentUrl = column => Url.Action("Document", "CafDepartmentOfficer", new { id, column });
@@ -147,7 +148,9 @@ namespace TradeLicence.Controllers
             if (officer == null || app == null) return Forbid();
 
             var summary = (await _cafService.GetSubmittedSummariesAsync(new[] { app.LoginId })).FirstOrDefault();
-            var preview = await _cafService.LoadPreviewAsync(app.LoginId);
+
+            // The PDF carries exactly the sections the officer can see on screen, no more.
+            var preview = await _cafService.LoadPreviewAsync(app.LoginId, CafDepartmentSections.StepKeysFor(app.Department));
 
             var bytes = CafPdfBuilder.BuildFullApplication(preview, app.LoginId, summary?.AppliedOn);
             return File(bytes, "application/pdf", $"CAF_{app.LoginId}.pdf");

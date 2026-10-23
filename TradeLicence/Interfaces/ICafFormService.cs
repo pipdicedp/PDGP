@@ -25,7 +25,12 @@ namespace TradeLicence.Interfaces
         /// Everything the Application Preview shows, for ANY applicant's CAF (the citizen's own preview and
         /// the officers' read-only view share this). Uses only the existing tables.
         /// </summary>
-        Task<CafPreviewViewModel> LoadPreviewAsync(long loginId);
+        /// <param name="stepKeys">
+        /// Null = every step (the applicant's own preview and the Industry officer's full view). A receiving
+        /// department's officer passes only the keys it may see (CafDepartmentSections.StepKeysFor), so the other
+        /// departments' data is never even read.
+        /// </param>
+        Task<CafPreviewViewModel> LoadPreviewAsync(long loginId, IReadOnlyCollection<string>? stepKeys = null);
 
         /// <summary>Current values for every column of step.TableName for this applicant (empty dictionary if the row doesn't exist yet).</summary>
         Task<Dictionary<string, string?>> LoadMainRowAsync(CafStepDef step, long loginId);

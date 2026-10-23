@@ -263,10 +263,16 @@ namespace TradeLicence.Services
             return result;
         }
 
-        public async Task<CafPreviewViewModel> LoadPreviewAsync(long loginId)
+        public async Task<CafPreviewViewModel> LoadPreviewAsync(long loginId, IReadOnlyCollection<string>? stepKeys = null)
         {
             var status = await GetStatusAsync(loginId);
-            var steps = TradeLicence.Helpers.CafFormMetadata.Steps;
+
+            // null = the whole form; a department officer's call passes only the step keys it may see.
+            var steps = stepKeys == null
+                ? TradeLicence.Helpers.CafFormMetadata.Steps
+                : TradeLicence.Helpers.CafFormMetadata.Steps
+                    .Where(s => stepKeys.Contains(s.Key, StringComparer.OrdinalIgnoreCase))
+                    .ToList();
 
             var vm = new CafPreviewViewModel
             {
