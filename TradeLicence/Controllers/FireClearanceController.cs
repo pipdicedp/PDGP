@@ -224,6 +224,7 @@ namespace TradeLicence.Controllers
             // Lets the view tell a saved draft apart from an application the
             // officer sent back for correction (both are editable).
             ViewBag.ApplicationStatus = app?.Status ?? "Draft";
+            ViewBag.OfficerRemarks = app?.OfficerRemarks;
 
             if (TempData["FireJustSubmitted"] is string just && just == "1") vm.JustSubmitted = true;
             if (TempData["FireMessage"] is string msg) vm.SuccessMessage = msg;
@@ -251,6 +252,8 @@ namespace TradeLicence.Controllers
             {
                 vm.ErrorMessage = "Please save every section before submitting the application.";
                 vm.AllowEdit = true;
+                ViewBag.ApplicationStatus = app?.Status ?? "Draft";
+                ViewBag.OfficerRemarks = app?.OfficerRemarks;
                 ViewBag.DocumentSizes = await _service.GetDocumentSizesAsync(loginId.Value);
                 ViewBag.DocumentTypes = await _service.GetDocumentTypesAsync(loginId.Value);
                 return View("Preview", vm);
@@ -362,7 +365,7 @@ namespace TradeLicence.Controllers
                 var errVm = await BuildViewModelAsync(stepDef, loginId, basicExists);
                 if (toSave.Count > 0)
                     errVm.SuccessMessage = $"{toSave.Count} document(s) uploaded.";
-                errVm.ErrorMessage = (saveAsDraft ? "Draft not saved. " : "The application was not submitted. ") + string.Join(" ", problems);
+                errVm.ErrorMessage = (saveAsDraft ? "Draft not saved. " : "The documents were not saved. ") + string.Join(" ", problems);
                 return View("Step", errVm);
             }
 
@@ -374,12 +377,11 @@ namespace TradeLicence.Controllers
                 return RedirectToAction("Step", new { step = stepDef.Number });
             }
 
-            await _service.MarkSubmittedAsync(loginId);
-            var updated = await _service.GetApplicationAsync(loginId);
-            TempData["FireMessage"] = "Fire NOC application submitted successfully." +
-                (updated?.ApplicationCode is string code ? $" Reference No: {code}." : "");
-
-            return RedirectToAction("Index");
+            // The documents are on file; the application itself is only sent to
+            // the department from the Preview & Submit tab, after the applicant
+            // has reviewed the whole form.
+            TempData["FireMessage"] = "Documents saved. Please review the application and submit.";
+            return RedirectToAction("Preview");
         }
 
         /// <summary>Opens one of the applicant's own uploaded documents. loginid comes from the cookie, never from the URL.</summary>
@@ -442,21 +444,29 @@ namespace TradeLicence.Controllers
         {
             var app = await _service.GetApplicationAsync(loginId);
 
+            // One preview load also gives the current step's saved values, the
+            // stepper's green ticks and (on the documents step) the review card,
+            // instead of hitting the same row once per concern.
+            var preview = await _service.LoadPreviewAsync(loginId);
+            var currentSection = preview.Sections.FirstOrDefault(s => s.Step.Number == stepDef.Number);
+
             var vm = new CafStepViewModel
             {
                 AllSteps = FireFormMetadata.Steps,
                 Current = stepDef,
                 BasicDetailsExist = basicExists,
+                IsSubmitted = preview.IsSubmitted,
+                SavedSteps = preview.SavedSteps,
                 ApplicationNo = app?.ApplicationCode,
                 ApplicationStatus = app?.Status,
+                OfficerRemarks = app?.OfficerRemarks,
                 AppliedOn = app?.AppliedOn,
-                Values = stepDef.Documents.Count > 0
-                    ? new Dictionary<string, string?>()
-                    : await _service.LoadMainRowAsync(stepDef, loginId)
+                Values = currentSection?.Values ?? new Dictionary<string, string?>()
             };
 
             if (stepDef.Documents.Count > 0)
             {
+                vm.Review = preview;
                 var sizes = await _service.GetDocumentSizesAsync(loginId);
                 var types = await _service.GetDocumentTypesAsync(loginId);
                 foreach (var doc in stepDef.Documents)

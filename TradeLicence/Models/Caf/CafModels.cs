@@ -142,6 +142,19 @@ namespace TradeLicence.Models.Caf
         /// <summary>False only before Step 1 (Basic Details) has ever been saved — later steps redirect back to Step 1 until then.</summary>
         public bool BasicDetailsExist { get; set; }
 
+        /// <summary>True once the application has been submitted — drives the stepper's Preview tab.</summary>
+        public bool IsSubmitted { get; set; }
+
+        /// <summary>Step numbers already saved at least once, so the stepper can mark them done.</summary>
+        public HashSet<int> SavedSteps { get; set; } = new();
+
+        /// <summary>
+        /// On the documents step: the read-only summary of every step, shown as a
+        /// compact "review before you submit" card next to the uploads.
+        /// </summary>
+        public CafPreviewViewModel? Review { get; set; }
+
+
         public string? SuccessMessage { get; set; }
         public string? ErrorMessage { get; set; }
 
@@ -151,6 +164,9 @@ namespace TradeLicence.Models.Caf
         public string? ApplicationNo { get; set; }
 
         public string? ApplicationStatus { get; set; }
+
+        /// <summary>Officer's remarks — shown on every step after a Correction / Modification request.</summary>
+        public string? OfficerRemarks { get; set; }
 
         public DateTime? AppliedOn { get; set; }
     }

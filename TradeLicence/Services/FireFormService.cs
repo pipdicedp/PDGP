@@ -425,7 +425,10 @@ namespace TradeLicence.Services
                 else
                 {
                     section.Values = await LoadMainRowAsync(step, loginId);
-                    section.HasRow = section.Values.Count > 0;
+                    // LoadMainRowAsync returns a key for every field of the step as
+                    // soon as the row exists, so the row alone is not enough: a step
+                    // counts as saved only when at least one of its fields is filled.
+                    section.HasRow = section.Values.Values.Any(v => !string.IsNullOrWhiteSpace(v));
                 }
 
                 vm.Sections.Add(section);

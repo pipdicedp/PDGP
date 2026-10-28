@@ -92,7 +92,20 @@ namespace TradeLicence.Controllers
         {
             var engine = new WorkflowEngineService<FireClearanceApplication>(
                 _context, _context, FireWorkflowConfig.ServiceType, FireWorkflowConfig.Department);
-            var apps = await engine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+            // A Fire NOC Administrator sits outside the four workflow stages and
+            // owns the whole service, so their dashboard is the full register
+            // (same rows as FireOfficer/AdminQueue) rather than only the
+            // unassigned rows at a designation's stage. Without this, a freshly
+            // submitted application — which has no assigned officer yet — would
+            // never appear on the admin dashboard, and there would be no way to
+            // forward it to the inspector.
+            var apps = string.Equals(officer.Designation, "Admin", StringComparison.OrdinalIgnoreCase)
+                ? await _context.FireClearanceApplications
+                    .Where(a => a.Status == null || a.Status != "Draft")
+                    .OrderByDescending(a => a.Id)
+                    .ToListAsync()
+                : await engine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
 
             return apps.Select(a => new OfficerQueueItem
             {

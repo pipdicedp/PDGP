@@ -73,6 +73,7 @@ namespace TradeLicence.Services
             // pages for, so their "All Applications" spans Trade Licence +
             // their own department's service.
             if (isAdmin) items.AddRange(await BuildTradeLicenceAsync());
+            if (isAdmin) items.AddRange(await BuildFireAsync());
 
             // Industry department officers work CAF through their own pages
             // (AccountController.OfficerLogin sends them to CafOfficer) — the

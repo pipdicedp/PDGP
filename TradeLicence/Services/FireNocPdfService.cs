@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using QRCoder;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -44,9 +45,9 @@ namespace TradeLicence.Services
 
                     page.Header().Column(col =>
                     {
-                        col.Item().AlignCenter().Text("Fire NOC Application — Acknowledgement Slip")
+                        col.Item().AlignCenter().Text("Fire NOC Application â€” Acknowledgement Slip")
                             .Bold().FontSize(16).FontColor("#1a3a52");
-                        col.Item().AlignCenter().Text("Government of Puducherry — Fire Service Department")
+                        col.Item().AlignCenter().Text("Government of Puducherry â€” Fire Service Department")
                             .FontSize(9).FontColor(Colors.Grey.Darken1);
                         col.Item().PaddingTop(10).LineHorizontal(1).LineColor("#1a3a52");
                     });
@@ -102,6 +103,17 @@ namespace TradeLicence.Services
             return document.GeneratePdf();
         }
 
+        private static byte[] GenerateQrPng(string text, int pixelsPerModule)
+        {
+            if (string.IsNullOrEmpty(text))
+                return Array.Empty<byte>();
+
+            using var generator = new QRCodeGenerator();
+            var data = generator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q);
+            var png = new PngByteQRCode(data);
+            return png.GetGraphic(pixelsPerModule);
+        }
+
         public async Task<byte[]> GenerateNocPdfAsync(long loginId)
         {
             var app = await _forms.GetApplicationAsync(loginId)
@@ -110,99 +122,186 @@ namespace TradeLicence.Services
             if (!string.Equals(app.Status, "Approved", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("The Fire Safety Clearance is available only for approved applications.");
 
-            var details = await BuildDetailsAsync(loginId);
-            var nocNumber = $"FIRE/NOC/{app.ApplicationCode ?? app.Id.ToString()}";
+            var preview = await _forms.LoadPreviewAsync(loginId);
+            var nocNumber = $"C.No.{app.ApplicationCode ?? app.Id.ToString()}/FSD/FPW/NOC/{DateTime.Now.Year}/";
             var issueDate = (app.ModifiedDate ?? DateTime.UtcNow).ToLocalTime();
             var validUpto = issueDate.AddYears(3);
+
+            string GetVal(string name) =>
+                preview.Sections.SelectMany(s => s.Values.Where(v => string.Equals(v.Key, name, StringComparison.OrdinalIgnoreCase)))
+                       .Select(v => v.Value)
+                       .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+            var buildingclass = GetVal("buildingclass") ?? "";
+            var isEducational = buildingclass.Contains("Educational", StringComparison.OrdinalIgnoreCase);
+
+            var name = app.Name ?? GetVal("name") ?? GetVal("ownername") ?? GetVal("premisesname") ?? "-";
+            var address = GetVal("address") ?? GetVal("owneraddress") ?? "-";
+            var floortype = GetVal("floortype") ?? "-";
+            var occupencydetail = GetVal("occupencydetail") ?? "-";
+            var firefighting = GetVal("firefighting") ?? "-";
+            var hazard = GetVal("hazard") ?? "-";
+            var builtuparea = GetVal("builtuparea") ?? "-";
+
+            address = (address ?? "").Replace("\r", "").Replace("\n", "");
+            occupencydetail = (occupencydetail ?? "").Replace("\r", "").Replace("\n", "");
+
+            var qrText = $"Applicant Name :    {name}\nAddress :    {address}   \nApplication No. :    {(app.ApplicationCode ?? app.Id.ToString())}";
+            var qrBytes = GenerateQrPng(qrText, 100);
 
             var document = Document.Create(container =>
             {
                 container.Page(page =>
                 {
                     page.Size(PageSizes.A4);
-                    page.Margin(30);
-                    page.DefaultTextStyle(x => x.FontSize(10));
-                    page.Background().Border(3).BorderColor("#c9a227").Padding(6).Border(1).BorderColor("#1a3a52");
+                    page.Margin(34);
+                    page.DefaultTextStyle(x => x.FontSize(11).FontColor("#111111"));
 
-                    page.Header().PaddingTop(15).Column(col =>
+                    page.Background().Padding(2)
+                        .Border(2).BorderColor("#1a3a52");
+
+                    // ---------------- letterhead ----------------
+                    page.Header().PaddingHorizontal(16).PaddingTop(14).Column(col =>
                     {
                         col.Item().AlignCenter().Text("GOVERNMENT OF PUDUCHERRY")
-                            .Bold().FontSize(14).FontColor("#1a3a52");
-                        col.Item().AlignCenter().Text("Fire Service Department")
-                            .FontSize(10).FontColor(Colors.Grey.Darken1);
-                        col.Item().PaddingTop(8).AlignCenter().Text("FIRE SAFETY CLEARANCE CERTIFICATE (NOC)")
-                            .Bold().FontSize(16).FontColor("#c9a227");
-                        col.Item().PaddingTop(10).LineHorizontal(1).LineColor("#c9a227");
+                            .Bold().FontSize(13.5f).LetterSpacing(0.06f).FontColor("#1a3a52");
+                        col.Item().AlignCenter().Text("FIRE SERVICE DEPARTMENT")
+                            .Bold().FontSize(15).LetterSpacing(0.05f).FontColor("#1a3a52");
+                        col.Item().AlignCenter().Text("Puducherry")
+                            .FontSize(10).FontColor("#4b5d69");
+
+                        col.Item().PaddingTop(8).LineHorizontal(1.4f).LineColor("#1a3a52");
+                        col.Item().PaddingTop(2).LineHorizontal(0.8f).LineColor("#D4A017");
+
+                        col.Item().PaddingTop(10).Row(row =>
+                        {
+                            row.RelativeItem().Text(nocNumber).FontSize(10.5f).SemiBold();
+                            row.RelativeItem().AlignRight().Text("Puducherry, dt. " + issueDate.ToString("dd-MM-yyyy"))
+                                .FontSize(10.5f);
+                        });
                     });
 
-                    page.Content().PaddingTop(20).Column(col =>
+                    page.Content().PaddingHorizontal(16).PaddingTop(18).Column(col =>
                     {
-                        col.Spacing(14);
+                        col.Spacing(12);
 
-                        col.Item().Background("#f5f9fa").Padding(10).Row(row =>
+                        // Different certificate formats by building classification
+                        if (isEducational)
+                        {
+                            col.Item().AlignCenter().Text("NO OBJECTION CERTIFICATE")
+                                .Bold().FontSize(16).Underline();
+
+                            col.Item().PaddingTop(8).Text(text =>
+                            {
+                                text.Justify();
+                                text.Span("           This is to certify that the ").FontSize(11.5f);
+                                text.Span(floortype).FontSize(11.5f);
+                                text.Span(" of M/s. ").FontSize(11.5f);
+                                text.Span(name).SemiBold().FontSize(11.5f);
+                                text.Span(" at ").FontSize(11.5f);
+                                text.Span(address).FontSize(11.5f);
+                                text.Span(" has been inspected and examined by the officials of this Department on Fire Safety point of view. Hence, there is").FontSize(11.5f);
+                                text.Span(" 'No Objection'").SemiBold().FontSize(11.5f);
+                                text.Span(" for the purpose of ").FontSize(11.5f);
+                                text.Span(occupencydetail).FontSize(11.5f);
+                                text.Span(".").FontSize(11.5f);
+                            });
+                        }
+                        else
+                        {
+                            col.Item().AlignCenter().Text("FIRE SAFETY CLEARANCE CERTIFICATE")
+                                .Bold().FontSize(15.5f).Underline();
+                            col.Item().AlignCenter().Text("(No Objection Certificate)")
+                                .FontSize(10.5f).FontColor("#4b5d69");
+
+                            col.Item().PaddingTop(6).Element(c => AddNocParticulars(c,
+                                ("Building Classification", string.IsNullOrWhiteSpace(buildingclass) ? "-" : buildingclass),
+                                ("Type of Building", floortype),
+                                ("Occupancy / Purpose", occupencydetail),
+                                ("Built-up Area (sq.m.)", builtuparea),
+                                ("Hazard Classification", hazard),
+                                ("Fire Fighting Arrangements", firefighting),
+                                ("Valid Upto", validUpto.ToString("dd-MM-yyyy"))));
+
+                            col.Item().PaddingTop(4).Text(text =>
+                            {
+                                text.Justify();
+                                text.Span("           This is to certify that the existing/proposed building premises of M/s. ").FontSize(11.5f);
+                                text.Span(name).SemiBold().FontSize(11.5f);
+                                text.Span(" situated at ").FontSize(11.5f);
+                                text.Span(address).FontSize(11.5f);
+                                text.Span(" has been inspected by the Fire Service Personnel and found to comply with the fire safety requirements as per the National Building Code of India and the Puducherry Fire Service Rules. Hence, there is ").FontSize(11.5f);
+                                text.Span("'No Objection'").SemiBold().FontSize(11.5f);
+                                text.Span(" for the purpose of ").FontSize(11.5f);
+                                text.Span(occupencydetail).FontSize(11.5f);
+                                text.Span(" subject to the observance of all fire safety measures and periodic maintenance of the fire fighting systems.").FontSize(11.5f);
+                            });
+                        }
+
+                        // ---------------- signature ----------------
+                        col.Item().PaddingTop(38).Row(row =>
                         {
                             row.RelativeItem().Column(c =>
                             {
-                                c.Item().Text("Certificate Number").FontSize(9).FontColor("#5a6b78");
-                                c.Item().Text(nocNumber).FontSize(11).SemiBold();
-                            });
-                            row.RelativeItem().Column(c =>
-                            {
-                                c.Item().Text("Date of Issue").FontSize(9).FontColor("#5a6b78");
-                                c.Item().Text(issueDate.ToString("dd-MM-yyyy")).FontSize(11).SemiBold();
-                            });
-                            row.RelativeItem().Column(c =>
-                            {
-                                c.Item().Text("Valid Upto").FontSize(9).FontColor("#5a6b78");
-                                c.Item().Text(validUpto.ToString("dd-MM-yyyy")).FontSize(11).SemiBold();
-                            });
-                            row.RelativeItem().Column(c =>
-                            {
-                                c.Item().Text("Status").FontSize(9).FontColor("#5a6b78");
-                                c.Item().PaddingTop(2).Element(e =>
+                                if (qrBytes.Length > 0)
                                 {
-                                    e.AlignLeft().Background("#1a7f4b").PaddingVertical(3).PaddingHorizontal(10)
-                                        .Text(app.Status).FontColor("#ffffff").FontSize(10).SemiBold();
-                                });
+                                    c.Item().Width(86).Height(86).Image(qrBytes);
+                                    c.Item().PaddingTop(4).Text("Scan to verify").FontSize(7.5f)
+                                        .FontColor("#4b5d69");
+                                }
                             });
-                        });
 
-                        col.Item().PaddingTop(4).Text(text =>
-                        {
-                            text.Span("This is to certify that Fire Safety Clearance (No Objection Certificate) has been granted to ")
-                                .FontSize(11);
-                            text.Span(app.Name ?? "the applicant").Bold().FontSize(11);
-                            text.Span(" for the premises described below, subject to the provisions of the National Building Code and the applicable Fire Safety Rules.")
-                                .FontSize(11);
-                        });
-
-                        col.Item().Element(c => AddDetailTable(c, details));
-
-                        col.Item().PaddingTop(20).Row(row =>
-                        {
-                            row.RelativeItem();
-                            row.ConstantItem(180).Column(c =>
+                            row.RelativeItem().AlignRight().Column(c =>
                             {
-                                c.Item().AlignCenter().PaddingBottom(30).Text("");
-                                c.Item().LineHorizontal(1).LineColor(Colors.Grey.Darken1);
-                                c.Item().AlignCenter().Text("Issuing Authority").FontSize(9).FontColor(Colors.Grey.Darken2);
+                                c.Item().Text("(K. ILANGO)").FontSize(11);
+                                c.Item().Text("DIVISIONAL FIRE OFFICER").FontSize(11).SemiBold();
+                                c.Item().Text("PUDUCHERRY").FontSize(11);
                             });
                         });
 
-                        col.Item().PaddingTop(10).Background("#FFF8E6").Padding(8).Text(
-                            "This is a system-generated Fire Safety Clearance certificate.")
-                            .FontSize(8).Italic().FontColor(Colors.Grey.Darken2);
+                        // ---------------- recipient ----------------
+                        col.Item().PaddingTop(26).Column(c =>
+                        {
+                            c.Item().Text("To").FontSize(11);
+                            c.Item().Text("Mr./Ms. " + name).FontSize(11).SemiBold();
+                            c.Item().Text(address).FontSize(11);
+                        });
+
+                        col.Item().PaddingTop(14).Text(
+                                "This certificate is issued on the basis of the particulars furnished in the application and the fire safety inspection conducted by this Department.")
+                            .FontSize(8.5f).Italic().FontColor("#4b5d69");
                     });
 
-                    page.Footer().AlignCenter().Text(t =>
+                    page.Footer().PaddingHorizontal(16).PaddingBottom(10).AlignCenter().Text(t =>
                     {
                         t.Span("Generated on ").FontSize(8);
                         t.Span(DateTime.Now.ToString("dd-MM-yyyy hh:mm tt")).FontSize(8);
+                        t.Span("  â€¢  Fire Service Department, Government of Puducherry").FontSize(8);
                     });
                 });
             });
 
             return document.GeneratePdf();
+        }
+
+        private static void AddNocParticulars(IContainer container, params (string Label, string Value)[] rows)
+        {
+            container.Border(0.8f).BorderColor("#cbd7df").Table(table =>
+            {
+                table.ColumnsDefinition(columns =>
+                {
+                    columns.RelativeColumn(1.1f);
+                    columns.RelativeColumn(1.9f);
+                });
+
+                foreach (var (label, value) in rows)
+                {
+                    table.Cell().Background("#f4f7f9").Border(0.5f).BorderColor("#dbe4ea")
+                        .Padding(5).Text(label).FontSize(9).SemiBold().FontColor("#33454f");
+                    table.Cell().Border(0.5f).BorderColor("#dbe4ea")
+                        .Padding(5).Text(value).FontSize(9.5f);
+                }
+            });
         }
 
         /// <summary>Every saved field, in step order, formatted the way the Preview page shows it.</summary>
@@ -282,3 +381,5 @@ namespace TradeLicence.Services
         }
     }
 }
+
+

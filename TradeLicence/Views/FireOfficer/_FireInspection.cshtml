@@ -1,0 +1,143 @@
+@model TradeLicence.Models.FireApplicationVm
+@using System
+@using System.Linq
+@using TradeLicence.Models
+
+@*
+    Fire NOC inspection workflow — administrator forwards the application to a
+    Fire inspector via the separate "Forward to Inspector" menu action; the inspector
+    records site findings and uploads the signed report; the application then lands
+    back with the administrator for the final decision. Kept separate from the
+    shared _OfficerWorkflowPanel so the generic Water / Electricity / CAF flows are untouched.
+*@
+
+@{
+    var app = Model.Application;
+    var inspectors = ViewBag.Inspectors as List<Officer> ?? new List<Officer>();
+    var canForwardToInspector = ViewBag.CanForwardToInspector == true;
+    var canSubmitInspection = ViewBag.CanSubmitInspection == true;
+    var inspectionAssignedToOther = ViewBag.InspectionAssignedToOther == true;
+    var inspectionHistory = ViewBag.InspectionHistory as WorkflowHistory;
+    var inspectionDocument = ViewBag.InspectionDocument as WorkflowSupportingDocument;
+    var inspectionOfficerName = ViewBag.InspectionOfficerName as string;
+
+    var hasContent = canSubmitInspection || inspectionAssignedToOther || inspectionHistory != null;
+}
+
+@if (hasContent)
+{
+    <div class="tl-officer-panel tl-inspection-panel">
+        <div class="tl-officer-panel-title">
+            <i class="fa-solid fa-clipboard-check"></i> Fire NOC Inspection
+        </div>
+
+        @if (inspectionHistory != null)
+        {
+            <fieldset class="tl-section tl-card-green">
+                <legend><i class="fa-solid fa-file-signature"></i> Inspection Report</legend>
+
+                <div class="tl-inspection-meta">
+                    <div>
+                        <span>Inspected by</span>
+                        <strong>@(string.IsNullOrWhiteSpace(inspectionOfficerName) ? "Fire NOC Inspector" : inspectionOfficerName)</strong>
+                    </div>
+                    <div>
+                        <span>Submitted on</span>
+                        <strong>@inspectionHistory.ActionDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")</strong>
+                    </div>
+                    <div>
+                        <span>Report file</span>
+                        <strong>@(inspectionDocument?.FileName ?? "Not attached")</strong>
+                    </div>
+                </div>
+
+                <div class="tl-inspection-remarks">
+                    <div class="tl-inspection-label">Inspection remarks</div>
+                    <div>@(string.IsNullOrWhiteSpace(inspectionHistory.Remarks) ? "No remarks were recorded." : inspectionHistory.Remarks)</div>
+                </div>
+
+                @if (inspectionDocument != null)
+                {
+                    <div class="tl-officer-actions-group">
+                        <a class="btn btn-secondary"
+                           href="@Url.Action("PreviewStageDocument", "FireOfficer", new { docId = inspectionDocument.WorkflowSupportingDocumentId })"
+                           target="_blank">
+                            <i class="fa-solid fa-eye"></i> View Report
+                        </a>
+                        <a class="btn btn-primary"
+                           href="@Url.Action("DownloadStageDocument", "FireOfficer", new { docId = inspectionDocument.WorkflowSupportingDocumentId })">
+                            <i class="fa-solid fa-download"></i> Download Report
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="tl-note">No inspection report file is attached.</p>
+                }
+
+                @if (ViewBag.AdminOverride == true
+                     && string.Equals(app.Status, "Submitted", StringComparison.OrdinalIgnoreCase)
+                     && string.Equals(app.CurrentStage, "Approval", StringComparison.OrdinalIgnoreCase))
+                {
+                    <p class="tl-note">
+                        Review the inspection findings and report above, then take the final decision in the
+                        <strong>Officer Workflow</strong> panel below.
+                    </p>
+                }
+            </fieldset>
+        }
+
+        @if (canSubmitInspection)
+        {
+            <fieldset class="tl-section tl-card-blue">
+                <legend><i class="fa-solid fa-magnifying-glass-location"></i> Site Inspection</legend>
+                <p class="tl-note">
+                    Inspect the premises and review the applicant's documents below. Record your findings
+                    and attach the signed inspection report. Submitting the report returns this application
+                    to the Fire NOC Administrator for the final decision.
+                </p>
+
+                <form method="post" asp-controller="FireOfficer" asp-action="SubmitInspectionReport" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@app.Id" />
+
+                    <div class="form-group">
+                        <label>Inspection Remarks <span class="req">*</span></label>
+                        <textarea name="remarks" class="form-control" rows="4" maxlength="1000" required
+                                  placeholder="Describe the site inspection findings, compliance observations and any deficiencies..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Inspection Report <span class="req">*</span></label>
+                        <input type="file" name="report" class="form-control" required
+                               accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" />
+                        <span class="tl-note">PDF, JPG or PNG — maximum 5 MB.</span>
+                    </div>
+
+                    @if (inspectionDocument != null)
+                    {
+                        <p class="tl-note">
+                            A report is already on record: <strong>@inspectionDocument.FileName</strong>.
+                            Submitting a new report will replace it.
+                        </p>
+                    }
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-paper-plane"></i> Submit Inspection Report
+                    </button>
+                </form>
+            </fieldset>
+        }
+
+        @if (inspectionAssignedToOther)
+        {
+            <fieldset class="tl-section tl-card-gold">
+                <legend><i class="fa-solid fa-user-clock"></i> Inspection Assigned</legend>
+                <p class="tl-note">
+                    This site inspection is assigned to another Fire NOC Inspector. You can review the
+                    application and its history, but you cannot submit the inspection report.
+                </p>
+            </fieldset>
+        }
+    </div>
+}

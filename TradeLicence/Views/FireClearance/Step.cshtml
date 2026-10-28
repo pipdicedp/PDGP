@@ -89,29 +89,31 @@
         </div>
     }
 
-    <!-- Stepper -->
-    <div class="caf-stepper">
-        @foreach (var s in Model.AllSteps)
-        {
-            var state = s.Number == Model.Current.Number
-                ? "caf-step-current"
-                : (s.Number < Model.Current.Number || Model.BasicDetailsExist
-                    ? "caf-step-done"
-                    : "caf-step-locked");
+    @if (FireStatusDisplay.IsReturned(Model.ApplicationStatus))
+    {
+        <div class="alert alert-warning caf-alert">
+            <strong><i class="fa-solid fa-pen-to-square"></i> Returned for correction / modification.</strong>
+            The Fire Department has asked for changes. <em>Every</em> section and every uploaded
+            document on all steps is editable again &mdash; update what is needed, then resubmit
+            from the Preview &amp; Submit tab.
+            @if (!string.IsNullOrWhiteSpace(Model.OfficerRemarks))
+            {
+                <div class="mt-2"><strong>Remarks:</strong> &ldquo;@Model.OfficerRemarks&rdquo;</div>
+            }
+        </div>
+    }
 
-            <a class="caf-step @state"
-               href="@(Url.Action("Step", new { step = s.Number }))">
-
-                <span class="caf-step-circle">
-                    @s.Number
-                </span>
-
-                <span class="caf-step-label">
-                    @s.Title
-                </span>
-            </a>
-        }
-    </div>
+    <!-- Stepper: the three data-entry steps plus the Preview & Submit tab.
+         The partial keeps the tab in step with the saved sections. -->
+    <partial name="_FireStepper"
+             model="new CafStepperVm
+             {
+                 AllSteps = Model.AllSteps,
+                 CurrentNumber = Model.Current.Number,
+                 BasicDetailsExist = Model.BasicDetailsExist,
+                 IsSubmitted = Model.IsSubmitted,
+                 SavedSteps = Model.SavedSteps
+             }" />
 
     @{
         var progressPct = (int)System.Math.Round(Model.Current.Number * 100.0 / FireFormMetadata.MaxStep);
@@ -150,8 +152,14 @@
 
         @foreach (var group in sections)
         {
-            var fieldList = group.ToList();
+            var allFields = group.ToList();
             var secNo = SectionNo(group.Key);
+
+            // Application Type is a form-level choice, not one of the 33%
+            // input cells: its caption and the Registration / Renewal radios
+            // sit above the grid, at the start of the section's inputs.
+            var topChoices = allFields.Where(f => f.Type == CafFieldType.Radio).ToList();
+            var fieldList = allFields.Where(f => f.Type != CafFieldType.Radio).ToList();
 
             <fieldset class="tl-form-section">
 
@@ -160,13 +168,53 @@
                     <span>@group.Key</span>
                 </legend>
 
+                @foreach (var choice in topChoices)
+                {
+                    var choiceCurrent = Val(choice.Name);
+                    var choiceOptions = choice.Options ?? Array.Empty<string>();
+
+                    <div class="tl-form-apptype">
+                        <span class="tl-form-apptype-label">
+                            @choice.Label
+                            @if (choice.Required)
+                            {
+                                <span class="caf-required">*</span>
+                            }
+                        </span>
+                        <div class="caf-choice-row" role="radiogroup" aria-label="@choice.Label">
+                            @foreach (var opt in choiceOptions)
+                            {
+                                var oPipe = opt.IndexOf('|');
+                                var oValue = oPipe >= 0 ? opt[..oPipe] : opt;
+                                var oLabel = oPipe >= 0 ? opt[(oPipe + 1)..] : opt;
+                                var oChecked = string.Equals(oValue, choiceCurrent, StringComparison.OrdinalIgnoreCase);
+
+                                <label class="caf-choice">
+                                    <input type="radio"
+                                           name="@choice.Name"
+                                           value="@oValue"
+                                           checked="@oChecked"
+                                           required="@choice.Required" />
+                                    <span>@oLabel</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @* Every remaining field is one cell of the three-column grid,
+                   so text areas and selects all share the same 33% width. Only
+                   the fire-fighting checklist (nine checkboxes in one group)
+                   spans the full sheet. *@
+                <div class="tl-form-fields">
+
                 @for (var i = 0; i < fieldList.Count; i++)
                 {
                     var f = fieldList[i];
 
-                    var compact = f.Type != CafFieldType.TextArea && f.Type != CafFieldType.MultiSelect;
+                    var wide = f.Type == CafFieldType.MultiSelect;
 
-                    <div class="tl-form-row">
+                    <div class="tl-form-row @(wide ? "tl-form-row-wide" : null)">
 
                         <span class="tl-form-no">@(secNo + "." + (i + 1))</span>
 
@@ -193,7 +241,7 @@
                             </label>
                         }
 
-                        <div class="tl-form-control @(compact ? "tl-form-control-compact" : null)">
+                        <div class="tl-form-control">
 
                             @switch (f.Type)
                             {
@@ -390,6 +438,8 @@
                     </div>
                 }
 
+                </div>
+
             </fieldset>
         }
 
@@ -405,7 +455,7 @@
                 <p class="tl-note">
                     Accepted: PDF, JPG or PNG, up to 5 MB per file. A document you uploaded
                     earlier is kept unless you choose a new file for it. Saving this step
-                    submits the application.
+                    takes you to the preview, where you review everything and submit.
                     @{
                         var requiredLabels = Model.Documents.Where(d => d.Def.Required).Select(d => d.Def.Label).ToList();
                     }
@@ -484,6 +534,53 @@
             </fieldset>
         }
 
+        @if (Model.Current.Key == "documents" && Model.Review != null)
+        {
+            var savedSections = Model.Review.Sections.Count(s => s.HasRow);
+            var totalSections = Model.Review.Sections.Count;
+
+            <section class="tl-form-review">
+
+                <div class="tl-review-head">
+                    <h3>Review &amp; Submit</h3>
+                    <p>
+                        @savedSections of @totalSections sections have data.
+                        Nothing is sent to the department until you submit from the preview.
+                    </p>
+                </div>
+
+                <ul class="tl-review-list">
+
+                    @foreach (var s in Model.Review.Sections)
+                    {
+                        <li class="tl-review-item">
+
+                            <span class="tl-review-no">@s.Step.Number</span>
+
+                            <span class="tl-review-title">@s.Step.Title</span>
+
+                            <span class="tl-review-chip @(s.HasRow ? "tl-review-chip-ok" : "tl-review-chip-missing")">
+                                @(s.HasRow ? "Saved" : "Not filled")
+                            </span>
+
+                            <a class="tl-review-edit"
+                               href="@Url.Action("Step", new { step = s.Step.Number })">
+                                @(s.HasRow ? "Edit" : "Fill in")
+                            </a>
+
+                        </li>
+                    }
+
+                </ul>
+
+                <a class="btn btn-secondary tl-review-open"
+                   href="@Url.Action("Preview")">
+                    Open full preview
+                </a>
+
+            </section>
+        }
+
         @if (Model.Current.Key == "documents")
         {
             <section class="tl-form-declaration">
@@ -526,7 +623,7 @@
                button is last in the DOM and pulled to its left with flexbox. *@
             <button type="submit"
                     class="btn btn-primary caf-next-btn">
-                @(Model.Current.Key == "documents" ? "Submit Application" : "Save & Next")
+                @(Model.Current.Key == "documents" ? "Save & Preview" : "Save & Next")
             </button>
 
             <button type="submit"

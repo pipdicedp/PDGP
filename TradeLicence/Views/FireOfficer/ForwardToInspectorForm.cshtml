@@ -1,0 +1,80 @@
+@model TradeLicence.Models.FireClearanceApplication
+@using TradeLicence.Helpers
+@{
+    ViewData["Title"] = "Forward to Inspector - " + (Model.ApplicationCode ?? Model.Id.ToString());
+    Layout = "~/Views/Shared/_OfficerLayout.cshtml";
+    var inspectors = ViewBag.Inspectors as List<TradeLicence.Models.Officer> ?? new List<TradeLicence.Models.Officer>();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/caf_css/caf.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+    <div class="dashboard-body">
+        <div class="dashboard-banner">
+            <div class="dashboard-banner-text">
+                <span class="dashboard-banner-icon">🔥</span>
+                <div>
+                    <h3>@(string.IsNullOrEmpty(Model.Name) ? "Fire NOC Application" : Model.Name)</h3>
+                    <p>
+                        Fire NOC Ref. No. @(string.IsNullOrEmpty(Model.ApplicationCode) ? Model.Id.ToString() : Model.ApplicationCode)
+                        &bull; Current stage: @TradeLicence.Helpers.FireStatusDisplay.StageLabel(Model.Status, Model.CurrentStage)
+                        &bull; Status: @TradeLicence.Helpers.FireStatusDisplay.StatusLabel(Model.Status)
+                    </p>
+                </div>
+            </div>
+            <div class="dashboard-controls">
+                <a class="btn btn-secondary" href="@Url.Action("ForwardToInspector", "FireOfficer")">
+                    <i class="fa-solid fa-arrow-left"></i> Back to List
+                </a>
+                <a class="btn btn-secondary" href="@Url.Action("ViewApplication", "FireOfficer", new { id = Model.Id })">
+                    <i class="fa-solid fa-file-alt"></i> View Application
+                </a>
+            </div>
+        </div>
+
+        <div class="tl-officer-panel tl-inspection-panel">
+            <div class="tl-officer-panel-title">
+                <i class="fa-solid fa-share-from-square"></i> Forward to Inspector
+            </div>
+
+            <fieldset class="tl-section tl-card-navy">
+                <legend><i class="fa-solid fa-user-shield"></i> Forward Application</legend>
+                <p class="tl-note">
+                    Send this application to the Fire NOC Inspector for a site inspection. The inspector
+                    will record their findings, attach the signed inspection report, and return it to you
+                    for the final decision.
+                </p>
+
+                <form method="post" asp-controller="FireOfficer" asp-action="ForwardToOfficer">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <input type="hidden" name="targetStage" value="Inspection" />
+
+                    <div class="form-group">
+                        <label>Inspector <span class="req">*</span></label>
+                        <select name="officerId" class="form-select" required>
+                            <option value="">-- Select inspector --</option>
+                            @foreach (var inspector in inspectors)
+                            {
+                                <option value="@inspector.OfficerId">@inspector.FullName (@inspector.Username)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Instructions / Remarks</label>
+                        <textarea name="remarks" class="form-control" rows="3" maxlength="1000"
+                                  placeholder="Anything the inspector should specifically check on site..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-paper-plane"></i> Forward to Inspector
+                    </button>
+                </form>
+            </fieldset>
+        </div>
+    </div>
+</div>

@@ -30,6 +30,7 @@
     var locked = !editable;
     var appStatus = ViewBag.ApplicationStatus as string ?? "Draft";
     var isDraft = string.Equals(appStatus, "Draft", StringComparison.OrdinalIgnoreCase);
+    var isReturned = string.Equals(appStatus, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase);
 }
 
 @section Styles {
@@ -85,6 +86,18 @@
             Department until you click <strong>Submit Application</strong>.
         </div>
     }
+    else if (string.Equals(appStatus, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase))
+    {
+        <div class="alert alert-warning caf-alert">
+            <strong>Returned for correction / modification.</strong>
+            The Fire Department has asked for changes. Every section and document is editable
+            again &mdash; use <em>Edit</em> below, then resubmit.
+            @if (!string.IsNullOrWhiteSpace(ViewBag.OfficerRemarks as string))
+            {
+                <div class="mt-2"><strong>Remarks:</strong> &ldquo;@ViewBag.OfficerRemarks&rdquo;</div>
+            }
+        </div>
+    }
     else if (!Model.IsComplete)
     {
         <div class="alert alert-warning caf-alert">
@@ -138,7 +151,7 @@
                 <button type="submit"
                         class="btn btn-primary"
                         disabled="@(!Model.IsComplete)">
-                    Submit Application
+                    @(isReturned ? "Resubmit Application" : "Submit Application")
                 </button>
 
             </form>

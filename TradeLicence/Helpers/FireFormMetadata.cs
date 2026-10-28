@@ -90,16 +90,15 @@ namespace TradeLicence.Helpers
         public static readonly List<CafStepDef> Steps = new()
         {
             // ============================================================
-            // STEP 1 — Premises & Owner Details
-            // Mirrors page 1 of the department's printed form:
-            // Premises Name / Owner Name / Mobile / Region / Registration or
-            // Renewal / addresses / land line / e-mail / purpose / survey no.
+            // STEP 1 — Premises, Owner & Building Details
+            // The department's page 1: premises, owner and the whole
+            // building block (classification, areas, floors, basement).
             // ============================================================
             new CafStepDef
             {
                 Number = 1,
                 Key = "applicant",
-                Title = "Premises & Owner Details",
+                Title = "Premises, Owner & Building",
                 TableName = "FireClearanceApplications",
                 Fields = new List<CafField>
                 {
@@ -117,20 +116,8 @@ namespace TradeLicence.Helpers
                     new() { Name = "mobileno",      Label = "Mobile No.",          Type = CafFieldType.Text,     MaxLength = 10,  Section = "Particulars of the Owner", Required = true },
                     new() { Name = "phno",          Label = "Land Line No.",       Type = CafFieldType.Text,     MaxLength = 20,  Section = "Particulars of the Owner" },
                     new() { Name = "email",         Label = "E-mail",              Type = CafFieldType.Email,    MaxLength = 150, Section = "Particulars of the Owner", Required = true },
-                }
-            },
 
-            // ============================================================
-            // STEP 2 — Building Details
-            // ============================================================
-            new CafStepDef
-            {
-                Number = 2,
-                Key = "building",
-                Title = "Building Details",
-                TableName = "FireClearanceApplications",
-                Fields = new List<CafField>
-                {
+                    // ---- building details ----
                     new() { Name = "buildingclass",   Label = "Building Classification",       Type = CafFieldType.Select,   MaxLength = 50, Section = "Particulars of the Building", Options = BuildingClassifications, Required = true },
                     new() { Name = "floortype",       Label = "Type of Floor / Roof",          Type = CafFieldType.Select,   MaxLength = 50, Section = "Particulars of the Building", Options = new[] { "RCC", "Madras Terrace", "Tiled", "Thatched", "Others" }, Required = true },
                     new() { Name = "ht",              Label = "Height Including Stilt Floor (M)", Type = CafFieldType.Decimal, Section = "Particulars of the Building", Required = true },
@@ -148,13 +135,16 @@ namespace TradeLicence.Helpers
             },
 
             // ============================================================
-            // STEP 3 — Occupancy & Business Details
+            // STEP 2 — Occupancy, Business & Fire Safety
+            // Floor-wise occupancy, business/hazard details and the whole
+            // fire-safety block (arrangements, escape, installations,
+            // previous licence) on one page.
             // ============================================================
             new CafStepDef
             {
-                Number = 3,
+                Number = 2,
                 Key = "occupancy",
-                Title = "Occupancy & Business Details",
+                Title = "Occupancy, Business & Fire Safety",
                 TableName = "FireClearanceApplications",
                 Fields = new List<CafField>
                 {
@@ -166,24 +156,12 @@ namespace TradeLicence.Helpers
                     new() { Name = "staff",          Label = "Total No. of Staff / Student / Workers in the Building", Type = CafFieldType.TextArea, MaxLength = 200, Section = "Business and Hazard Details", Required = true },
                     new() { Name = "hazard",         Label = "Degree of Hazard in Case of Industry as per NBC-2016 (Annexure-B)", Type = CafFieldType.Select, MaxLength = 20, Section = "Business and Hazard Details",
                             Options = HazardDegrees, Required = true },
-                    new() { Name = "fireescape",     Label = "Details of Fire Escape and Internal Staircase, Lifts, Ramps, Escalator, Corridors, Exits", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Business and Hazard Details" },
+                    new() { Name = "fireescape",     Label = "Fire Escape, Staircase, Lift, Ramp & Exit Details", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Business and Hazard Details" },
                     new() { Name = "canteen",        Label = "Details of Canteen / Cooking Facility with LPG Cylinders Available", Type = CafFieldType.TextArea, MaxLength = 400, Section = "Business and Hazard Details" },
                     new() { Name = "noofbed",        Label = "No. of Beds (Hospital / Clinic / Nursing Home)", Type = CafFieldType.Text, MaxLength = 50, Section = "Business and Hazard Details" },
                     new() { Name = "noofrooms",      Label = "Total No. of Rooms (Lodging House)",    Type = CafFieldType.Text,   MaxLength = 50,  Section = "Business and Hazard Details" },
-                }
-            },
 
-            // ============================================================
-            // STEP 4 — Site & Fire Safety
-            // ============================================================
-            new CafStepDef
-            {
-                Number = 4,
-                Key = "site",
-                Title = "Site & Fire Safety",
-                TableName = "FireClearanceApplications",
-                Fields = new List<CafField>
-                {
+                    // ---- fire safety ----
                     new() { Name = "firefighting", Label = "Fire Fighting Arrangements Available", Type = CafFieldType.MultiSelect, MaxLength = 400, Section = "Fire Safety Arrangements",
                             Options = FireFightingSystems, Required = true },
                     new() { Name = "watersource",  Label = "Details of Water Source",           Type = CafFieldType.TextArea, MaxLength = 200, Section = "Fire Safety Arrangements", Required = true },
@@ -199,12 +177,12 @@ namespace TradeLicence.Helpers
             },
 
             // ============================================================
-            // STEP 5 — Upload Documents (dbo.FireClearanceDocuments)
+            // STEP 3 — Upload Documents (dbo.FireClearanceDocuments)
             // One varbinary(max) column per document; no Fields.
             // ============================================================
             new CafStepDef
             {
-                Number = 5,
+                Number = 3,
                 Key = "documents",
                 Title = "Upload Documents",
                 TableName = "FireClearanceDocuments",

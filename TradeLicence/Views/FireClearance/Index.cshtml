@@ -37,6 +37,21 @@
     var statusBadge = FireStatusDisplay.StatusBadge(app.Status);
     var statusLabel = FireStatusDisplay.StatusLabel(app.Status);
     var stageLabel = FireStatusDisplay.StageLabel(app.Status, app.CurrentStage);
+
+    // The NOC template is chosen from the building classification saved on the
+    // application (FireNocPdfService), so show the applicant which format they
+    // will receive before they download it.
+    var certificateClass = Model.Preview.Sections
+        .SelectMany(s => s.Values)
+        .Where(v => string.Equals(v.Key, "buildingclass", StringComparison.OrdinalIgnoreCase))
+        .Select(v => v.Value)
+        .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+
+    var certificateFormat = string.IsNullOrWhiteSpace(certificateClass)
+        ? "Fire Safety Clearance Certificate"
+        : certificateClass.Contains("Educational", StringComparison.OrdinalIgnoreCase)
+            ? "Educational Institution NOC"
+            : "Industrial / Other Occupancy Clearance Certificate";
 }
 
 @section Styles {
@@ -47,10 +62,30 @@
 
 <div class="caf-wrapper">
 
-    <div class="caf-header">
-        <h2>Fire NOC Application</h2>
-        <p>Government of Puducherry — Fire Service Department</p>
-    </div>
+    <header class="tl-form-masthead">
+
+        <div class="tl-form-masthead-main">
+            <p class="tl-form-govt">Government of Puducherry</p>
+            <h1 class="tl-form-dept">Fire Service Department</h1>
+            <p class="tl-form-doc">FIRE SAFETY CLEARANCE &mdash; APPLICATION STATUS</p>
+        </div>
+
+        <dl class="tl-form-meta">
+            <div>
+                <dt>Application No.</dt>
+                <dd>@(string.IsNullOrEmpty(app.ApplicationCode) ? "Not assigned yet" : app.ApplicationCode)</dd>
+            </div>
+            <div>
+                <dt>Applied On</dt>
+                <dd>@(app.AppliedOn?.ToString("dd-MM-yyyy") ?? "—")</dd>
+            </div>
+            <div>
+                <dt>Status</dt>
+                <dd><span class="tl-form-status">@statusLabel</span></dd>
+            </div>
+        </dl>
+
+    </header>
 
     @if (!string.IsNullOrEmpty(Model.Preview.SuccessMessage))
     {
@@ -134,6 +169,39 @@
 
     </fieldset>
 
+    @if (isApproved)
+    {
+        <section class="tl-cert-card" aria-label="Fire Safety No Objection Certificate">
+
+            <div class="tl-cert-card-main">
+                <p class="tl-cert-kicker">
+                    <i class="fa-solid fa-circle-check"></i> Approved &mdash; certificate ready
+                </p>
+                <h3>Fire Safety No Objection Certificate</h3>
+                <p class="tl-cert-card-meta">
+                    Certificate format:
+                    <span class="tl-cert-format">@certificateFormat</span>
+                    @if (!string.IsNullOrWhiteSpace(certificateClass))
+                    {
+                        <span class="tl-cert-sep">&middot;</span>
+                        <span>Building classification: @certificateClass</span>
+                    }
+                </p>
+                <p class="tl-cert-card-note">
+                    Digitally generated with the Department's certificate number and a QR code.
+                    Download the PDF to save or print it.
+                </p>
+            </div>
+
+            <a class="btn btn-success tl-cert-download"
+               href="@Url.Action("Noc")">
+                <i class="fa-solid fa-file-arrow-down"></i>
+                Download NOC (PDF)
+            </a>
+
+        </section>
+    }
+
     <div class="caf-actions">
 
         @if (Model.Preview.AllowEdit)
@@ -175,14 +243,6 @@
                href="@Url.Action("Acknowledgement")">
                 <i class="fa-solid fa-file-arrow-down"></i> Download Acknowledgement
             </a>
-
-            @if (isApproved)
-            {
-                <a class="btn btn-success"
-                   href="@Url.Action("Noc")">
-                    <i class="fa-solid fa-certificate"></i> Download Fire Safety NOC
-                </a>
-            }
         }
 
     </div>
