@@ -48,6 +48,10 @@ namespace TradeLicence.Data
         public DbSet<SocietyNameAvailability> SocietyNameAvailabilities { get; set; } = null!;
         public DbSet<FirmNameAvailability> FirmNameAvailabilities { get; set; } = null!;
 
+        // ---------------- Society Name Change (Request for Name/Business Place/Members) ----------------
+        // Own table: dbo.SocietyNameChangeRequest.
+        public DbSet<SocietyNameChangeRequest> SocietyNameChangeRequests { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -408,6 +412,11 @@ namespace TradeLicence.Data
                 entity.Property(e => e.IdentityProofPath).HasColumnName("IdentityProofPath");
                 entity.Property(e => e.SignatureProofPath).HasColumnName("SignatureProofPath");
                 entity.Property(e => e.NocPath).HasColumnName("NocPath");
+                entity.Property(e => e.Status).HasColumnName("Status").HasMaxLength(20);
+                entity.Property(e => e.ApprovedName).HasColumnName("ApprovedName").HasMaxLength(200);
+                entity.Property(e => e.AdminRemarks).HasColumnName("AdminRemarks").HasMaxLength(500);
+                entity.Property(e => e.ApprovedBy).HasColumnName("ApprovedBy").HasMaxLength(100);
+                entity.Property(e => e.ApprovedOn).HasColumnName("ApprovedOn");
             });
 
             modelBuilder.Entity<FirmNameAvailability>(entity =>
@@ -427,6 +436,36 @@ namespace TradeLicence.Data
                 entity.Property(e => e.IdentityProofPath).HasColumnName("IdentityProofPath");
                 entity.Property(e => e.SignatureProofPath).HasColumnName("SignatureProofPath");
                 entity.Property(e => e.NocPath).HasColumnName("NocPath");
+                entity.Property(e => e.Status).HasColumnName("Status").HasMaxLength(20);
+                entity.Property(e => e.ApprovedName).HasColumnName("ApprovedName").HasMaxLength(200);
+                entity.Property(e => e.AdminRemarks).HasColumnName("AdminRemarks").HasMaxLength(500);
+                entity.Property(e => e.ApprovedBy).HasColumnName("ApprovedBy").HasMaxLength(100);
+                entity.Property(e => e.ApprovedOn).HasColumnName("ApprovedOn");
+            });
+
+            // ---------------- Society Name Change ----------------
+            modelBuilder.Entity<SocietyNameChangeRequest>(entity =>
+            {
+                entity.ToTable("SocietyNameChangeRequest");
+                entity.HasKey(e => e.RequestId);
+                entity.Property(e => e.RequestId).HasColumnName("RequestId").ValueGeneratedOnAdd();
+                entity.Property(e => e.ApplicationNo).HasColumnName("ApplicationNo").HasMaxLength(50);
+                entity.Property(e => e.SerialNo).HasColumnName("SerialNo").HasMaxLength(50);
+                entity.Property(e => e.IsNameChange).HasColumnName("IsNameChange");
+                entity.Property(e => e.IsAddressChange).HasColumnName("IsAddressChange");
+                entity.Property(e => e.IsMemberChange).HasColumnName("IsMemberChange");
+                entity.Property(e => e.IsOthers).HasColumnName("IsOthers");
+                entity.Property(e => e.FormFileName).HasColumnName("FormFileName").HasMaxLength(520);
+                entity.Property(e => e.FormFilePath).HasColumnName("FormFilePath").HasMaxLength(1000);
+                entity.Property(e => e.FormContentType).HasColumnName("FormContentType").HasMaxLength(100);
+                entity.Property(e => e.FormFileSizeKB).HasColumnName("FormFileSizeKB");
+                entity.Property(e => e.Remarks).HasColumnName("Remarks").HasMaxLength(2000);
+                entity.Property(e => e.RequestStatus).HasColumnName("RequestStatus").HasMaxLength(20);
+                entity.Property(e => e.CreatedBy).HasColumnName("CreatedBy").HasMaxLength(100);
+                entity.Property(e => e.CreatedOn).HasColumnName("CreatedOn");
+                entity.Property(e => e.ModifiedBy).HasColumnName("ModifiedBy").HasMaxLength(100);
+                entity.Property(e => e.ModifiedOn).HasColumnName("ModifiedOn");
+                entity.Property(e => e.IsActive).HasColumnName("IsActive");
             });
         }
     }

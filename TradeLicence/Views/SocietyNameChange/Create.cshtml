@@ -1,0 +1,96 @@
+@model TradeLicence.Models.SocietyNameChangeRequest
+@{
+    ViewData["Title"] = "Society Name Change";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+
+<style>
+    .snc-card { max-width: 780px; margin: 20px auto; border: 1px solid #337ab7; border-radius: 4px; background: #fff; }
+    .snc-header { background: #337ab7; color: #fff; text-align: center; font-weight: 700; padding: 14px; font-size: 14px; }
+    .snc-body { padding: 30px 40px 40px; font-size: 11px; }
+    .snc-body label, .snc-body .snc-label { font-weight: 700; font-size: 11px; display: block; margin-bottom: 6px; }
+    .snc-body .req { color: #d00; }
+    .snc-body .form-control { width: 100%; border: 1px solid #2e9e1f; border-radius: 3px; padding: 6px 8px; font-size: 11px; }
+    .snc-body .form-control:focus { outline: none; box-shadow: 0 0 3px #2e9e1f; }
+    .snc-body textarea.form-control { height: 62px; resize: vertical; }
+    .snc-body input[type="file"] { font-size: 11px; }
+    .snc-section { font-weight: 700; font-size: 11px; margin: 0 0 12px; }
+    .snc-block { margin-bottom: 20px; }
+    .snc-options { display: flex; flex-wrap: wrap; gap: 26px; align-items: center; }
+    .snc-options label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; margin: 0; cursor: pointer; }
+    .snc-options input[type="checkbox"] { margin: 0; }
+    .snc-row { display: flex; flex-wrap: wrap; gap: 20px; }
+    .snc-col { flex: 1 1 220px; min-width: 220px; }
+    .snc-note { text-align: center; font-weight: 700; font-size: 11px; color: #a94442; margin-top: 12px; }
+    .snc-actions { text-align: center; margin-top: 20px; }
+    .btn-save { background: #337ab7; color: #fff; border: none; padding: 9px 34px; border-radius: 3px; font-size: 13px; cursor: pointer; }
+    .btn-save:hover { background: #286090; }
+    .btn-reset { background: #777; color: #fff; border: none; padding: 9px 26px; border-radius: 3px; font-size: 13px; cursor: pointer; margin-left: 8px; }
+    .text-danger { color: #d00; font-size: 10px; }
+    .snc-alert { background: #dff0d8; border: 1px solid #3c763d; color: #3c763d; padding: 10px 14px; margin-bottom: 18px; border-radius: 3px; font-size: 12px; }
+</style>
+
+<div class="snc-card">
+    <div class="snc-header">Society - Request for Name/Business Place/Members</div>
+
+    <div class="snc-body">
+        @if (TempData["Success"] != null)
+        {
+            <div class="snc-alert">@TempData["Success"]</div>
+        }
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger" style="font-size:12px;margin-bottom:10px;"></div>
+
+            <div class="snc-block">
+                <span class="snc-label">Requested Change For <span class="req">*</span></span>
+                <div class="snc-options">
+                    <label><input asp-for="IsNameChange" /> Name Change</label>
+                    <label><input asp-for="IsAddressChange" /> Address Change</label>
+                    <label><input asp-for="IsMemberChange" /> Member</label>
+                    <label><input asp-for="IsOthers" /> Others</label>
+                </div>
+            </div>
+
+            <div class="snc-block">
+                <label>1. Upload Change Request Form <span class="req">*</span></label>
+                <input asp-for="ChangeRequestFormFile" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                <br /><span asp-validation-for="ChangeRequestFormFile" class="text-danger"></span>
+            </div>
+
+            <div class="snc-block">
+                <span class="snc-label">2. Application No. / Serial No.</span>
+                <div class="snc-row">
+                    <div class="snc-col">
+                        <label>Application No. <span class="req">*</span></label>
+                        <input asp-for="ApplicationNo" class="form-control" placeholder="Application No." />
+                        <span asp-validation-for="ApplicationNo" class="text-danger"></span>
+                    </div>
+                    <div class="snc-col">
+                        <label>Serial No.</label>
+                        <input asp-for="SerialNo" class="form-control" placeholder="Serial No." />
+                        <span asp-validation-for="SerialNo" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="snc-block">
+                <label>3. Remarks</label>
+                <textarea asp-for="Remarks" class="form-control" placeholder="Remarks"></textarea>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+
+            <div class="snc-note">Note: Only allowed PDF/JPG/PNG file and Maximum size of uploading file is 1MB</div>
+
+            <div class="snc-actions">
+                <button type="submit" class="btn-save">Save</button>
+                <button type="reset" class="btn-reset">Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

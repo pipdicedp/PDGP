@@ -115,6 +115,14 @@ namespace TradeLicence.Helpers
                     });
                     break;
 
+                case "Name Availability Admin":
+                    // Name Availability administrator (Username: Society). One
+                    // login, two queues - Society and Firms each keep their own
+                    // table, so they are separate menu entries.
+                    menu.Add(new() { Text = "Name Availability of Society", Controller = "NameAvailabilityAdmin", Action = "Society", Icon = "fa-solid fa-building-columns" });
+                    menu.Add(new() { Text = "Name Availability of Firms", Controller = "NameAvailabilityAdmin", Action = "Firms", Icon = "fa-solid fa-briefcase" });
+                    break;
+
                 default:
                     // Unrecognized/blank designation — safe minimal menu (Dashboard only).
                     break;

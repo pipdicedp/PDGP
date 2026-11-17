@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Http;
@@ -63,6 +64,41 @@ namespace TradeLicence.Models
         public string? NocPath { get; set; }
 
         public DateTime CreatedOn { get; set; } = DateTime.Now;
+
+        // ---------------- Admin review (Name Availability administrator) ----------------
+        // Every new request starts as "Pending"; the administrator either
+        // approves ONE of the proposed names (Status "Approved" + ApprovedName)
+        // or rejects the request. The applicant sees the result on their
+        // submitted-requests list.
+
+        [StringLength(20)]
+        public string Status { get; set; } = "Pending";
+
+        /// <summary>The one proposed name the administrator approved.</summary>
+        [StringLength(200)]
+        public string? ApprovedName { get; set; }
+
+        [StringLength(500)]
+        public string? AdminRemarks { get; set; }
+
+        [StringLength(100)]
+        public string? ApprovedBy { get; set; }
+
+        public DateTime? ApprovedOn { get; set; }
+
+        /// <summary>Non-empty proposed names, in order (form/list helper, not a column).</summary>
+        [NotMapped]
+        public List<string> ProposedNames
+        {
+            get
+            {
+                var all = new[] { ProposedName1, ProposedName2, ProposedName3, ProposedName4, ProposedName5 };
+                var result = new List<string>();
+                foreach (var n in all)
+                    if (!string.IsNullOrWhiteSpace(n)) result.Add(n.Trim());
+                return result;
+            }
+        }
 
         // Upload controls (not stored in DB)
         [NotMapped]

@@ -127,6 +127,12 @@ namespace TradeLicence.Controllers
             var officer = await _context.Officers.FindAsync(currentOfficerId);
             if (officer == null) return Forbid();
 
+            // Name Availability administrator (Username: Society) owns its own
+            // module - two queues (Society / Firms) behind one login. Redirect
+            // before any trade-licence stats work.
+            if (string.Equals(officer.Designation, NameAvailabilityAdminController.AdminDesignation, StringComparison.OrdinalIgnoreCase))
+                return RedirectToAction("Index", "NameAvailabilityAdmin");
+
             // Status breakdown for the stat cards at the top of both officer
             // dashboards (Index.cshtml for Trade Licence, SharedQueue.cshtml for
             // every other service). Built from the whole register, so Approved /
