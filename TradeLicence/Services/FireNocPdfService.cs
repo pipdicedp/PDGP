@@ -127,7 +127,7 @@ namespace TradeLicence.Services
             var issueDate = (app.ModifiedDate ?? DateTime.UtcNow).ToLocalTime();
             var validUpto = issueDate.AddYears(3);
 
-            string GetVal(string name) =>
+            string? GetVal(string name) =>
                 preview.Sections.SelectMany(s => s.Values.Where(v => string.Equals(v.Key, name, StringComparison.OrdinalIgnoreCase)))
                        .Select(v => v.Value)
                        .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));

@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_UserLayout.cshtml";
 }
@@ -54,28 +54,28 @@
             </div>
 
             <div class="dashboard-card dashboard-accent-4" data-name="transport management" data-category="other">
-                <div class="card-icon">🚐</div>
+                <div class="card-icon">⚡</div>
                 <h4>Transport Management</h4>
                 <p>Apply for New Trade Licence and Track Application Status</p>
                 <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
             </div>
 
             <div class="dashboard-card dashboard-accent-5" data-name="labor department" data-category="registration">
-                <div class="card-icon">👷</div>
+                <div class="card-icon">🚐</div>
                 <h4>Labor Department</h4>
                 <p>Apply for New Trade Licence and Track Application Status</p>
                 <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
             </div>
 
             <div class="dashboard-card dashboard-accent-1" data-name="registration department" data-category="registration">
-                <div class="card-icon">📝</div>
+                <div class="card-icon">👷</div>
                 <h4>Registration Department</h4>
                 <p>Apply for New Trade Licence and Track Application Status</p>
                 <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
             </div>
 
             <div class="dashboard-card dashboard-accent-2" data-name="survey department" data-category="other">
-                <div class="card-icon">📐</div>
+                <div class="card-icon">📝</div>
                 <h4>Survey Department</h4>
                 <p>Apply for New Trade Licence and Track Application Status</p>
                 <a asp-controller="TradeLicence" asp-action="Apply" class="dashboard-btn">New Application</a>
@@ -89,26 +89,20 @@
             </div>
 
             <div class="dashboard-card dashboard-accent-3" data-name="society clearance" data-category="other">
-                <div class="card-icon">🏛️</div>
-                <h4>Society Clearance</h4>
-                <p>Apply for Society Name Availability and Track Application Status</p>
-
-                <a href="https://eodb.py.gov.in/Society/NameAvailability?servicedesc=Society"
-                   target="_blank"
-                   rel="noopener noreferrer"
-                   class="dashboard-btn">
-                    New Application
-                </a>
+                <div class="card-icon">📐</div>
+                <h4>Name Availability of Societies</h4>
+                <p>Apply for Name Availability of Societies and Track Application Status</p>
+                <a asp-controller="NameAvailability" asp-action="Create" class="dashboard-btn">New Application</a>
+                <a asp-controller="NameAvailability" asp-action="Index" class="dashboard-btn" style="background:#4a6b85;">View Submitted Requests</a>
             </div>
 
-
-
-            <!--
-                To add a new service, copy one .dashboard-card block above and:
-                1. Set data-name to the service name in lowercase (used by search)
-                2. Add one of dashboard-accent-1 through dashboard-accent-5 (cycle through them)
-                3. Update the icon, title, description, and the asp-controller/asp-action link
-            -->
+            <div class="dashboard-card dashboard-accent-4" data-name="firm name availability" data-category="other">
+                <div class="card-icon">🏢</div>
+                <h4>Name Availability of Firms</h4>
+                <p>Apply for Name Availability of Firms and Track Application Status</p>
+                <a asp-controller="NameAvailabilityFirm" asp-action="Create" class="dashboard-btn">New Application</a>
+                <a asp-controller="NameAvailabilityFirm" asp-action="Index" class="dashboard-btn" style="background:#4a6b85;">View Submitted Requests</a>
+            </div>
 
         </div>
 
@@ -130,7 +124,7 @@
             var noResults = document.getElementById('dashboardNoResults');
             var countLabel = document.getElementById('dashboardCount');
             var loadMoreBtn = document.getElementById('dashboardLoadMore');
-            var pageSize = 12;   // cards shown per "page" — keeps 50+ services light to render
+            var pageSize = 12;
             var visibleLimit = pageSize;
 
             function getMatches() {
@@ -171,3 +165,4 @@
         })();
     </script>
 }
+

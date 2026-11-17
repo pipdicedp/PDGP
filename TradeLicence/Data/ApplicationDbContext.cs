@@ -43,6 +43,11 @@ namespace TradeLicence.Data
         // ---------------- Fire NOC / Fire Safety Clearance (deptcode 9, serviceid 1017) ----------------
         public DbSet<FireClearanceApplication> FireClearanceApplications { get; set; } = null!;
 
+        // ---------------- Name Availability of Societies / Firms ----------------
+        // Two separate tables: dbo.SocietyNameAvailabilities and dbo.FirmNameAvailabilities.
+        public DbSet<SocietyNameAvailability> SocietyNameAvailabilities { get; set; } = null!;
+        public DbSet<FirmNameAvailability> FirmNameAvailabilities { get; set; } = null!;
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -383,6 +388,46 @@ namespace TradeLicence.Data
                       .OnDelete(DeleteBehavior.SetNull);
             });
 
+            // ---------------- Name Availability of Societies / Firms ----------------
+            // Shared columns come from NameAvailabilityBase; each concrete type gets
+            // its own table. Column names match Database/NameAvailability_Tables.sql.
+            modelBuilder.Entity<SocietyNameAvailability>(entity =>
+            {
+                entity.ToTable("SocietyNameAvailabilities");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ProposedName1).HasColumnName("ProposedName1");
+                entity.Property(e => e.ProposedName2).HasColumnName("ProposedName2");
+                entity.Property(e => e.ProposedName3).HasColumnName("ProposedName3");
+                entity.Property(e => e.ProposedName4).HasColumnName("ProposedName4");
+                entity.Property(e => e.ProposedName5).HasColumnName("ProposedName5");
+                entity.Property(e => e.Purpose).HasColumnName("Purpose");
+                entity.Property(e => e.ApplicantName).HasColumnName("ApplicantName");
+                entity.Property(e => e.ApplicantAddress).HasColumnName("ApplicantAddress");
+                entity.Property(e => e.MobileNo).HasColumnName("MobileNo");
+                entity.Property(e => e.Email).HasColumnName("Email");
+                entity.Property(e => e.IdentityProofPath).HasColumnName("IdentityProofPath");
+                entity.Property(e => e.SignatureProofPath).HasColumnName("SignatureProofPath");
+                entity.Property(e => e.NocPath).HasColumnName("NocPath");
+            });
+
+            modelBuilder.Entity<FirmNameAvailability>(entity =>
+            {
+                entity.ToTable("FirmNameAvailabilities");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ProposedName1).HasColumnName("ProposedName1");
+                entity.Property(e => e.ProposedName2).HasColumnName("ProposedName2");
+                entity.Property(e => e.ProposedName3).HasColumnName("ProposedName3");
+                entity.Property(e => e.ProposedName4).HasColumnName("ProposedName4");
+                entity.Property(e => e.ProposedName5).HasColumnName("ProposedName5");
+                entity.Property(e => e.Purpose).HasColumnName("Purpose");
+                entity.Property(e => e.ApplicantName).HasColumnName("ApplicantName");
+                entity.Property(e => e.ApplicantAddress).HasColumnName("ApplicantAddress");
+                entity.Property(e => e.MobileNo).HasColumnName("MobileNo");
+                entity.Property(e => e.Email).HasColumnName("Email");
+                entity.Property(e => e.IdentityProofPath).HasColumnName("IdentityProofPath");
+                entity.Property(e => e.SignatureProofPath).HasColumnName("SignatureProofPath");
+                entity.Property(e => e.NocPath).HasColumnName("NocPath");
+            });
         }
     }
 }
