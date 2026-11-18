@@ -44,10 +44,11 @@ namespace TradeLicence.Services
         private readonly string? _department;
         private readonly bool _requirePaymentAtInspection;
 
-        // department: when set, "forward to officer" is limited to officers of that department.
-        //   CAF needs this because the same workflow runs in several departments at once.
-        //   Null keeps the original behaviour (any officer with the right designation), so
-        //   Water / Electricity are unchanged.
+        // "Forward to officer" is always limited to ONE department, worked out automatically:
+        //   - department given here (CAF: the department the CAF was forwarded to), else
+        //   - the department of the officer who is doing the forwarding.
+        //   So a new department needs no code - just create its officers with the same Department
+        //   text and they only ever see (and can only forward to) each other.
         // requirePaymentAtInspection: false for workflows with no applicant-payment step (CAF).
         public WorkflowEngineService(DbContext appContext, ApplicationDbContext sharedContext, string serviceType,
             string? department = null, bool requirePaymentAtInspection = true)
@@ -83,8 +84,10 @@ namespace TradeLicence.Services
 
         // One entry per (stage, officer) for every stage AFTER the current
         // one — officers can only forward forward, never skip backward.
-        public async Task<List<(string Stage, TradeLicence.Models.Officer Officer)>> GetForwardableOfficersAsync(string currentStage)
+        public async Task<List<(string Stage, TradeLicence.Models.Officer Officer)>> GetForwardableOfficersAsync(string currentStage, int actingOfficerId)
         {
+            var department = await ResolveDepartmentAsync(actingOfficerId);
+
             var currentIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(currentStage);
             var laterStages = TradeLicence.Models.OfficerWorkflow.Stages.Skip(currentIndex + 1).ToList();
 
@@ -92,18 +95,22 @@ namespace TradeLicence.Services
             foreach (var stage in laterStages)
             {
                 var designation = TradeLicence.Models.OfficerWorkflow.StageToDesignation[stage];
-                var officersQuery = _sharedContext.Officers
-                    .Where(o => o.Designation == designation && !o.IsLocked);
-                if (_department != null)
-                    officersQuery = officersQuery.Where(o => o.Department == _department);
-
-                var officers = await officersQuery
+                var officers = await _sharedContext.Officers
+                    .Where(o => o.Designation == designation && !o.IsLocked && o.Department == department)
                     .OrderBy(o => o.FullName)
                     .ToListAsync();
 
                 result.AddRange(officers.Select(o => (stage, o)));
             }
             return result;
+        }
+
+        // The one department "Forward to officer" is limited to (null = officers with no department).
+        private async Task<string?> ResolveDepartmentAsync(int actingOfficerId)
+        {
+            if (_department != null) return _department;
+            var acting = await _sharedContext.Officers.FindAsync(actingOfficerId);
+            return acting?.Department;
         }
 
         public bool IsFinalStage(string currentStage) =>
@@ -172,8 +179,9 @@ namespace TradeLicence.Services
             if (expectedDesignation == null || officer.Designation != expectedDesignation)
                 return WorkflowActionResult.Fail("That officer doesn't match the selected stage.");
 
-            if (_department != null && !string.Equals(officer.Department, _department, StringComparison.OrdinalIgnoreCase))
-                return WorkflowActionResult.Fail($"That officer doesn't belong to the {_department} department.");
+            var department = await ResolveDepartmentAsync(actingOfficerId);
+            if (!string.Equals(officer.Department ?? "", department ?? "", StringComparison.OrdinalIgnoreCase))
+                return WorkflowActionResult.Fail("You can only forward to an officer of your own department.");
 
             var currentIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(application.CurrentStage);
             var targetIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(targetStage);

@@ -1,0 +1,19 @@
+﻿@*
+    Document preview popup for the Firms and Society pages (applicant AND officer side) - same
+    Bootstrap modal + iframe design as Trade Licence's #previewDocumentModal. Opened by
+    wwwroot/js/reg_js/registration_preview.js for any element with class "reg-view-doc" and a
+    data-doc-url attribute, so the user never leaves the page.
+*@
+<div class="modal fade" id="regDocModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="regDocTitle">Document Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="height:75vh; padding:0;">
+                <iframe id="regDocViewer" src="about:blank" style="width:100%; height:100%; border:none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>

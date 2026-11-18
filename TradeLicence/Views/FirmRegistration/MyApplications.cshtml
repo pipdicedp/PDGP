@@ -1,0 +1,217 @@
+﻿@model IEnumerable<TradeLicence.Models.FirmApplication>
+@{
+    ViewData["Title"] = "Application Status Tracking";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    var apps = Model?.ToList() ?? new List<TradeLicence.Models.FirmApplication>();
+    var payments = ViewBag.Payments as Dictionary<int, TradeLicence.Models.WorkflowPayment>
+                   ?? new Dictionary<int, TradeLicence.Models.WorkflowPayment>();
+    var stages = TradeLicence.Models.OfficerWorkflow.Stages;
+
+    // Same counting rule as Trade Licence's Status page: Status stays "Submitted" through every
+    // officer stage, so "not picked up yet" vs "being worked on" is told apart by CurrentStage.
+    int draftCount = apps.Count(a => a.Status == "Draft");
+    int submittedCount = apps.Count(a => a.Status == "Submitted" && a.CurrentStage == "Initial Scrutiny");
+    int progressCount = apps.Count(a => a.Status == "Submitted" && a.CurrentStage != "Initial Scrutiny");
+    int approvedCount = apps.Count(a => a.Status == "Approved");
+    int rejectedCount = apps.Count(a => a.Status == "Rejected" || a.Status == "ReturnedToApplicant");
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reg_css/registration.css" asp-append-version="true" />
+}
+
+<div class="dashboard-wrapper">
+
+    <div class="status-page-header">
+        Application Status Tracking
+    </div>
+
+    <div class="dashboard-body">
+
+        <partial name="_RegistrationStatusTabs" model="@("firms")" />
+
+        @if (TempData["Message"] != null)
+        {
+            <div class="reg-notice reg-notice-success">@TempData["Message"]</div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="reg-notice reg-notice-error">@TempData["Error"]</div>
+        }
+
+        <div class="page-title">
+            <h3>Your Applications</h3>
+            <p>Track every Registration of Firms application you have started or submitted.</p>
+        </div>
+
+        <div class="status-stats">
+            <div class="stat-card stat-card-draft">
+                <div class="stat-label">Draft</div>
+                <div class="stat-value">@draftCount</div>
+            </div>
+            <div class="stat-card stat-card-submitted">
+                <div class="stat-label">Submitted</div>
+                <div class="stat-value">@submittedCount</div>
+            </div>
+            <div class="stat-card stat-card-progress">
+                <div class="stat-label">In Progress</div>
+                <div class="stat-value">@progressCount</div>
+            </div>
+            <div class="stat-card stat-card-approved">
+                <div class="stat-label">Approved</div>
+                <div class="stat-value">@approvedCount</div>
+            </div>
+            <div class="stat-card stat-card-rejected">
+                <div class="stat-label">Rejected</div>
+                <div class="stat-value">@rejectedCount</div>
+            </div>
+        </div>
+
+        <div class="status-table-controls">
+            <div class="status-show-entries">
+                Show
+                <select id="statusPageSize">
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                entries
+            </div>
+            <div class="status-search">
+                Search: <input type="text" id="statusSearchBox" placeholder="Search applications..." />
+            </div>
+        </div>
+
+        @if (!apps.Any())
+        {
+            <p class="tl-note">You haven't started any applications yet.</p>
+        }
+        else
+        {
+            <div style="overflow-x:auto;">
+                <table class="tl-partner-table" id="statusTable">
+                    <thead>
+                        <tr>
+                            <th>Sl No.</th>
+                            <th>Application ID</th>
+                            <th>Firm Name</th>
+                            <th>Date of Application</th>
+                            <th>Current Status</th>
+                            <th>Progress</th>
+                            <th>Time Elapsed (Days)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int slNo = 1;
+                        }
+                        @foreach (var app in apps)
+                        {
+                            payments.TryGetValue(app.Id, out var payment);
+                            var paymentPending = app.Status == "Submitted" && app.PaymentStatus == "Pending";
+
+                            var statusClass = app.Status switch
+                            {
+                                "Draft" => "myapps-status-draft",
+                                "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "myapps-status-submitted" : "myapps-status-review",
+                                "ReturnedToApplicant" => "myapps-status-rejected",
+                                "Approved" => "myapps-status-approved",
+                                "Rejected" => "myapps-status-rejected",
+                                _ => "myapps-status-draft"
+                            };
+                            var statusText = app.Status switch
+                            {
+                                "Submitted" when paymentPending => $"Payment Pending — {app.CurrentStage}",
+                                "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "Submitted" : $"In Progress — {app.CurrentStage}",
+                                "ReturnedToApplicant" => "Returned for Correction",
+                                _ => app.Status
+                            };
+
+                            int stageIndex = Math.Max(0, TradeLicence.Models.OfficerWorkflow.StageIndex(app.CurrentStage));
+                            var daysElapsed = (DateTime.Now.Date - (app.CreatedDate ?? DateTime.Now).Date).Days;
+                            var appliedOn = app.SubmittedDate ?? app.CreatedDate;
+
+                            <tr>
+                                <td>@slNo</td>
+                                <td>@(app.ApplicationNumber ?? "—")</td>
+                                <td>@(string.IsNullOrEmpty(app.FirmName ?? app.ApplicantName) ? "—" : app.FirmName ?? app.ApplicantName)</td>
+                                <td>@(appliedOn?.ToString("dd-MM-yyyy") ?? "—")</td>
+                                <td><span class="myapps-status-badge @statusClass">@statusText</span></td>
+                                <td>
+                                    @if (app.Status == "Draft")
+                                    {
+                                        <span class="reg-progress-label">Not submitted</span>
+                                    }
+                                    else
+                                    {
+                                        <div class="reg-progress" title="@app.CurrentStage">
+                                            @for (int i = 0; i < stages.Length; i++)
+                                            {
+                                                var seg = app.Status == "Approved" || i < stageIndex ? "on"
+                                                    : i == stageIndex ? (app.Status == "Rejected" ? "bad" : "now")
+                                                    : "";
+                                                <span class="@seg"></span>
+                                            }
+                                        </div>
+                                        <div class="reg-progress-label">@(app.Status == "Approved" ? "Completed" : app.CurrentStage)</div>
+                                    }
+                                </td>
+                                <td>@daysElapsed</td>
+                                <td>
+                                    @if (app.Status == "Draft")
+                                    {
+                                        <a class="myapps-btn" href="@Url.Action("Edit", "FirmRegistration", new { id = app.Id })">Continue</a>
+                                    }
+                                    else if (app.Status == "ReturnedToApplicant")
+                                    {
+                                        <a class="myapps-btn" href="@Url.Action("Edit", "FirmRegistration", new { id = app.Id })">Correct &amp; Resubmit</a>
+                                    }
+                                    else if (paymentPending)
+                                    {
+                                        <form method="post" asp-action="PayNow" asp-controller="FirmRegistration" style="display:inline;">
+                                            <input type="hidden" name="id" value="@app.Id" />
+                                            <button type="button" class="myapps-btn btn-pay-now" style="background:#1D6E3E; border:none; cursor:pointer;">
+                                                <i class="fas fa-indian-rupee-sign"></i> Pay Now@(payment != null ? $" (₹{payment.TotalPaymentAmount:N2})" : "")
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("Preview", "FirmRegistration", new { id = app.Id })">View / Track</a>
+                                    }
+                                </td>
+                            </tr>
+                            slNo++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <div class="myapps-new-wrap">
+            <a class="myapps-new-btn" href="@Url.Action("Index", "FirmRegistration")">
+                <i class="fa-solid fa-plus"></i> New Application
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/tl_js/tl_status.js" asp-append-version="true"></script>
+    @if (TempData["SubmitSuccess"] != null)
+    {
+        <script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Application Submitted Successfully!',
+                text: @Html.Raw(Json.Serialize(TempData["SubmittedAppNumber"] != null ? "Your application number is " + TempData["SubmittedAppNumber"] + "." : "")),
+                confirmButtonColor: '#1a3a52'
+            });
+        </script>
+    }
+}

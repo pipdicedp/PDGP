@@ -21,11 +21,13 @@ namespace TradeLicence.Controllers
         private readonly IFileEncryptionService _encryption;
         private readonly WaterApplicationDbContext _waterContext;
         private readonly ElectricityApplicationDbContext _electricityContext;
+        private readonly FirmRegistrationDbContext _firmContext;
+        private readonly SocietyRegistrationDbContext _societyContext;
         private readonly ICafFormService _cafService;
         private readonly ICafDepartmentProvider _cafDepartments;
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
-        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext, ICafFormService cafService, ICafDepartmentProvider cafDepartments)
+        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext, ICafFormService cafService, ICafDepartmentProvider cafDepartments, FirmRegistrationDbContext firmContext, SocietyRegistrationDbContext societyContext)
         {
             _cafService = cafService;
             _cafDepartments = cafDepartments;
@@ -34,6 +36,8 @@ namespace TradeLicence.Controllers
             _encryption = encryption;
             _waterContext = waterContext;
             _electricityContext = electricityContext;
+            _firmContext = firmContext;
+            _societyContext = societyContext;
         }
 
         // The officer's own id is set as ClaimTypes.NameIdentifier at login
@@ -153,6 +157,52 @@ namespace TradeLicence.Controllers
                 return View("SharedQueue", electricityItems);
             }
 
+            // ---------------- Registration of Firms ----------------
+            if (RegistrationWorkflowConfig.IsFirmsOfficer(officer.Department))
+            {
+                var firmEngine = new WorkflowEngineService<FirmApplication>(_firmContext, _context, RegistrationWorkflowConfig.FirmServiceType);
+                var firmApps = await firmEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+                var firmItems = firmApps.Select(a => new OfficerQueueItem
+                {
+                    ApplicationId = a.ApplicationId,
+                    ServiceType = "Registration of Firms",
+                    DisplayName = a.FirmName ?? a.ApplicantName ?? "-",
+                    Contact = a.MobileNumber ?? "-",
+                    CurrentStage = a.CurrentStage,
+                    Status = a.Status,
+                    SubmittedDate = a.SubmittedDate ?? a.CreatedDate ?? DateTime.UtcNow,
+                    ViewUrl = Url.Action("ViewApplication", "FirmRegistrationOfficer", new { id = a.ApplicationId })!
+                }).ToList();
+
+                ViewBag.Designation = officer.Designation;
+                ViewBag.Department = officer.Department;
+                return View("SharedQueue", firmItems);
+            }
+
+            // ---------------- Registration / Renewal of Society ----------------
+            if (RegistrationWorkflowConfig.IsSocietyOfficer(officer.Department))
+            {
+                var societyEngine = new WorkflowEngineService<SocietyApplication>(_societyContext, _context, RegistrationWorkflowConfig.SocietyServiceType);
+                var societyApps = await societyEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+                var societyItems = societyApps.Select(a => new OfficerQueueItem
+                {
+                    ApplicationId = a.ApplicationId,
+                    ServiceType = a.ApplicationType == "Renewal" ? "Society Renewal" : "Society Registration",
+                    DisplayName = a.SocietyName ?? a.ApplicantName ?? "-",
+                    Contact = a.MobileNumber ?? "-",
+                    CurrentStage = a.CurrentStage,
+                    Status = a.Status,
+                    SubmittedDate = a.SubmittedDate ?? a.CreatedDate ?? DateTime.UtcNow,
+                    ViewUrl = Url.Action("ViewApplication", "SocietyRegistrationOfficer", new { id = a.ApplicationId })!
+                }).ToList();
+
+                ViewBag.Designation = officer.Designation;
+                ViewBag.Department = officer.Department;
+                return View("SharedQueue", societyItems);
+            }
+
             // Any other department CAF can be forwarded to (Town & Country Planning, Factory & Boiler,
             // Science & Technology, ...): their queue is the CAFs forwarded to them.
             var cafDepartmentNames = await _cafDepartments.GetForwardableDepartmentsAsync();
@@ -214,12 +264,17 @@ namespace TradeLicence.Controllers
             // One entry per (stage, officer) — a Manager appears once under
             // "Verification" and again under "Inspection", since the same
             // person can be the target of either stage.
+            // Only officers of the logged-in officer's OWN department are offered, so a Trade Licence
+            // application can't be forwarded into another department's officers (PPA, Revenue, ...).
+            var currentOfficer = await _context.Officers.FindAsync(GetCurrentOfficerId());
+            var myDepartment = currentOfficer?.Department;
+
             var forwardableByStage = new List<(string Stage, Officer Officer)>();
             foreach (var stage in laterStages)
             {
                 var designation = OfficerWorkflow.StageToDesignation[stage];
                 var officers = await _context.Officers
-                    .Where(o => o.Designation == designation && !o.IsLocked)
+                    .Where(o => o.Designation == designation && !o.IsLocked && o.Department == myDepartment)
                     .OrderBy(o => o.FullName)
                     .ToListAsync();
 
@@ -466,6 +521,11 @@ namespace TradeLicence.Controllers
             var officer = await _context.Officers.FindAsync(officerId);
             if (officer == null)
                 return BadRequest(new { error = "Please choose a valid officer to forward to." });
+
+            // Server-side twin of the department filter in ViewApplication.
+            var me = await _context.Officers.FindAsync(GetCurrentOfficerId());
+            if (me == null || !string.Equals(me.Department ?? "", officer.Department ?? "", StringComparison.OrdinalIgnoreCase))
+                return BadRequest(new { error = "You can only forward to an officer of your own department." });
 
             var expectedDesignation = OfficerWorkflow.StageToDesignation.GetValueOrDefault(targetStage);
             if (expectedDesignation == null || officer.Designation != expectedDesignation)

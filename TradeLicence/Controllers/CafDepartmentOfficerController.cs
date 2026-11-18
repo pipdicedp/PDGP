@@ -80,7 +80,7 @@ namespace TradeLicence.Controllers
             var engine = CreateEngine(app.Department);
             var currentStage = app.CurrentStage;
 
-            var forwardableByStage = await engine.GetForwardableOfficersAsync(currentStage);
+            var forwardableByStage = await engine.GetForwardableOfficersAsync(currentStage, officer.OfficerId);
             var (history, officerNames, revertTarget) = await engine.GetHistoryContextAsync(id, currentStage);
             var (stageDocuments, stageDocOfficerNames) = await engine.GetStageDocumentsAsync(id);
 

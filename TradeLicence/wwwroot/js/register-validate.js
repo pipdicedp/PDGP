@@ -12,7 +12,8 @@
     // (This script runs before jQuery parses the page, so removing data-val is enough.)
     form.querySelectorAll('[data-val]').forEach(function (i) { i.removeAttribute('data-val'); });
 
-    const $ = function (id) { return document.getElementById(id); };
+    //const $ = function (id) { return document.getElementById(id); };
+    const $ = function (id) { return form.querySelector('#' + id); };
     const PAN_TYPES = {
         P: 'Individual', C: 'Company', H: 'Hindu Undivided Family', F: 'Firm / LLP',
         A: 'Association of Persons', T: 'Trust', B: 'Body of Individuals',

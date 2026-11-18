@@ -244,7 +244,8 @@ if (stageUploadForm) {
 
                 var previewBtn = document.getElementById('stageDocPreviewBtn');
                 if (previewBtn) {
-                    previewBtn.dataset.previewUrl = '/Officer/PreviewStageDocument?docId=' + data.docId;
+                    // Same controller as the upload form (Officer, WaterOfficer, ElectricityOfficer, FirmRegistrationOfficer, ...)
+                    previewBtn.dataset.previewUrl = stageUploadForm.action.replace(/UploadStageDocument.*$/i, 'PreviewStageDocument') + '?docId=' + data.docId;
                     previewBtn.dataset.contentType = data.contentType;
                     previewBtn.dataset.fileName = data.fileName;
                     previewBtn.style.display = '';
