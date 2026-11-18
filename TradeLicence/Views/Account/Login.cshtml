@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
 }
 
-<div class="tl-lx-page">
+<div class="tl-lx-page tl-lx-pro">
     <div class="tl-lx2-shell">
 
         <!-- ===== LEFT: photo hero + services ===== -->
@@ -23,6 +23,11 @@
                 </div>
             </div>
 
+            <div class="tl-lxp-masthead">
+                <span class="tl-lxp-masthead-rule"></span>
+                <span>Investor Facilitation &middot; Single Window</span>
+            </div>
+
             <div class="tl-lx2-hero">
                 <span class="tl-lx2-eyebrow"><i class="fa-solid fa-landmark"></i> Investor Portal</span>
                 <h1 class="tl-lx2-hero-title">Invest in <em>Puducherry</em></h1>
@@ -32,6 +37,14 @@
                     <span><i class="fa-solid fa-circle-check"></i> Single Window System</span>
                     <span><i class="fa-solid fa-circle-check"></i> Online Application &amp; Status Tracking</span>
                     <span><i class="fa-solid fa-circle-check"></i> Download Final Certificate</span>
+                </div>
+
+                <div class="tl-lxp-journey" aria-label="How the investor portal works">
+                    <div class="tl-lxp-jstep"><span class="tl-lxp-jnum">01</span><span class="tl-lxp-jlabel">Create Account</span></div>
+                    <span class="tl-lxp-jline" aria-hidden="true"></span>
+                    <div class="tl-lxp-jstep"><span class="tl-lxp-jnum">02</span><span class="tl-lxp-jlabel">Apply Online</span></div>
+                    <span class="tl-lxp-jline" aria-hidden="true"></span>
+                    <div class="tl-lxp-jstep"><span class="tl-lxp-jnum">03</span><span class="tl-lxp-jlabel">Track &amp; Approve</span></div>
                 </div>
 
                 <div class="tl-lx2-services">
@@ -47,6 +60,11 @@
                 </div>
             </div>
 
+            <div class="tl-lxp-place">
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                <span>White Town <b>&middot;</b> Auroville <b>&middot;</b> Coromandel Coast</span>
+            </div>
+
             <div class="tl-lx2-footline">
                 <span><i class="fa-solid fa-shield-halved"></i> Secured by NIC</span>
                 <span><i class="fa-solid fa-lock"></i> HTTPS Encrypted</span>
@@ -56,8 +74,8 @@
             <div class="tl-lx2-landmark">
                 <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
                 <span>
-                    <span class="tl-lx2-landmark-name">Matrimandir &middot; Auroville</span>
-                    <span class="tl-lx2-landmark-note">The golden meditation centre at the heart of Auroville, an international township near Puducherry.</span>
+                    <span class="tl-lx2-landmark-name">Auroville &middot; Aerial View</span>
+                    <span class="tl-lx2-landmark-note">An aerial view of Auroville, the international township near Puducherry.</span>
                 </span>
             </div>
         </aside>
@@ -65,9 +83,10 @@
         <!-- ===== RIGHT: login card ===== -->
         <main class="tl-lx2-form-side">
             <div class="tl-lx2-card">
-                <div class="tl-lx2-signin-label">Secure Sign-in</div>
-                <h1 class="tl-lx2-heading">Welcome back</h1>
-                <p class="tl-lx2-sub">Sign in with your investor portal credentials to continue.</p>
+                <div class="tl-lxp-step"><span class="tl-lxp-step-dot"></span><span>Investor Sign-in</span><span class="tl-lxp-step-count">01 / 02</span></div>
+                <div class="tl-lx2-signin-label">Puducherry Investor Portal</div>
+                <h1 class="tl-lx2-heading"><i class="fa-solid fa-fingerprint tl-lxp-heading-icon" aria-hidden="true"></i> Welcome back</h1>
+                <p class="tl-lx2-sub">Sign in to manage your applications, approvals and licences in one place.</p>
 
                 @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
                 {
@@ -108,6 +127,7 @@
                             <img id="captchaImg" src="@Url.Action("CaptchaImage", "Account")" alt="Captcha code" class="tl-lx2-captcha-img" />
                             <button type="button" id="refreshCaptcha" class="tl-lx2-captcha-refresh" title="Get a new code" aria-label="Refresh captcha"><i class="fa-solid fa-rotate-right"></i></button>
                         </div>
+                        <div class="tl-lxp-captcha-hint"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Can't read it? Click refresh for a new code.</div>
                         <div class="tl-lx2-control">
                             <i class="fa-solid fa-shield-halved"></i>
                             <input asp-for="CaptchaInput" class="tl-lx2-input" placeholder="Enter the code shown above" autocomplete="off" maxlength="6" />
@@ -128,6 +148,17 @@
                     </a>
 
                     <p class="tl-lx2-secure"><i class="fa-solid fa-lock"></i> Protected by captcha verification</p>
+
+                    <div class="tl-lxp-trust">
+                        <span><i class="fa-solid fa-lock" aria-hidden="true"></i> Encrypted</span>
+                        <span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> NIC Secured</span>
+                        <span><i class="fa-solid fa-headset" aria-hidden="true"></i> 24&times;7 Helpdesk</span>
+                    </div>
+
+                    <div class="tl-lxp-official">
+                        Department official?
+                        <a asp-controller="Account" asp-action="OfficerLogin">Officer sign-in <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                    </div>
                 </form>
             </div>
         </main>

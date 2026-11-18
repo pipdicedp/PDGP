@@ -3,21 +3,37 @@
 Backdrop photography used by the login pages. Files live in `wwwroot/Images/`
 and are referenced from `wwwroot/css/login.css`.
 
-The two login pages now carry **different** photographs, so each image does a
-job rather than being generic decoration:
+Both login pages now share one wide Auroville aerial photograph. It is
+licence-clean and large enough to be downscaled (never upscaled) by `cover`:
 
 | Page | File | Subject | Licence |
 | --- | --- | --- | --- |
-| Citizen login (`Views/Account/Login.cshtml`) | `Matrimandir_Auroville.jpg` | Matrimandir | CC0 1.0 |
-| Officer login (`Views/Account/OfficerLogin.cshtml`) | `Auroville_Town_Hall.jpg` | Auroville Town Hall | Public domain |
+| Citizen login (`Views/Account/Login.cshtml`) | `Auroville_Drone_Hero.jpg` | Auroville, aerial view | CC0 1.0 |
+| Officer login (`Views/Account/OfficerLogin.cshtml`) | `Auroville_Drone_Hero.jpg` | Auroville, aerial view | CC0 1.0 |
 
-Both are licence-clean: **neither imposes an attribution duty on the
-department**, and both are large enough to be downscaled (never upscaled) by
-`cover` at every viewport, so they stay sharp.
+The photograph imposes **no attribution duty on the department**. The earlier
+`Matrimandir_Auroville.jpg` and `Auroville_Town_Hall.jpg` are retained below
+as fallbacks.
 
 ---
 
-## Matrimandir_Auroville.jpg  ← current backdrop, citizen login
+## Auroville_Drone_Hero.jpg  ← current backdrop, both login pages
+
+- **Subject:** Aerial (drone) view of Auroville, near Puducherry, India
+- **Source:** Wikimedia Commons — <https://commons.wikimedia.org/wiki/File:The_drone_view_of_Auroville.jpg>
+- **Author:** KalkiRaj
+- **Licence:** **CC0 1.0 Universal (Public Domain Dedication)** —
+  <https://creativecommons.org/publicdomain/zero/1.0/>
+  → **no attribution required.**
+- **Resolution:** 1904x929 JPEG — a wide 2.05:1 frame, suited to a full-bleed hero.
+- **Modifications:** none; the original CC0 file is served unchanged.
+- Referenced by `.tl-lx-pro .tl-lx2-shell`,
+  `.tl-lx-page.tl-lx-officer .tl-lx2-shell` and their `::before` / stacked
+  `.tl-lx2-photo` counterparts in `wwwroot/css/login.css`.
+
+---
+
+## Matrimandir_Auroville.jpg  (retained — earlier citizen login backdrop)
 
 - **Subject:** Matrimandir, Auroville, near Puducherry, India
 - **Source:** Wikimedia Commons — <https://commons.wikimedia.org/wiki/File:Auroville.jpg>
@@ -33,7 +49,7 @@ department**, and both are large enough to be downscaled (never upscaled) by
 
 ---
 
-## Auroville_Town_Hall.jpg  ← current backdrop, officer login
+## Auroville_Town_Hall.jpg  (retained — earlier officer login backdrop)
 
 - **Subject:** Auroville Town Hall, near Puducherry, India
 - **Source:** Wikimedia Commons — <https://commons.wikimedia.org/wiki/File:Town_Hall_of_Auroville.jpg>

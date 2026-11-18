@@ -3068,3 +3068,502 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 .tl-lx2-crest-dept {
 	text-shadow: 0 1px 3px rgba(2,10,20,0.78), 0 2px 14px rgba(2,10,20,0.68);
 }
+
+/* =====================================================================
+   INVESTOR LOGIN 2026 — "Puducherry Invest" refinement
+   ---------------------------------------------------------------------
+   APPENDED ONLY: every rule below is scoped to .tl-lx-pro, a hook added
+   solely to Views/Account/Login.cshtml. The officer login page and all
+   previously recovered baselines are left exactly as they were.
+
+   Design intent: a calm, civic-precise shell (navy / warm gold / ivory)
+   with three investor-specific signals on the left - a masthead, a
+   three-step journey and a place line - and a focused, elevated sign-in
+   card on the right. No fabricated statistics or invented certifications.
+   ===================================================================== */
+
+/* ---------- 1. shell: a finer keyline and a softer scrim ---------- */
+.tl-lx-pro .tl-lx2-shell {
+	min-height: 700px;
+	border-radius: 22px;
+	box-shadow:
+		0 0 0 1px rgba(232,185,35,0.30),
+		0 34px 84px rgba(2,10,20,0.55);
+}
+
+/* ---------- 2. wide-layout scrim + a quiet colonial-arch motif ----------
+   Scoped to the two-column layout only: the stacked layout turns the shell
+   scrim off and gives .tl-lx2-photo::before its own scrim, so layering these
+   there would double-darken the photograph. */
+@media (min-width: 1001px) {
+	.tl-lx-pro .tl-lx2-shell::after {
+		background:
+			radial-gradient(115% 95% at 10% 4%, rgba(232,185,35,0.13) 0%, transparent 44%),
+			radial-gradient(100% 90% at 92% 96%, rgba(8,42,72,0.52) 0%, transparent 62%),
+			linear-gradient(96deg, rgba(4,14,26,0.74) 0%, rgba(6,22,38,0.32) 45%, rgba(5,16,28,0.22) 66%, rgba(4,13,23,0.68) 100%);
+		box-shadow: inset 0 0 120px 18px rgba(2,8,15,0.30);
+	}
+
+	.tl-lx-pro .tl-lx2-photo::before {
+		content: "";
+		position: absolute;
+		top: -86px;
+		right: -70px;
+		width: 300px;
+		height: 300px;
+		border: 1px solid rgba(232,185,35,0.20);
+		border-radius: 50%;
+		box-shadow:
+			0 0 0 28px rgba(232,185,35,0.035),
+			0 0 0 58px rgba(232,185,35,0.025),
+			0 0 0 90px rgba(232,185,35,0.018);
+		pointer-events: none;
+	}
+}
+
+/* ---------- 3. masthead: "Investor Facilitation / Single Window" ---------- */
+.tl-lxp-masthead {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 20px;
+	color: #E8D6A0;
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	text-shadow: 0 1px 4px rgba(2,10,20,0.8);
+}
+
+.tl-lxp-masthead-rule {
+	display: block;
+	width: 26px;
+	height: 1px;
+	background: #E8B923;
+}
+
+.tl-lx-pro .tl-lx2-hero {
+	margin-top: 18px;
+}
+
+/* ---------- 4. hero display type: larger, with a gold underline ---------- */
+.tl-lx-pro .tl-lx2-hero-title {
+	font-size: clamp(2rem, 3.1vw, 2.9rem);
+	line-height: 1.1;
+	letter-spacing: -0.012em;
+	margin: 14px 0 12px;
+}
+
+.tl-lx-pro .tl-lx2-hero-title em {
+	position: relative;
+	white-space: nowrap;
+}
+
+.tl-lx-pro .tl-lx2-hero-title em::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -5px;
+	height: 2px;
+	border-radius: 2px;
+	background: linear-gradient(90deg, #E8B923, rgba(232,185,35,0.10));
+}
+
+.tl-lx-pro .tl-lx2-hero-text {
+	font-size: 0.94rem;
+	line-height: 1.7;
+	max-width: 540px;
+}
+
+/* ---------- 5. the investor journey: 3 numbered steps ---------- */
+.tl-lxp-journey {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 2px 0 18px;
+	max-width: 520px;
+}
+
+.tl-lxp-jstep {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	flex: 0 0 auto;
+	text-align: center;
+}
+
+.tl-lxp-jnum {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	border: 1px solid rgba(232,185,35,0.62);
+	background: rgba(232,185,35,0.12);
+	color: #F3D27A;
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 0.68rem;
+	font-weight: 500;
+	box-shadow: 0 0 0 4px rgba(232,185,35,0.05);
+}
+
+.tl-lxp-jlabel {
+	color: #DCE7F0;
+	font-size: 0.66rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	text-shadow: 0 1px 4px rgba(2,10,20,0.85);
+}
+
+.tl-lxp-jline {
+	flex: 1 1 auto;
+	height: 1px;
+	margin-top: 15px;
+	background: linear-gradient(90deg, rgba(232,185,35,0.45), rgba(232,185,35,0.12));
+}
+
+/* ---------- 6. place line, above the existing landmark placard ---------- */
+.tl-lxp-place {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 16px;
+	padding: 6px 12px;
+	border: 1px solid rgba(255,255,255,0.16);
+	border-radius: 999px;
+	background: rgba(255,255,255,0.06);
+	color: #E6EEF5;
+	font-size: 0.68rem;
+	letter-spacing: 0.06em;
+	text-shadow: 0 1px 3px rgba(2,10,20,0.8);
+}
+
+.tl-lxp-place i { color: #E8B923; }
+.tl-lxp-place b { color: rgba(232,185,35,0.75); font-weight: 400; }
+.tl-lx-pro .tl-lx2-landmark { margin-top: 10px; }
+
+/* ---------- 7. sign-in card: ivory glass with a precise gold edge ---------- */
+.tl-lx-pro .tl-lx2-card {
+	max-width: 442px;
+	padding: 28px 34px 26px;
+	border: 1px solid rgba(212,160,23,0.38);
+	border-top: 3px solid #D4A017;
+	border-radius: 20px;
+	background: linear-gradient(180deg, #FFFDF7 0%, #FFFFFF 60%, #FCFDFE 100%);
+	box-shadow:
+		0 0 0 6px rgba(255,255,255,0.05),
+		0 32px 74px rgba(2,10,20,0.56);
+}
+
+/* small warm corner glow */
+.tl-lx-pro .tl-lx2-card::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 110px;
+	height: 110px;
+	border-radius: 0 20px 0 100%;
+	background: radial-gradient(circle at 100% 0, rgba(212,160,23,0.16), transparent 72%);
+	pointer-events: none;
+}
+
+.tl-lxp-step {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 14px;
+	padding: 5px 11px;
+	border: 1px solid #E4E9EF;
+	border-radius: 999px;
+	background: #F6F9FC;
+	color: #41546a;
+	font-size: 0.67rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.tl-lxp-step-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #D4A017;
+	box-shadow: 0 0 0 3px rgba(212,160,23,0.16);
+}
+
+.tl-lxp-step-count {
+	font-family: 'IBM Plex Mono', monospace;
+	color: #94A3B8;
+	letter-spacing: 0;
+}
+
+.tl-lx-pro .tl-lx2-signin-label {
+	display: inline-block;
+	color: #A8760A;
+	letter-spacing: 0.15em;
+}
+
+.tl-lx-pro .tl-lx2-heading {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	font-size: 1.85rem;
+	letter-spacing: -0.01em;
+	margin: 8px 0 7px;
+}
+
+.tl-lxp-heading-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	flex: 0 0 auto;
+	border-radius: 10px;
+	background: linear-gradient(135deg, #12304A, #1E4F70);
+	color: #F3D27A;
+	font-size: 0.86rem;
+	box-shadow: 0 6px 14px rgba(18,48,74,0.22);
+}
+
+.tl-lx-pro .tl-lx2-sub {
+	margin-bottom: 20px;
+}
+
+/* ---------- 8. fields: icon tab, calm focus, clearer labels ---------- */
+.tl-lx-pro .tl-lx2-field label {
+	color: #34495E;
+	font-size: 0.73rem;
+	font-weight: 700;
+	letter-spacing: 0.035em;
+	text-transform: uppercase;
+}
+
+.tl-lx-pro .tl-lx2-control > i {
+	left: 0;
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-right: 1px solid #E2E8F0;
+	border-radius: 10px 0 0 10px;
+	background: linear-gradient(135deg, #F5F8FB, #EDF3F8);
+	color: #1E4F70;
+	font-size: 0.9rem;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-input {
+	height: 44px;
+	border-color: #DCE4EC;
+	background: #FFFFFF;
+	border-radius: 0 10px 10px 0;
+	padding: 10px 44px 10px 55px;
+	box-shadow: inset 0 1px 2px rgba(15,36,56,0.035);
+	font-size: 0.88rem;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-input:focus {
+	border-color: #C28F0C;
+	background: #FFFDF7;
+	box-shadow: 0 0 0 4px rgba(212,160,23,0.17);
+}
+
+.tl-lx-pro .tl-lx2-eye {
+	right: 4px;
+	color: #64748B;
+}
+
+/* ---------- 9. captcha: framed image, helper line ---------- */
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-row {
+	gap: 10px;
+	margin-bottom: 6px;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-img,
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-refresh {
+	height: 46px;
+	border-radius: 10px;
+	border-color: #D8E0E8;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-img {
+	flex: 1 1 auto;
+	max-width: 230px;
+	object-fit: cover;
+	box-shadow: 0 4px 10px rgba(15,36,56,0.08);
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-refresh {
+	width: 46px;
+	flex: 0 0 46px;
+	background: #F8FAFC;
+	color: #1E4F70;
+}
+
+.tl-lxp-captcha-hint {
+	color: #8A98A8;
+	font-size: 0.69rem;
+	margin: 0 0 8px;
+}
+
+.tl-lxp-captcha-hint i { color: #B07F0A; margin-right: 4px; }
+
+/* ---------- 10. submit: gold bar with a light sweep ---------- */
+.tl-lx-pro .tl-lx2-submit {
+	position: relative;
+	overflow: hidden;
+	height: 46px;
+	margin-top: 8px;
+	border-radius: 10px;
+	background: linear-gradient(135deg, #F2CB55 0%, #D4A017 55%, #B8860A 100%);
+	color: #0E2A40;
+	font-size: 0.91rem;
+	letter-spacing: 0.045em;
+	text-transform: uppercase;
+	box-shadow: 0 12px 26px rgba(3,12,22,0.26), inset 0 1px 0 rgba(255,255,255,0.55);
+}
+
+.tl-lx-pro .tl-lx2-submit::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	transform: translateX(-125%);
+	background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.42) 50%, transparent 80%);
+	transition: transform 0.65s ease;
+}
+
+.tl-lx-pro .tl-lx2-submit:hover::after { transform: translateX(125%); }
+.tl-lx-pro .tl-lx2-submit i { transition: transform 0.2s ease; }
+.tl-lx-pro .tl-lx2-submit:hover i { transform: translateX(4px); }
+
+/* ---------- 11. secondary actions and trust footer ---------- */
+.tl-lx-pro .tl-lx2-divider { margin: 17px 0 12px; }
+.tl-lx-pro .tl-lx2-register {
+	height: 44px;
+	border-radius: 10px;
+	border-color: #1E4F70;
+	background: #F7FAFC;
+}
+.tl-lx-pro .tl-lx2-secure { margin-top: 15px; }
+
+.tl-lxp-trust {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 6px;
+	margin-top: 14px;
+	padding-top: 13px;
+	border-top: 1px solid #EDF1F5;
+}
+
+.tl-lxp-trust span {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 9px;
+	border-radius: 999px;
+	background: #F2F7F4;
+	color: #41704F;
+	font-size: 0.65rem;
+	font-weight: 600;
+}
+
+.tl-lxp-trust i { color: #2E7D46; }
+
+.tl-lxp-official {
+	margin-top: 14px;
+	text-align: center;
+	color: #8A98A8;
+	font-size: 0.7rem;
+}
+
+.tl-lxp-official a {
+	color: #1E4F70;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.tl-lxp-official a:hover { text-decoration: underline; }
+.tl-lxp-official i { font-size: 0.62rem; margin-left: 2px; }
+
+/* ---------- 12. stacked layout and small screens ---------- */
+@media (max-width: 1000px) {
+	.tl-lx-pro .tl-lx2-shell { min-height: 0; }
+	.tl-lx-pro .tl-lx2-card { max-width: 460px; }
+	.tl-lx-pro .tl-lx2-hero-title { font-size: clamp(1.8rem, 5vw, 2.5rem); }
+}
+
+@media (max-width: 520px) {
+	.tl-lx-pro .tl-lx2-card { padding: 24px 20px 22px; }
+	.tl-lx-pro .tl-lx2-heading { font-size: 1.6rem; }
+	.tl-lxp-journey { gap: 6px; }
+	.tl-lxp-jnum { width: 26px; height: 26px; font-size: 0.6rem; }
+	.tl-lxp-jlabel { font-size: 0.6rem; }
+	.tl-lxp-jline { margin-top: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx-pro .tl-lx2-submit::after { transition: none; }
+}
+
+/* =====================================================================
+   SHARED AUROVILLE HERO + BOLD BLACK INPUT TEXT
+   ---------------------------------------------------------------------
+   Appended only. The CC0 Auroville aerial photograph is used by BOTH
+   login pages. User Name, Password and Captcha values are always typed
+   in bold black text on a light field, on the citizen AND official page.
+   ===================================================================== */
+
+/* ---------- 1. bold black text for all three fields, both pages ---------- */
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input {
+	background: #FFFFFF;
+	color: #000000;
+	-webkit-text-fill-color: #000000;
+	caret-color: #000000;
+	font-weight: 700;
+	border-color: #C9D6E2;
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input:focus {
+	border-color: #C28F0C;
+	box-shadow: 0 0 0 4px rgba(212,160,23,0.18);
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input::placeholder {
+	color: #8A98A8;
+	-webkit-text-fill-color: #8A98A8;
+	font-weight: 500;
+	opacity: 1;
+}
+
+/* The officer card keeps its gold focus ring on the light field. */
+.tl-lx-page.tl-lx-officer .tl-lx2-card .tl-lx2-field input.tl-lx2-input:focus {
+	border-color: #E8B923;
+	box-shadow: 0 0 0 4px rgba(232,185,35,0.22);
+}
+
+/* ---------- 2. one Auroville hero for both login pages ---------- */
+.tl-lx-pro .tl-lx2-shell,
+.tl-lx-page.tl-lx-officer .tl-lx2-shell {
+	background-image: url('../Images/Auroville_Drone_Hero.jpg');
+}
+
+@media (min-width: 1001px) {
+	.tl-lx-pro .tl-lx2-shell::before,
+	.tl-lx-page.tl-lx-officer .tl-lx2-shell::before {
+		background-image: url('../Images/Auroville_Drone_Hero.jpg');
+	}
+}
+
+@media (max-width: 1000px) {
+	.tl-lx-pro .tl-lx2-photo,
+	.tl-lx-page.tl-lx-officer .tl-lx2-photo {
+		background-image: url('../Images/Auroville_Drone_Hero.jpg');
+	}
+}
