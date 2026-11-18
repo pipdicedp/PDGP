@@ -1340,3 +1340,32 @@
 .caf-doc-missing {
     color: #6b7280;
 }
+
+
+/* ---------- Approved CAF: certificate download ---------- */
+.caf-st-cert {
+    margin: 14px 0;
+    padding: 14px 16px;
+    background: #f3faf5;
+    border: 1px solid #cfe8d6;
+    border-radius: 8px;
+}
+
+.caf-st-cert-text {
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+    color: #1a3a52;
+}
+
+.caf-st-cert-done {
+    margin: 0;
+    color: #1D6E3E;
+    font-weight: 600;
+}
+
+.caf-st-cert-no {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #6b7686;
+}

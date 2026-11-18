@@ -1,0 +1,119 @@
+﻿@model TradeLicence.Models.FirmApplication
+@*
+    Read-only "Registration of Firms" details, used by the citizen's Preview page AND the officer's
+    ViewApplication page. The caller sets:
+      ViewBag.DocController / ViewBag.DocAction   -- who serves a document (takes ?documentId=)
+      ViewBag.DocNames (Dictionary<int,string>)   -- optional, original file names
+*@
+@{
+    var docController = (string)ViewBag.DocController;
+    var docAction = (string)ViewBag.DocAction;
+    var docNames = ViewBag.DocNames as Dictionary<int, string> ?? new Dictionary<int, string>();
+
+    Func<string, string?, Microsoft.AspNetCore.Html.IHtmlContent> Field = (label, value) =>
+        new Microsoft.AspNetCore.Html.HtmlString(
+            "<div class=\"reg-field\"><span class=\"reg-field-label\">" + System.Net.WebUtility.HtmlEncode(label) +
+            "</span><span class=\"reg-field-value\">" +
+            System.Net.WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(value) ? "-" : value) + "</span></div>");
+
+    string DocUrl(int? id) => Url.Action(docAction, docController, new { documentId = id })!;
+    string DocFile(int? id) => id.HasValue && docNames.TryGetValue(id.Value, out var n) ? n : "";
+
+    var documents = new (string Label, int? Id)[]
+    {
+        ("Form-I (Indian Partnership Act, 1932)", Model.FormIDocumentId),
+        ("Partnership Deed", Model.PartnershipDeedDocumentId),
+        ("Rental Agreement / Utility Bill (proof of address)", Model.AddressProofDocumentId)
+    };
+}
+
+<fieldset class="tl-section">
+    <legend><i class="fa-solid fa-user"></i> Applicant Details</legend>
+    <div class="reg-details-grid">
+        @Field("Applicant Name", Model.ApplicantName)
+        @Field("Applicant Address", Model.ApplicantAddress)
+        @Field("Mobile No.", Model.MobileNumber)
+        @Field("Email Id", Model.Email)
+    </div>
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend><i class="fa-solid fa-building"></i> Firm Details</legend>
+    <div class="reg-details-grid">
+        @Field("Proposed Name of the Firm", Model.ProposedFirmName)
+        @Field("Firm Name", Model.FirmName)
+        @Field("Principal Place of Business", Model.PrincipalPlace)
+        @Field("Other Place", Model.OtherPlace)
+        @Field("Station", Model.Station)
+    </div>
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend><i class="fa-solid fa-people-group"></i> Details of Partners</legend>
+    <div class="reg-table-wrap">
+        <table class="reg-people-table">
+            <thead>
+                <tr>
+                    <th>Sl.No.</th>
+                    <th>Name of Partner</th>
+                    <th>Date of Joining</th>
+                    <th>Permanent Address</th>
+                    <th>ID Proof</th>
+                    <th>Signature</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int sl = 1;
+                }
+                @foreach (var p in Model.Partners.OrderBy(x => x.Id))
+                {
+                    <tr>
+                        <td>@(sl++)</td>
+                        <td>@p.Name</td>
+                        <td>@(p.DateOfJoining?.ToString("dd-MM-yyyy") ?? "-")</td>
+                        <td>@p.PermanentAddress</td>
+                        <td>@if (p.IdProofDocumentId.HasValue) {
+                            <button type="button" class="reg-btn-view reg-view-doc" data-doc-url="@DocUrl(p.IdProofDocumentId)" data-doc-title="Document Preview"><i class="fas fa-eye"></i> View</button>
+                        } else
+                        {
+
+                            <text>-</text>
+                        }
+                    </td>
+                    <td>@if (p.SignatureDocumentId.HasValue) {
+                        <button type="button" class="reg-btn-view reg-view-doc" data-doc-url="@DocUrl(p.SignatureDocumentId)" data-doc-title="Document Preview"><i class="fas fa-eye"></i> View</button>
+                    } else
+                    {
+
+                        <text>-</text>
+                    }
+                </td>
+            </tr>
+        }
+        @if (!Model.Partners.Any())
+        {
+            <tr><td colspan="6" class="reg-empty">No partners added.</td></tr>
+        }
+    </tbody>
+</table>
+</div>
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend><i class="fa-solid fa-paperclip"></i> Documents Submitted</legend>
+    @foreach (var d in documents)
+    {
+        <div class="reg-doc-row">
+            <span class="reg-doc-name">@d.Label <span class="reg-doc-file">@DocFile(d.Id)</span></span>
+            @if (d.Id.HasValue)
+            {
+                <button type="button" class="reg-btn-view reg-view-doc" data-doc-url="@DocUrl(d.Id)" data-doc-title="Document Preview"><i class="fas fa-eye"></i> View</button>
+            }
+            else
+            {
+                <span class="reg-hint">Not uploaded</span>
+            }
+        </div>
+    }
+</fieldset>

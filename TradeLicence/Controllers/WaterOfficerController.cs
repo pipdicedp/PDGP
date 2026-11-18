@@ -89,7 +89,7 @@ namespace WaterConnection.Controllers
 
             var currentStage = application.CurrentStage;
 
-            var forwardableByStage = await _engine.GetForwardableOfficersAsync(currentStage);
+            var forwardableByStage = await _engine.GetForwardableOfficersAsync(currentStage, officer.OfficerId);
             var (history, officerNames, revertTarget) = await _engine.GetHistoryContextAsync(id, currentStage);
             var (stageDocuments, stageDocOfficerNames) = await _engine.GetStageDocumentsAsync(id);
             var payment = await _engine.GetPaymentAsync(id);

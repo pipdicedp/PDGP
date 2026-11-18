@@ -33,12 +33,19 @@ builder.Services.AddScoped<IFileEncryptionService, FileEncryptionService>();
 builder.Services.AddScoped<TradeLicence.Interfaces.ICafFormService, TradeLicence.Services.CafFormService>();
 builder.Services.AddScoped<TradeLicence.Repositories.ApplicationRepository>();
 builder.Services.AddScoped<ICafDepartmentProvider, StaticCafDepartmentProvider>();
+// CAF certificate template - swap this one line when the final certificate format is ready
+builder.Services.AddSingleton<TradeLicence.Interfaces.ICafCertificateGenerator, TradeLicence.Services.TradeLicenceStyleCafCertificateGenerator>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<WaterApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<ElectricityApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Registration of Firms + Registration / Renewal of Society
+builder.Services.AddDbContext<FirmRegistrationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<SocietyRegistrationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddDistributedMemoryCache();   // required by session
