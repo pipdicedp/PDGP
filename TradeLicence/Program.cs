@@ -31,14 +31,8 @@ builder.Services.AddScoped<ITradeLicenceRepository, TradeLicenceRepository>();
 builder.Services.AddScoped<ITradeLicenceService, TradeLicenceService>();
 builder.Services.AddScoped<IFileEncryptionService, FileEncryptionService>();
 builder.Services.AddScoped<TradeLicence.Interfaces.ICafFormService, TradeLicence.Services.CafFormService>();
-builder.Services.AddScoped<TradeLicence.Interfaces.IFireFormService, TradeLicence.Services.FireFormService>();
-builder.Services.AddScoped<TradeLicence.Interfaces.IFireNocPdfService, TradeLicence.Services.FireNocPdfService>();
 builder.Services.AddScoped<TradeLicence.Repositories.ApplicationRepository>();
 builder.Services.AddScoped<ICafDepartmentProvider, StaticCafDepartmentProvider>();
-// Shared officer "register" (all applications of an officer's department +
-// status stats) — used by the officer dashboard, the nav-menu pages
-// (All/Assigned/Forwarded/History/...) and the Reports pages.
-builder.Services.AddScoped<TradeLicence.Services.IOfficerRegisterService, TradeLicence.Services.OfficerRegisterService>();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

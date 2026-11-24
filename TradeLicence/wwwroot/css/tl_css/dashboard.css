@@ -677,3 +677,38 @@ body {
     font-style: italic;
     margin-top: 4px;
 }
+
+/* =====================================
+   AUROVILLE HD BANNER — citizen dashboard
+   The 3200x1800 Matrimandir photo (also used on the citizen login) sits
+   behind the existing banner title/search. The navy scrim keeps the white
+   copy readable; the gold hairline matches the login card accent.
+   Scoped to .dashboard-banner-photo so the status page, which shares
+   .dashboard-banner, keeps its plain navy banner.
+   ===================================== */
+.dashboard-banner-photo {
+    min-height: 160px;
+    background-color: #071A2C;
+    background-image:
+        linear-gradient(90deg, rgba(7, 26, 44, 0.92) 0%, rgba(7, 26, 44, 0.74) 45%, rgba(7, 26, 44, 0.30) 100%),
+        url('../../Images/Matrimandir_Auroville.jpg');
+    background-position: center, center 42%;
+    background-size: cover, cover;
+    background-repeat: no-repeat;
+    border: 1px solid rgba(212, 160, 23, 0.38);
+    overflow: hidden;
+}
+
+.dashboard-banner-photo .dashboard-banner-text h3,
+.dashboard-banner-photo .dashboard-banner-text p {
+    text-shadow: 0 1px 3px rgba(2, 10, 20, 0.78), 0 2px 12px rgba(2, 10, 20, 0.55);
+}
+
+@media (max-width: 640px) {
+    .dashboard-banner-photo {
+        background-image:
+            linear-gradient(180deg, rgba(7, 26, 44, 0.90) 0%, rgba(7, 26, 44, 0.72) 100%),
+            url('../../Images/Matrimandir_Auroville.jpg');
+        background-position: center, center 42%;
+    }
+}

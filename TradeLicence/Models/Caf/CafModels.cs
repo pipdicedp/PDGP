@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace TradeLicence.Models.Caf
@@ -13,9 +12,7 @@ namespace TradeLicence.Models.Caf
         Date,
         Select,     // free-text column, but offered as a dropdown of sensible values
         YesNo,      // free-text column storing "Yes"/"No"
-        Email,
-        Radio,      // a handful of options shown as radio buttons (e.g. Registration / Renewal)
-        MultiSelect // options shown as checkboxes; the ticked values are stored comma-separated
+        Email
     }
 
     /// <summary>
@@ -36,7 +33,6 @@ namespace TradeLicence.Models.Caf
 
         /// <summary>HTML input "step" attribute for Decimal fields (default "0.01").</summary>
         public string DecimalStep { get; init; } = "0.01";
-        public bool Required { get; set; }
     }
 
     /// <summary>
@@ -65,14 +61,6 @@ namespace TradeLicence.Models.Caf
 
         /// <summary>When true the applicant cannot submit until this document is uploaded.</summary>
         public bool Required { get; init; }
-
-        /// <summary>
-        /// Optional sub-heading this document is filed under (e.g. "Building &amp;
-        /// Ownership", "Fire Safety"). Empty = no grouping. The Fire NOC upload
-        /// step uses it to render the document slots as named sections instead of
-        /// one long flat list.
-        /// </summary>
-        public string Group { get; init; } = string.Empty;
     }
 
     /// <summary>
@@ -105,18 +93,7 @@ namespace TradeLicence.Models.Caf
     {
         public CafDocumentDef Def { get; set; } = null!;
         public long? SizeBytes { get; set; }
-
-        /// <summary>
-        /// Detected content type of the stored file ("image/jpeg", "application/pdf"
-        /// …), or null when nothing is uploaded. Lets the review pages show a
-        /// thumbnail for image uploads without guessing from the file name.
-        /// </summary>
-        public string? ContentType { get; set; }
-
         public bool HasFile => SizeBytes.HasValue && SizeBytes.Value > 0;
-
-        public bool IsImage => HasFile && ContentType != null &&
-                               ContentType.StartsWith("image/", System.StringComparison.OrdinalIgnoreCase);
     }
 
     public class CafSubTableVm
@@ -142,32 +119,7 @@ namespace TradeLicence.Models.Caf
         /// <summary>False only before Step 1 (Basic Details) has ever been saved — later steps redirect back to Step 1 until then.</summary>
         public bool BasicDetailsExist { get; set; }
 
-        /// <summary>True once the application has been submitted — drives the stepper's Preview tab.</summary>
-        public bool IsSubmitted { get; set; }
-
-        /// <summary>Step numbers already saved at least once, so the stepper can mark them done.</summary>
-        public HashSet<int> SavedSteps { get; set; } = new();
-
-        /// <summary>
-        /// On the documents step: the read-only summary of every step, shown as a
-        /// compact "review before you submit" card next to the uploads.
-        /// </summary>
-        public CafPreviewViewModel? Review { get; set; }
-
-
         public string? SuccessMessage { get; set; }
         public string? ErrorMessage { get; set; }
-
-        // ---- Application header (printed at the top of the Fire NOC form) ----
-
-        /// <summary>Official reference (FIRE/2026/00042). Null until the application is submitted.</summary>
-        public string? ApplicationNo { get; set; }
-
-        public string? ApplicationStatus { get; set; }
-
-        /// <summary>Officer's remarks — shown on every step after a Correction / Modification request.</summary>
-        public string? OfficerRemarks { get; set; }
-
-        public DateTime? AppliedOn { get; set; }
     }
 }

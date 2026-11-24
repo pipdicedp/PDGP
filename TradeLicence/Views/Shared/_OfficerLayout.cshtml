@@ -1,41 +1,7 @@
 ﻿@using TradeLicence.Helpers
-@using TradeLicence.Models
 @{
     var designation = User.FindFirst("Designation")?.Value;
     var officerMenu = OfficerMenuProvider.GetMenuForDesignation(designation);
-
-    // Render-time safety net: resolve every link now and drop anything that
-    // doesn't resolve, so a missing route can never render as a dead link
-    // (empty href) or a 404. A dropdown whose children are all dropped
-    // disappears with them.
-    Func<string, string, bool> resolves = (controller, action) =>
-        !string.IsNullOrEmpty(Url.Action(action, controller));
-
-    var resolvedMenu = new List<OfficerMenuItem>();
-    foreach (var item in officerMenu)
-    {
-        if (item.Children != null && item.Children.Any())
-        {
-            var children = item.Children.Where(c => resolves(c.Controller, c.Action)).ToList();
-            if (children.Count > 0)
-            {
-                resolvedMenu.Add(new OfficerMenuItem { Text = item.Text, Icon = item.Icon, Children = children });
-            }
-        }
-        else if (resolves(item.Controller, item.Action))
-        {
-            resolvedMenu.Add(item);
-        }
-    }
-
-    // Active-state helpers: highlight the item whose controller + action we
-    // are currently on (a dropdown parent lights up when any child matches).
-    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
-    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
-
-    Func<string, string, bool> isActive = (controller, action) =>
-        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
-        string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -82,49 +48,23 @@
     <nav class="tl-navbar">
         <div class="container">
             <ul class="tl-nav-menu">
-                @foreach (var item in resolvedMenu)
+                @foreach (var item in officerMenu)
                 {
-                    var isDropdown = item.Children != null && item.Children.Any();
-                    var parentActive = isDropdown && item.Children!.Any(c => isActive(c.Controller, c.Action));
-
-                    @if (isDropdown)
+                    @if (item.Children != null && item.Children.Any())
                     {
-                        <li class="dropdown @(parentActive ? "active" : "")">
-                            <a href="#">
-                                @if (!string.IsNullOrEmpty(item.Icon))
-                                {
-                                    <i class="@item.Icon"></i>
-                                }
-                                <span>@item.Text</span><span class="dropdown-arrow">▼</span>
-                            </a>
+                        <li class="dropdown">
+                            <a href="#">@item.Text<span class="dropdown-arrow">▼</span></a>
                             <ul class="dropdown-menu">
-                                @foreach (var child in item.Children!)
+                                @foreach (var child in item.Children)
                                 {
-                                    <li>
-                                        <a class="@(isActive(child.Controller, child.Action) ? "active" : "")"
-                                           href="@Url.Action(child.Action, child.Controller)">
-                                            @if (!string.IsNullOrEmpty(child.Icon))
-                                            {
-                                                <i class="@child.Icon"></i>
-                                            }
-                                            <span>@child.Text</span>
-                                        </a>
-                                    </li>
+                                    <li><a href="@Url.Action(child.Action, child.Controller)">@child.Text</a></li>
                                 }
                             </ul>
                         </li>
                     }
                     else
                     {
-                        <li class="@(isActive(item.Controller, item.Action) ? "active" : "")">
-                            <a href="@Url.Action(item.Action, item.Controller)">
-                                @if (!string.IsNullOrEmpty(item.Icon))
-                                {
-                                    <i class="@item.Icon"></i>
-                                }
-                                <span>@item.Text</span>
-                            </a>
-                        </li>
+                        <li><a href="@Url.Action(item.Action, item.Controller)">@item.Text</a></li>
                     }
                 }
                 <li class="user-menu">

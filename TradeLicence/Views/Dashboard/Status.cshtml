@@ -1,14 +1,20 @@
-﻿@model List<TradeLicence.Models.ApplicationStatusItem>
+﻿@model List<TradeLicence.Models.TradeLicenceApplication>
 @{
     ViewData["Title"] = "Application Status Tracking";
     Layout = "~/Views/Shared/_UserLayout.cshtml";
 
     // ---- status counts for the summary cards ----
-    int draftCount = Model.Count(a => string.Equals(a.Status, "Draft", StringComparison.OrdinalIgnoreCase));
-    int submittedCount = Model.Count(a => string.Equals(a.Status, "Submitted", StringComparison.OrdinalIgnoreCase) && string.Equals(a.CurrentStage, "Initial Scrutiny", StringComparison.OrdinalIgnoreCase));
-    int progressCount = Model.Count(a => string.Equals(a.Status, "Submitted", StringComparison.OrdinalIgnoreCase) && !string.Equals(a.CurrentStage, "Initial Scrutiny", StringComparison.OrdinalIgnoreCase));
-    int approvedCount = Model.Count(a => string.Equals(a.Status, "Approved", StringComparison.OrdinalIgnoreCase));
-    int rejectedCount = Model.Count(a => string.Equals(a.Status, "Rejected", StringComparison.OrdinalIgnoreCase) || string.Equals(a.Status, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase));
+    // Officer workflow keeps Status = "Submitted" all the way through
+    // Initial Scrutiny -> Verification -> Inspection -> Approval — only
+    // CurrentStage changes as it moves. So "freshly submitted, nobody's
+    // picked it up yet" vs "actively being worked on by an officer" is
+    // told apart by CurrentStage, not by a separate "UnderReview" status
+    // (that value was never actually being set anywhere).
+    int draftCount = Model.Count(a => a.Status == "Draft");
+    int submittedCount = Model.Count(a => a.Status == "Submitted" && a.CurrentStage == "Initial Scrutiny");
+    int progressCount = Model.Count(a => a.Status == "Submitted" && a.CurrentStage != "Initial Scrutiny");
+    int approvedCount = Model.Count(a => a.Status == "Approved");
+    int rejectedCount = Model.Count(a => a.Status == "Rejected" || a.Status == "ReturnedToApplicant");
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
@@ -79,7 +85,6 @@
                     <thead>
                         <tr>
                             <th>Sl No.</th>
-                            <th>Service</th>
                             <th>Application ID</th>
                             <th>Applicant Name</th>
                             <th>Purpose</th>
@@ -95,47 +100,45 @@
                         }
                         @foreach (var app in Model)
                         {
-                            var statusUpper = app.Status?.ToUpperInvariant() ?? string.Empty;
-                            var stageUpper = app.CurrentStage?.ToUpperInvariant() ?? string.Empty;
-                            var statusClass = statusUpper switch
+                            // Same CurrentStage-aware logic as the counts above —
+                            // "Submitted" only means "not yet picked up by an
+                            // officer"; once it moves past Initial Scrutiny it
+                            // reads as "In Progress — <stage>" instead.
+                            var statusClass = app.Status switch
                             {
-                                "DRAFT" => "myapps-status-draft",
-                                "SUBMITTED" => string.Equals(app.CurrentStage, "Initial Scrutiny", StringComparison.OrdinalIgnoreCase) ? "myapps-status-submitted" : "myapps-status-review",
-                                "RETURNEDTOAPPLICANT" => "myapps-status-rejected",
-                                "APPROVED" => "myapps-status-approved",
-                                "REJECTED" => "myapps-status-rejected",
+                                "Draft" => "myapps-status-draft",
+                                "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "myapps-status-submitted" : "myapps-status-review",
+                                "ReturnedToApplicant" => "myapps-status-rejected",
+                                "Approved" => "myapps-status-approved",
+                                "Rejected" => "myapps-status-rejected",
                                 _ => "myapps-status-draft"
                             };
-                            var statusText = statusUpper switch
+                            var statusText = app.Status switch
                             {
-                                "SUBMITTED" => string.Equals(app.CurrentStage, "Initial Scrutiny", StringComparison.OrdinalIgnoreCase) ? "Submitted" : $"In Progress — {app.CurrentStage}",
-                                "RETURNEDTOAPPLICANT" => "Returned for Correction",
+                                "Submitted" => app.CurrentStage == "Initial Scrutiny" ? "Submitted" : $"In Progress — {app.CurrentStage}",
+                                "ReturnedToApplicant" => "Returned for Correction",
                                 _ => app.Status
                             };
+                            var daysElapsed = (DateTime.Now.Date - app.CreatedDate.Date).Days;
 
                             <tr>
                                 <td>@slNo</td>
-                                <td>@app.Service</td>
-                                <td>@(string.IsNullOrEmpty(app.ApplicationId) ? "—" : app.ApplicationId)</td>
+                                <td>@(app.ApplicationNumber ?? "—")</td>
                                 <td>@(string.IsNullOrEmpty(app.ApplicantName) ? "—" : app.ApplicantName)</td>
-                                <td>@(string.IsNullOrEmpty(app.Purpose) ? "—" : app.Purpose)</td>
-                                <td>@app.DateOfApplication.ToLocalTime().ToString("dd-MM-yyyy")</td>
+                                <td>@(string.IsNullOrEmpty(app.PurposeOfLicence) ? "Trade Licence" : app.PurposeOfLicence)</td>
+                                <td>@app.CreatedDate.ToLocalTime().ToString("dd-MM-yyyy")</td>
                                 <td><span class="myapps-status-badge @statusClass">@statusText</span></td>
-                                <td>@app.TimeElapsedDays</td>
+                                <td>@daysElapsed</td>
                                 <td>
-                                    @if (app.Service == "Fire NOC")
+                                    @if (app.Status == "Draft")
                                     {
-                                        <a class="myapps-btn myapps-btn-view" href="@app.ViewUrl">View</a>
+                                        <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.ApplicationId })">Continue</a>
                                     }
-                                    else if (app.CanContinue)
-                                    {
-                                        <a class="myapps-btn" href="@Url.Action("Apply", "TradeLicence", new { id = app.InternalId })">Continue</a>
-                                    }
-                                    else if (app.CanPayNow)
+                                    else if (app.PaymentStatus == "Pending")
                                     {
                                         <form method="post" asp-action="PayNow" asp-controller="TradeLicence" style="display:inline;">
                                             @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@app.InternalId" />
+                                            <input type="hidden" name="id" value="@app.ApplicationId" />
                                             <button type="button" class="myapps-btn btn-pay-now" style="background:#1D6E3E; border:none; cursor:pointer;">
                                                 <i class="fas fa-indian-rupee-sign"></i> Pay Now
                                             </button>
@@ -143,7 +146,7 @@
                                     }
                                     else
                                     {
-                                        <a class="myapps-btn myapps-btn-view" href="@app.ViewUrl">View</a>
+                                        <a class="myapps-btn myapps-btn-view" href="@Url.Action("Confirmation", "TradeLicence", new { id = app.ApplicationId })">View</a>
                                     }
                                 </td>
                             </tr>

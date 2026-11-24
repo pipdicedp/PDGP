@@ -566,11 +566,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Was "nowrap": a long menu (Fire NOC etc.) overflowed the bar and pushed
-       the profile / logout control off the right edge, so the user could not
-       log out. Allow the items to wrap onto a second row instead of clipping. */
-    flex-wrap: wrap;
-    row-gap: 2px;
+    flex-wrap: nowrap !important;
     width: 100%;
 }
 

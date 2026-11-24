@@ -1,5 +1,5 @@
 /* ============================================================================
-   Society Name Change  —  table: dbo.SocietyNameChangeRequest
+   Name Change of Society  —  table: dbo.SocietyNameChangeRequest
    ----------------------------------------------------------------------------
    Backs the "Society - Request for Name/Business Place/Members" service
    (SocietyNameChangeController / Views/SocietyNameChange).

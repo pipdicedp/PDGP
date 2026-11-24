@@ -20,9 +20,9 @@
     var step = section.Step;
     var groups = step.Fields.GroupBy(f => f.Section).ToList();
 
-    <section class="caf-pv-step" id="pv-step-@step.Number" data-collapsible="@(Model.Collapsible ? "true" : "false")">
+    <section class="caf-pv-step @(Model.Collapsible ? "caf-pv-step-collapsed" : "")" id="pv-step-@step.Number" data-collapsible="@(Model.Collapsible ? "true" : "false")">
 
-        <header class="caf-pv-step-head @(Model.Collapsible ? "caf-pv-step-head-toggle" : "")" role="@(Model.Collapsible ? "button" : null)" tabindex="@(Model.Collapsible ? "0" : null)" aria-expanded="@(Model.Collapsible ? "true" : null)">
+        <header class="caf-pv-step-head @(Model.Collapsible ? "caf-pv-step-head-toggle" : "")" role="@(Model.Collapsible ? "button" : null)" tabindex="@(Model.Collapsible ? "0" : null)" aria-expanded="@(Model.Collapsible ? "false" : null)">
             <h3>
                 <span class="caf-pv-step-no">@step.Number</span>
                 @step.Title
@@ -69,7 +69,7 @@
                         {
                             var shown = CafFormMetadata.DisplayValue(f, section.Values.GetValueOrDefault(f.Name));
 
-                            <div class="caf-pv-field @(f.Type == CafFieldType.TextArea || f.Type == CafFieldType.MultiSelect ? "caf-pv-field-wide" : "")">
+                            <div class="caf-pv-field @(f.Type == CafFieldType.TextArea ? "caf-pv-field-wide" : "")">
                                 <span class="caf-pv-label">@f.Label</span>
 
                                 @if (shown == null)

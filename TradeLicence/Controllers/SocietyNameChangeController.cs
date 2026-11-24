@@ -13,7 +13,7 @@ using TradeLicence.Models;
 namespace TradeLicence.Controllers
 {
     /// <summary>
-    /// Society Name Change — "Society - Request for Name/Business Place/Members".
+    /// Name Change of Society — "Society - Request for Name/Business Place/Members".
     /// Every submitted request is saved as a row of dbo.SocietyNameChangeRequest
     /// (columns: RequestId, ApplicationNo, SerialNo, IsNameChange, IsAddressChange,
     /// IsMemberChange, IsOthers, FormFileName, FormFilePath, FormContentType,
@@ -43,7 +43,7 @@ namespace TradeLicence.Controllers
         [HttpGet]
         public IActionResult Create()
         {
-            ViewData["Title"] = "Society Name Change";
+            ViewData["Title"] = "Name Change of Society";
             return View(new SocietyNameChangeRequest());
         }
 
@@ -51,7 +51,7 @@ namespace TradeLicence.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(SocietyNameChangeRequest model)
         {
-            ViewData["Title"] = "Society Name Change";
+            ViewData["Title"] = "Name Change of Society";
 
             // "Requested Change For" is mandatory: at least one option.
             if (!model.IsNameChange && !model.IsAddressChange && !model.IsMemberChange && !model.IsOthers)
@@ -77,15 +77,15 @@ namespace TradeLicence.Controllers
             _context.SocietyNameChangeRequests.Add(model);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Society name change request saved successfully. Reference No: " + model.RequestId;
+            TempData["Success"] = "Name Change of Society request saved successfully. Reference No: " + model.RequestId;
             return RedirectToAction(nameof(Create));
         }
 
-        /// <summary>Tabular list of the Society name change requests saved so far.</summary>
+        /// <summary>Tabular list of the Name Change of Society requests saved so far.</summary>
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            ViewData["Title"] = "Society Name Change";
+            ViewData["Title"] = "Name Change of Society";
 
             var rows = await _context.SocietyNameChangeRequests
                 .AsNoTracking()

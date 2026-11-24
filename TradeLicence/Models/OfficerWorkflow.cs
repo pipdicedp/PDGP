@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace TradeLicence.Models
@@ -21,21 +20,6 @@ namespace TradeLicence.Models
         {
             "Initial Scrutiny", "Verification", "Inspection", "Approval"
         };
-
-        /// <summary>
-        /// Terminal values CurrentStage takes once a final decision is made.
-        /// They are deliberately NOT part of <see cref="Stages"/> — StageIndex()
-        /// returns -1 for them, so a decided application can never be forwarded
-        /// or reverted back into the chain. The controllers also refuse to act on
-        /// anything whose Status isn't "Submitted", so this is belt-and-braces.
-        /// </summary>
-        public const string ApprovedStage = "Approved";
-
-        public const string RejectedStage = "Rejected";
-
-        public static bool IsTerminal(string? stage) =>
-            string.Equals(stage, ApprovedStage, StringComparison.OrdinalIgnoreCase)
-            || string.Equals(stage, RejectedStage, StringComparison.OrdinalIgnoreCase);
 
         // Stage -> the Officer.Designation value allowed to act on it.
         public static readonly Dictionary<string, string> StageToDesignation = new()

@@ -10,7 +10,6 @@ function showOfficerActionAlert(actionType, message) {
         revert: { icon: 'info', title: 'Reverted' },
         reject: { icon: 'error', title: 'Rejected' },
         return: { icon: 'warning', title: 'Returned to Applicant' },
-        inspection: { icon: 'success', title: 'Inspection Report Submitted' },
         created: { icon: 'success', title: 'User Created!' },
         deleted: { icon: 'success', title: 'User Deleted' },
         toggled: { icon: 'success', title: 'Status Updated' },
@@ -135,18 +134,16 @@ if (btnRevert) {
     });
 }
 
-// "Correction / Modification" is shown twice on the Fire NOC screen (inside the
-// Final Approval card and in the bottom action bar); bind every copy so both
-// open the same remarks dialog and post the same form.
-document.querySelectorAll('#btnReturnToApplicant, .js-return-applicant').forEach(function (btn) {
-    btn.addEventListener('click', function () {
+var btnReturnToApplicant = document.getElementById('btnReturnToApplicant');
+if (btnReturnToApplicant) {
+    btnReturnToApplicant.addEventListener('click', function () {
         Swal.fire({
-            title: 'Send back for correction / modification?',
-            text: 'The applicant will be able to edit every section and document, then resubmit. Please state what needs fixing.',
+            title: 'Return to Applicant?',
+            text: 'The applicant will need to correct and resubmit. Please state what needs fixing.',
             input: 'textarea',
             inputPlaceholder: 'Remarks (required)...',
             showCancelButton: true,
-            confirmButtonText: 'Send back',
+            confirmButtonText: 'Return',
             confirmButtonColor: '#D4A017',
             inputValidator: function (value) {
                 if (!value || !value.trim()) {
@@ -160,7 +157,7 @@ document.querySelectorAll('#btnReturnToApplicant, .js-return-applicant').forEach
             }
         });
     });
-});
+}
 
 // ---------------- Inspection-stage payment ----------------
 var paymentAccordionHeader = document.getElementById('paymentAccordionHeader');

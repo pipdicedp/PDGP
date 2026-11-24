@@ -55,74 +55,15 @@ namespace TradeLicence.Controllers
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var userId = int.TryParse(userIdClaim, out var id) ? id : (int?)null;
-            var loginIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var loginId = long.TryParse(loginIdClaim, out var lid) ? lid : (long?)null;
 
-            var items = new List<ApplicationStatusItem>();
-
-            if (userId.HasValue)
-            {
-                var tradeApps = await _context.TradeLicenceApplications
+            var myApplications = userId == null
+                ? new List<TradeLicenceApplication>()
+                : await _context.TradeLicenceApplications
                     .Where(a => a.UserId == userId)
                     .OrderByDescending(a => a.CreatedDate)
                     .ToListAsync();
 
-                foreach (var a in tradeApps)
-                {
-                    var isDraft = string.Equals(a.Status, "Draft", StringComparison.OrdinalIgnoreCase);
-                    var isReturned = string.Equals(a.Status, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase);
-                    items.Add(new ApplicationStatusItem
-                    {
-                        Service = "Trade Licence",
-                        ApplicationId = a.ApplicationNumber ?? a.ApplicationId.ToString(),
-                        InternalId = a.ApplicationId,
-                        ApplicantName = a.ApplicantName ?? string.Empty,
-                        Purpose = a.PurposeOfLicence ?? "Trade Licence",
-                        DateOfApplication = a.CreatedDate,
-                        Status = a.Status ?? string.Empty,
-                        CurrentStage = a.CurrentStage ?? string.Empty,
-                        PaymentStatus = a.PaymentStatus ?? string.Empty,
-                        CanContinue = isDraft || isReturned,
-                        CanPayNow = string.Equals(a.PaymentStatus, "Pending", StringComparison.OrdinalIgnoreCase) && !isDraft,
-                        CanResubmit = isReturned,
-                        ViewUrl = Url.Action("Confirmation", "TradeLicence", new { id = a.ApplicationId }) ?? string.Empty
-                    });
-                }
-            }
-
-            if (loginId.HasValue)
-            {
-                var fireApps = await _context.FireClearanceApplications
-                    .Where(a => a.LoginId == loginId)
-                    .OrderByDescending(a => a.SubmittedDate ?? DateTime.MinValue)
-                    .ToListAsync();
-
-                foreach (var a in fireApps)
-                {
-                    var isDraft = string.Equals(a.Status, "Draft", StringComparison.OrdinalIgnoreCase);
-                    var isReturned = string.Equals(a.Status, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase);
-                    var appId = string.IsNullOrEmpty(a.ApplicationCode) ? a.Id.ToString() : a.ApplicationCode;
-                    items.Add(new ApplicationStatusItem
-                    {
-                        Service = "Fire NOC",
-                        ApplicationId = appId,
-                        InternalId = a.Id,
-                        ApplicantName = a.Name ?? string.Empty,
-                        Purpose = "Fire Safety Clearance",
-                        DateOfApplication = a.SubmittedDate?.Date ?? DateTime.Now.Date,
-                        Status = a.Status ?? string.Empty,
-                        CurrentStage = a.CurrentStage ?? string.Empty,
-                        PaymentStatus = a.PaymentStatus ?? string.Empty,
-                        CanContinue = isDraft || isReturned,
-                        CanPayNow = false,
-                        CanResubmit = isReturned,
-                        ViewUrl = Url.Action("Index", "FireClearance") ?? string.Empty
-                    });
-                }
-            }
-
-            items = items.OrderByDescending(i => i.DateOfApplication).ToList();
-            return View(items);
+            return View(myApplications);
         }
     }
 }

@@ -1,6 +1,6 @@
 @model IEnumerable<TradeLicence.Models.SocietyNameChangeRequest>
 @{
-    ViewData["Title"] = "Society Name Change";
+    ViewData["Title"] = "Name Change of Society";
     Layout = "~/Views/Shared/_UserLayout.cshtml";
     var rows = Model?.ToList() ?? new List<TradeLicence.Models.SocietyNameChangeRequest>();
 }
@@ -27,7 +27,7 @@
 </style>
 
 <div class="snc-list-card">
-    <div class="snc-list-header">Society Name Change — Submitted Requests</div>
+    <div class="snc-list-header">Name Change of Society — Submitted Requests</div>
 
     <div class="snc-list-body">
         <div class="snc-list-toolbar">
@@ -40,7 +40,7 @@
 
         @if (rows.Count == 0)
         {
-            <div class="snc-empty">No society name change requests found yet.</div>
+            <div class="snc-empty">No name change of Society requests found yet.</div>
         }
         else
         {

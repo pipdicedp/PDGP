@@ -28,12 +28,6 @@
       ViewBag.ExistingStageDocumentForCurrentStage (TradeLicence.Models.WorkflowSupportingDocument?)
       ViewBag.Payment                 (TradeLicence.Models.WorkflowPayment?)
       ViewBag.SubmittedDate           (DateTime) -- used as the "received on" fallback for the very first history hop
-
-      Optional (Fire NOC inspector): when the service has its own inspection
-      card, set these to true to suppress the generic workflow controls:
-      ViewBag.HideForwardPanel        (bool?) -- hide the forward/upload section
-      ViewBag.HideFinalActions        (bool?) -- hide approve/reject/return buttons
-      ViewBag.HideReturnToApplicant   (bool?) -- hide the bottom correction button
 *@
 @{
     var history = (List<TradeLicence.Models.WorkflowHistory>)ViewBag.WorkflowHistory;
@@ -42,15 +36,6 @@
     var revertToName = revertTarget?.FromOfficerId.HasValue == true && officerNames.ContainsKey(revertTarget.FromOfficerId.Value)
         ? officerNames[revertTarget.FromOfficerId.Value] : "previous officer";
     var submittedDate = (DateTime)ViewBag.SubmittedDate;
-
-    // A decided application (Approved/Rejected) shows a read-only decision card
-    // instead of the forward/approve/reject action buttons. Only services that
-    // opt-in via ViewBag.IsDecided are affected; others remain unchanged.
-    var isDecided = ViewBag.IsDecided == true
-        || string.Equals(Model.Status, "Approved", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(Model.Status, "Rejected", StringComparison.OrdinalIgnoreCase);
-    var decisionStatus = (ViewBag.DecisionStatus as string) ?? Model.Status;
-    var isReturned = string.Equals(Model.Status, "ReturnedToApplicant", StringComparison.OrdinalIgnoreCase);
 }
 
 <div class="tl-officer-panel">
@@ -162,42 +147,8 @@
                 </div>
             }
 
-            @if (isDecided)
+            @if (!(bool)ViewBag.IsFinalStage)
             {
-                <fieldset class="tl-section @(string.Equals(decisionStatus, "Approved", StringComparison.OrdinalIgnoreCase) ? "tl-card-green" : "tl-card-red")">
-                    <legend><i class="fa-solid @(string.Equals(decisionStatus, "Approved", StringComparison.OrdinalIgnoreCase) ? "fa-circle-check" : "fa-circle-xmark")"></i> Decision</legend>
-                    <p class="tl-note">
-                        This application has been <strong>@(string.Equals(decisionStatus, "Approved", StringComparison.OrdinalIgnoreCase) ? "approved" : "rejected")</strong>. No further officer actions are available.
-                    </p>
-                    <p class="tl-note" style="margin-top:-8px;">Current stage recorded as <strong>@Model.CurrentStage</strong>.</p>
-                </fieldset>
-            }
-            else if (isReturned)
-            {
-                <fieldset class="tl-section tl-card-gold">
-                    <legend><i class="fa-solid fa-hourglass-half"></i> With the Applicant</legend>
-                    <p class="tl-note">
-                        This application was sent back to the applicant for <strong>correction / modification</strong>.
-                        Every section and document is editable for the applicant; it returns to the workflow
-                        automatically when they resubmit it.
-                    </p>
-                </fieldset>
-            }
-            else if (!(bool)ViewBag.IsFinalStage)
-            {
-                if (ViewBag.HideForwardPanel == true)
-                {
-                    <fieldset class="tl-section tl-card-blue">
-                        <legend><i class="fa-solid fa-clipboard-check"></i> Inspection in Progress</legend>
-                        <p class="tl-note">
-                            Use the <strong>Site Inspection</strong> card above to record your findings and attach
-                            the inspection report. Submitting the report returns the application to the Fire NOC
-                            Administrator for the final decision.
-                        </p>
-                    </fieldset>
-                }
-                else
-                {
                 <fieldset class="tl-section tl-card-navy">
                     <legend><i class="fa-solid fa-paper-plane"></i> Forward to Officer</legend>
 
@@ -282,10 +233,9 @@
                     </div>
                     @if (paymentPendingBlock)
                     {
-                        <span class="tl-note" style="color:#B3261E;">Revert and Correction / Modification are disabled while a payment is pending with the applicant.</span>
+                        <span class="tl-note" style="color:#B3261E;">Revert and Return-to-Applicant are disabled while a payment is pending with the applicant.</span>
                     }
                 </fieldset>
-                }
             }
             else
             {
@@ -316,41 +266,15 @@
 
                 <fieldset class="tl-section tl-card-green">
                     <legend><i class="fa-solid fa-stamp"></i> Final Approval</legend>
-                    @if (ViewBag.HideFinalActions == true)
-                    {
-                        <p class="tl-note">
-                            The inspection report has been submitted. This application is now with the
-                            Fire NOC Administrator for the final decision — no further action is needed
-                            from you.
-                        </p>
-                    }
-                    else
-                    {
-                        @if (ViewBag.AdminOverride == true)
+                    <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, return it to the applicant if something needs correcting, or reject it outright.</p>
+                    <div class="tl-officer-actions-group">
+                        <button type="button" id="btnApprove" class="btn btn-success">Approve Application</button>
+                        <button type="button" id="btnReject" class="btn btn-danger">Reject Application</button>
+                        @if (revertTarget != null)
                         {
-                            <p class="tl-note">You're signed in as an Administrator, so you can approve, reject or send this application back for correction at any stage.</p>
+                            <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName" @(paymentPendingBlock ? "disabled" : "")><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
                         }
-                        else
-                        {
-                            <p class="tl-note">This application has reached the final stage (Approval). Approve it to finish the process, return it to the applicant if something needs correcting, or reject it outright.</p>
-                        }
-                        <div class="tl-officer-actions-group">
-                            <button type="button" id="btnApprove" class="btn btn-success">Approve Application</button>
-                            <button type="button" id="btnReject" class="btn btn-danger">Reject Application</button>
-                            <button type="button" class="btn btn-warning js-return-applicant">
-                                <i class="fa-solid fa-pen-to-square"></i> Correction / Modification
-                            </button>
-                            @if (revertTarget != null)
-                            {
-                                <button type="button" id="btnRevert" class="btn btn-revert" data-revert-to="@revertToName" @(paymentPendingBlock ? "disabled" : "")><i class="fa-solid fa-rotate-left"></i> Revert to Officer</button>
-                            }
-                        </div>
-                        <p class="tl-note" style="margin-top:10px;">
-                            <strong>Correction / Modification</strong> sends the application back to the
-                            applicant. Every section and every uploaded document becomes editable again,
-                            the applicant sees your remarks, and resubmits it to you for a fresh decision.
-                        </p>
-                    }
+                    </div>
                 </fieldset>
             }
         </div>
@@ -369,17 +293,7 @@
                                 ? officerNames[h.FromOfficerId.Value] : "Applicant";
                             var toName = h.ToOfficerId.HasValue && officerNames.ContainsKey(h.ToOfficerId.Value)
                                 ? officerNames[h.ToOfficerId.Value] : "-";
-
-                            var isRevert = string.Equals(h.ActionType, "Revert", StringComparison.OrdinalIgnoreCase);
-                            var isApprove = string.Equals(h.ActionType, "Approve", StringComparison.OrdinalIgnoreCase);
-                            var isReject  = string.Equals(h.ActionType, "Reject", StringComparison.OrdinalIgnoreCase);
-                            var isReturn  = string.Equals(h.ActionType, "Return", StringComparison.OrdinalIgnoreCase);
-                            var isResubmit= string.Equals(h.ActionType, "Resubmit", StringComparison.OrdinalIgnoreCase);
-                            var isInspection = string.Equals(h.ActionType, "Inspection", StringComparison.OrdinalIgnoreCase);
-                            var isDecision= isApprove || isReject || isReturn;
-
-                            var actionLabel = isApprove ? "Approved" : isReject ? "Rejected" : isReturn ? "Returned to Applicant" : isResubmit ? "Resubmitted by Applicant" : isInspection ? "Inspection Report Submitted" : isRevert ? "Reverted" : "Forwarded";
-                            var iconClass    = isApprove ? "fa-circle-check" : isReject ? "fa-circle-xmark" : isReturn ? "fa-arrow-rotate-left" : isResubmit ? "fa-paper-plane" : isInspection ? "fa-clipboard-check" : isRevert ? "fa-rotate-left" : "fa-share";
+                            var isRevert = h.ActionType == "Revert";
 
                             var receivedOn = i > 0 ? history[i - 1].ActionDate : submittedDate;
                             var forwardedOn = h.ActionDate;
@@ -390,27 +304,20 @@
                                     ? $"{(int)duration.TotalHours} hour{((int)duration.TotalHours == 1 ? "" : "s")}"
                                     : "under an hour";
 
-                            <div class="tl-history-item @(isRevert || isDecision ? "tl-history-revert" : "")">
-                                <span class="tl-history-icon"><i class="fa-solid @iconClass"></i></span>
+                            <div class="tl-history-item @(isRevert ? "tl-history-revert" : "")">
+                                <span class="tl-history-icon"><i class="fa-solid @(isRevert ? "fa-rotate-left" : "fa-share")"></i></span>
                                 <div class="tl-history-body">
                                     <div class="tl-history-action">
-                                        @actionLabel
+                                        @(isRevert ? "Reverted" : "Forwarded")
                                         @if (i == history.Count - 1)
                                         {
                                             <span class="tl-history-latest-tag">Latest</span>
                                         }
                                     </div>
-                                    @if (isDecision)
-                                    {
-                                        <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @actionLabel</div>
-                                    }
-                                    else
-                                    {
-                                        <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @toName (@h.ToStage)</div>
-                                    }
+                                    <div class="tl-history-route">@fromName (@h.FromStage) &rarr; @toName (@h.ToStage)</div>
                                     <div class="tl-history-meta">
                                         Received: @receivedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
-                                        @(isResubmit ? "Resubmitted:" : isInspection ? "Submitted:" : isDecision ? "Actioned:" : "Forwarded:") @forwardedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
+                                        Forwarded: @forwardedOn.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")<br />
                                         Time taken: @takenText
                                     </div>
                                     @if (!string.IsNullOrWhiteSpace(h.Remarks))
@@ -436,21 +343,7 @@
 
     <div class="tl-actions">
         <a class="btn btn-secondary" href="@Url.Action("Index")">&laquo; Back to Dashboard</a>
-        @if (!isDecided && !isReturned)
-        {
-            @if (ViewBag.IsFireNocAdmin == true && ViewBag.CanForwardToInspectorFromPanel == true)
-            {
-                <a class="btn btn-primary" href="@Url.Action("ForwardToInspectorForm", "FireOfficer", new { id = Model.ApplicationId })">
-                    <i class="fa-solid fa-share-from-square"></i> Forward to Inspector
-                </a>
-            }
-            @if (!(ViewBag.IsFireNocAdmin == true) || ViewBag.HideReturnToApplicant == true)
-            {
-                <button type="button" id="btnReturnToApplicant" class="btn btn-warning js-return-applicant" style="@(ViewBag.HideReturnToApplicant == true ? "display:none;" : "")" @(paymentPendingBlock ? "disabled" : "")>
-                    <i class="fa-solid fa-pen-to-square"></i> Correction / Modification
-                </button>
-            }
-        }
+        <button type="button" id="btnReturnToApplicant" class="btn btn-warning" style="@(ViewBag.HideReturnToApplicant == true ? "display:none;" : "")" @(paymentPendingBlock ? "disabled" : "")>Return to Applicant</button>
     </div>
 
 </div>

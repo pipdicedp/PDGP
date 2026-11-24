@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 namespace TradeLicence.Models
 {
     /// <summary>
-    /// Society - Request for Name / Business Place / Members (Society Name Change).
+    /// Society - Request for Name / Business Place / Members (Name Change of Society).
     /// Maps 1:1 to dbo.SocietyNameChangeRequest — the table columns are fixed by
     /// whatever is defined in the database (see Database/SocietyNameChange_Tables.sql).
     /// The uploaded Change Request Form is stored on disk under

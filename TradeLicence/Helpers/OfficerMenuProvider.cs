@@ -7,18 +7,15 @@ namespace TradeLicence.Helpers
     /// designation's menu, just add a new case below — no other file
     /// needs to change.
     ///
-    /// Every Controller/Action referenced here now exists, so the rendered
-    /// nav has no dead links:
-    ///   - Officer: Index, All, Assigned, Forwarded, History, Approvals,
-    ///     Inspections, InspectionSchedule, CreateUser, ExistingOfficers
-    ///   - OfficerManagement: Index (redirects to Officer/ExistingOfficers),
-    ///     Workflow (stage/designation overview)
-    ///   - Reports: Index, DailyScrutiny, PendingScrutiny, VerificationSummary,
-    ///     InspectionSummary, ApprovalSummary, WorkflowSummary
-    ///
-    /// _OfficerLayout still resolves each URL at render time and drops any
-    /// item that doesn't, so a future typo here degrades gracefully instead
-    /// of shipping a broken link.
+    /// NOTE: several controllers/actions referenced below don't exist yet —
+    /// these links are wired for when they're built. Ask to have them built
+    /// out and the routes here will already be correct:
+    ///   - Officer: Forwarded, History, Assigned, Inspections,
+    ///     InspectionSchedule, Approvals, All
+    ///   - OfficerManagement: Index, Workflow
+    ///   - Reports: Index, DailyScrutiny, PendingScrutiny,
+    ///     VerificationSummary, InspectionSummary, ApprovalSummary,
+    ///     WorkflowSummary
     /// </summary>
     public static class OfficerMenuProvider
     {
@@ -27,16 +24,12 @@ namespace TradeLicence.Helpers
             // Every officer, regardless of designation, sees this.
             var menu = new List<OfficerMenuItem>
             {
-                new() { Text = "Home", Controller = "Officer", Action = "Index", Icon = "fa-solid fa-house" }
+                new() { Text = "Home", Controller = "Officer", Action = "Index" }
             };
 
             switch (designation)
             {
                 case "Admin":
-                    // Stage-less Administrator. Fire NOC lets an admin approve a
-                    // fire application directly (skipping the DEO -> Manager ->
-                    // Inspection chain), so surface its queue here.
-                    menu.Add(new() { Text = "Fire NOC Applications", Controller = "FireOfficer", Action = "AdminQueue", Icon = "fa-solid fa-fire-flame-curved" });
                     // "All Applications" not added separately — the Dashboard
                     // (Officer/Index) already shows every application.
 
@@ -47,23 +40,21 @@ namespace TradeLicence.Helpers
                     menu.Add(new()
                     {
                         Text = "Administration",
-                        Icon = "fa-solid fa-gears",
                         Children = new List<OfficerMenuItem>
                         {
-                            new() { Text = "Manage Officers", Controller = "OfficerManagement", Action = "Index", Icon = "fa-solid fa-users-gear" },
-                            new() { Text = "Workflow Settings", Controller = "OfficerManagement", Action = "Workflow", Icon = "fa-solid fa-diagram-project" },
-                            new() { Text = "Reports", Controller = "Reports", Action = "Index", Icon = "fa-solid fa-chart-pie" }
+                            new() { Text = "Manage Officers", Controller = "OfficerManagement", Action = "Index" },
+                            new() { Text = "Workflow Settings", Controller = "OfficerManagement", Action = "Workflow" },
+                            new() { Text = "Reports", Controller = "Reports", Action = "Index" }
                         }
                     });
-                    menu.Add(new() { Text = "All Applications", Controller = "Officer", Action = "All", Icon = "fa-solid fa-layer-group" });
+                    menu.Add(new() { Text = "All Applications", Controller = "Officer", Action = "All" });
                     menu.Add(new()
                     {
                         Text = "Officer Creation",
-                        Icon = "fa-solid fa-user-plus",
                         Children = new List<OfficerMenuItem>
                         {
-                            new() { Text = "Officer Creation", Controller = "Officer", Action = "CreateUser", Icon = "fa-solid fa-user-plus" },
-                            new() { Text = "Existing Officers", Controller = "Officer", Action = "ExistingOfficers", Icon = "fa-solid fa-list-check" }
+                            new() { Text = "Officer Creation", Controller = "Officer", Action = "CreateUser" },
+                            new() { Text = "Existing Officers", Controller = "Officer", Action = "ExistingOfficers" }
                         }
                     });
                     break;
@@ -72,55 +63,45 @@ namespace TradeLicence.Helpers
                     // Stage 1 — Initial Scrutiny. Home (Officer/Index) already
                     // shows their pending queue, so these are the extra views:
                     // what they've already forwarded, and their own reports.
-                    menu.Add(new() { Text = "Forwarded Applications", Controller = "Officer", Action = "Forwarded", Icon = "fa-solid fa-share-from-square" });
+                    menu.Add(new() { Text = "Forwarded Applications", Controller = "Officer", Action = "Forwarded" });
                     menu.Add(new()
                     {
                         Text = "Reports",
-                        Icon = "fa-solid fa-chart-column",
                         Children = new List<OfficerMenuItem>
                         {
-                            new() { Text = "Daily Scrutiny Report", Controller = "Reports", Action = "DailyScrutiny", Icon = "fa-solid fa-calendar-day" },
-                            new() { Text = "Pending Applications Report", Controller = "Reports", Action = "PendingScrutiny", Icon = "fa-solid fa-hourglass-half" }
+                            new() { Text = "Daily Scrutiny Report", Controller = "Reports", Action = "DailyScrutiny" },
+                            new() { Text = "Pending Applications Report", Controller = "Reports", Action = "PendingScrutiny" }
                         }
                     });
                     break;
 
                 case "Manager":
                     // Stage 2 — Verification.
-                    menu.Add(new() { Text = "Assigned Applications", Controller = "Officer", Action = "Assigned", Icon = "fa-solid fa-inbox" });
-                    menu.Add(new() { Text = "Verification History", Controller = "Officer", Action = "History", Icon = "fa-solid fa-clock-rotate-left" });
-                    menu.Add(new() { Text = "Reports", Controller = "Reports", Action = "VerificationSummary", Icon = "fa-solid fa-chart-column" });
+                    menu.Add(new() { Text = "Assigned Applications", Controller = "Officer", Action = "Assigned" });
+                    menu.Add(new() { Text = "Verification History", Controller = "Officer", Action = "History" });
+                    menu.Add(new() { Text = "Reports", Controller = "Reports", Action = "VerificationSummary" });
                     break;
 
                 case "Inspection Officer":
-                    menu.Add(new() { Text = "Site Inspections", Controller = "Officer", Action = "Inspections", Icon = "fa-solid fa-clipboard-check" });
-                    menu.Add(new() { Text = "Assigned Applications", Controller = "Officer", Action = "Assigned", Icon = "fa-solid fa-inbox" });
-                    menu.Add(new() { Text = "Inspection Schedule", Controller = "Officer", Action = "InspectionSchedule", Icon = "fa-solid fa-calendar-check" });
-                    menu.Add(new() { Text = "Reports", Controller = "Reports", Action = "InspectionSummary", Icon = "fa-solid fa-chart-column" });
+                    menu.Add(new() { Text = "Site Inspections", Controller = "Officer", Action = "Inspections" });
+                    menu.Add(new() { Text = "Assigned Applications", Controller = "Officer", Action = "Assigned" });
+                    menu.Add(new() { Text = "Inspection Schedule", Controller = "Officer", Action = "InspectionSchedule" });
+                    menu.Add(new() { Text = "Reports", Controller = "Reports", Action = "InspectionSummary" });
                     break;
 
                 case "GM":
                     // Stage 4 — final Approval.
-                    menu.Add(new() { Text = "Assigned Applications", Controller = "Officer", Action = "Assigned", Icon = "fa-solid fa-inbox" });
-                    menu.Add(new() { Text = "Final Approvals", Controller = "Officer", Action = "Approvals", Icon = "fa-solid fa-file-circle-check" });
+                    menu.Add(new() { Text = "Assigned Applications", Controller = "Officer", Action = "Assigned" });
+                    menu.Add(new() { Text = "Final Approvals", Controller = "Officer", Action = "Approvals" });
                     menu.Add(new()
                     {
                         Text = "Reports",
-                        Icon = "fa-solid fa-chart-column",
                         Children = new List<OfficerMenuItem>
                         {
-                            new() { Text = "Approval Summary", Controller = "Reports", Action = "ApprovalSummary", Icon = "fa-solid fa-clipboard-check" },
-                            new() { Text = "Overall Workflow Report", Controller = "Reports", Action = "WorkflowSummary", Icon = "fa-solid fa-diagram-project" }
+                            new() { Text = "Approval Summary", Controller = "Reports", Action = "ApprovalSummary" },
+                            new() { Text = "Overall Workflow Report", Controller = "Reports", Action = "WorkflowSummary" }
                         }
                     });
-                    break;
-
-                case "Name Availability Admin":
-                    // Name Availability administrator (Username: Society). One
-                    // login, two queues - Society and Firms each keep their own
-                    // table, so they are separate menu entries.
-                    menu.Add(new() { Text = "Name Availability of Society", Controller = "NameAvailabilityAdmin", Action = "Society", Icon = "fa-solid fa-building-columns" });
-                    menu.Add(new() { Text = "Name Availability of Firms", Controller = "NameAvailabilityAdmin", Action = "Firms", Icon = "fa-solid fa-briefcase" });
                     break;
 
                 default:
