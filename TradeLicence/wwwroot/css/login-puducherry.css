@@ -1,0 +1,811 @@
+/* =====================================================================
+   PUDUCHERRY HERITAGE LOGIN — citizen + official
+   ---------------------------------------------------------------------
+   Loaded AFTER login.css in Views/Account/Login.cshtml and
+   Views/Account/OfficerLogin.cshtml. It deliberately overrides the older
+   append-only layers instead of adding yet another section to login.css.
+
+   Design intent: a civic "heritage window" on the photograph side and a
+   warm ivory, colonial-tile sign-in room on the form side. Navy, antique
+   gold and ivory run through both pages; the official side shifts to
+   deeper brass/burgundy accents so the two audiences read differently.
+   ===================================================================== */
+
+.tl-lx-page {
+    --py-navy: #102F4A;
+    --py-navy-deep: #081D30;
+    --py-gold: #D4A017;
+    --py-gold-light: #F0D28A;
+    --py-ivory: #FBF7EE;
+    --py-ink: #12304A;
+    --py-muted: #64748B;
+    --py-line: #E3D9C4;
+    --py-accent: #D4A017;
+    --py-accent-soft: rgba(212, 160, 23, 0.16);
+}
+
+.tl-lx-page.tl-lx-officer {
+    --py-gold: #B27A32;
+    --py-gold-light: #E9C98D;
+    --py-ivory: #F6F3ED;
+    --py-line: #DED5C6;
+    --py-accent: #9B5B3B;
+    --py-accent-soft: rgba(155, 91, 59, 0.14);
+}
+
+/* ---------------------------------------------------------------------
+   1. SHELL + PHOTOGRAPHY SIDE
+   --------------------------------------------------------------------- */
+
+.tl-lx-page .tl-lx2-shell {
+    min-height: 720px;
+    border-radius: 26px;
+    box-shadow:
+        0 0 0 1px rgba(212, 160, 23, 0.32),
+        0 40px 92px rgba(2, 10, 20, 0.5);
+}
+
+/* A calm scrim: clear in the middle so the landmark stays visible. */
+@media (min-width: 1001px) {
+    .tl-lx-page .tl-lx2-shell::after {
+        background:
+            radial-gradient(85% 75% at 12% 5%, rgba(240, 210, 138, 0.20) 0%, transparent 52%),
+            linear-gradient(90deg, rgba(5, 18, 31, 0.94) 0%, rgba(6, 24, 40, 0.78) 30%, rgba(6, 22, 38, 0.28) 58%, rgba(7, 25, 42, 0.58) 100%),
+            linear-gradient(180deg, rgba(4, 15, 27, 0.08) 0%, rgba(3, 12, 22, 0.58) 100%);
+        box-shadow: inset 0 0 140px 22px rgba(2, 8, 15, 0.34);
+    }
+
+    /* A French-colonial arched window drawn over the photograph. */
+    .tl-lx-page .tl-lx2-photo::before {
+        content: "";
+        position: absolute;
+        inset: 14px 14px 104px 14px;
+        border: 1px solid rgba(240, 210, 138, 0.26);
+        border-radius: 240px 240px 14px 14px;
+        box-shadow: inset 0 0 0 6px rgba(255, 255, 255, 0.025);
+        pointer-events: none;
+    }
+}
+
+.tl-lx-page .tl-lx2-photo {
+    padding: 42px 46px;
+}
+
+.tl-lx-page .tl-lx2-crest {
+    gap: 14px;
+}
+
+.tl-lx-page .tl-lx2-crest-img {
+    height: 52px;
+    padding: 4px;
+    border: 1px solid rgba(240, 210, 138, 0.55);
+    border-radius: 10px;
+    background: #FFFDF6;
+    box-shadow: 0 10px 24px rgba(2, 10, 20, 0.32);
+}
+
+.tl-lx-page .tl-lx2-crest-govt {
+    color: #F7DFA6;
+    font-size: 0.67rem;
+    letter-spacing: 0.17em;
+}
+
+.tl-lx-page .tl-lx2-crest-dept {
+    color: #D9E6F0;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+}
+
+.tl-lx-page .tl-lxp-masthead {
+    margin-top: 24px;
+    color: #E8D4A2;
+    font-size: 0.61rem;
+    letter-spacing: 0.22em;
+}
+
+.tl-lx-page .tl-lxp-masthead-rule {
+    width: 34px;
+    background: #F0D28A;
+}
+
+.tl-lx-page .tl-lx2-hero {
+    margin-top: 14px;
+}
+
+.tl-lx-page .tl-lx2-eyebrow {
+    gap: 9px;
+    padding: 8px 15px;
+    border: 1px solid rgba(240, 210, 138, 0.52);
+    border-radius: 999px;
+    background: rgba(7, 26, 44, 0.58);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    color: #F7DFA6;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.17em;
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-eyebrow::before {
+    background: #E4785A;
+    box-shadow: 0 0 0 4px rgba(228, 120, 90, 0.16);
+    animation: none;
+}
+
+.tl-lx-page .tl-lx2-hero-title {
+    font-family: 'Cormorant Garamond', 'Source Serif 4', Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(2.35rem, 3.5vw, 3.4rem);
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    color: #FFF9EC;
+    margin: 18px 0 12px;
+    text-shadow: 0 2px 18px rgba(2, 10, 20, 0.55);
+}
+
+.tl-lx-page .tl-lx2-hero-title em {
+    position: relative;
+    color: var(--py-gold-light);
+    white-space: normal;
+}
+
+.tl-lx-page .tl-lx2-hero-title em::after {
+    bottom: -6px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--py-gold-light), transparent);
+}
+
+.tl-lx-page .tl-lx2-hero-text {
+    max-width: 520px;
+    color: #DEE9F2;
+    font-size: 0.93rem;
+    line-height: 1.72;
+}
+
+.tl-lx-page .tl-lx2-points {
+    gap: 8px;
+    margin: 2px 0 20px;
+}
+
+.tl-lx-page .tl-lx2-points span {
+    padding: 8px 12px;
+    border: 1px solid rgba(240, 210, 138, 0.22);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.055);
+    color: #EDF3F8;
+    font-size: 0.69rem;
+    letter-spacing: 0.01em;
+}
+
+.tl-lx-page .tl-lx2-points i {
+    color: var(--py-gold-light);
+}
+
+.tl-lx-page .tl-lxp-journey {
+    margin: 0 0 18px;
+}
+
+.tl-lx-page .tl-lxp-jnum {
+    width: 32px;
+    height: 32px;
+    border-color: rgba(240, 210, 138, 0.6);
+    background: rgba(240, 210, 138, 0.12);
+    color: #F7DFA6;
+}
+
+.tl-lx-page .tl-lxp-jlabel {
+    color: #E5EDF4;
+    font-size: 0.63rem;
+    white-space: normal;
+}
+
+.tl-lx-page .tl-lxp-place {
+    margin-top: 14px;
+    border-color: rgba(240, 210, 138, 0.28);
+    background: rgba(7, 26, 44, 0.5);
+    color: #EDF3F8;
+    letter-spacing: 0.08em;
+}
+
+.tl-lx-page .tl-lxp-place i,
+.tl-lx-page .tl-lxp-place b {
+    color: var(--py-gold-light);
+}
+
+.tl-lx-page .tl-lx2-services {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.tl-lx-page .tl-lx2-service {
+    min-height: 84px;
+    gap: 8px;
+    padding: 11px 11px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.055);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.tl-lx-page .tl-lx2-service:hover {
+    border-color: var(--py-gold-light);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.tl-lx-page .tl-lx2-service-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #F2D689, #C79A28);
+    color: #102F4A;
+    font-size: 0.76rem;
+}
+
+.tl-lx-page .tl-lx2-service-title {
+    color: #F1F6FA;
+    font-size: 0.63rem;
+    line-height: 1.35;
+}
+
+.tl-lx-page .tl-lx2-footline {
+    border-top-color: rgba(240, 210, 138, 0.24);
+    color: #AFC4D3;
+    font-size: 0.7rem;
+}
+
+.tl-lx-page .tl-lx2-footline i {
+    color: var(--py-gold-light);
+}
+
+.tl-lx-page .tl-lx2-landmark {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.tl-lx-page .tl-lx2-landmark > i {
+    color: var(--py-gold-light);
+}
+
+.tl-lx-page .tl-lx2-landmark-name {
+    color: #F7DFA6;
+    font-size: 0.63rem;
+    letter-spacing: 0.14em;
+}
+
+.tl-lx-page .tl-lx2-landmark-note {
+    color: rgba(219, 232, 242, 0.78);
+    font-size: 0.65rem;
+}
+
+/* ---------------------------------------------------------------------
+   2. FORM SIDE — "the ivory sign-in room"
+   --------------------------------------------------------------------- */
+
+.tl-lx-page .tl-lx2-form-side {
+    background-color: var(--py-ivory);
+    background-image:
+        radial-gradient(rgba(16, 47, 74, 0.055) 1px, transparent 1px),
+        radial-gradient(110% 80% at 92% 4%, rgba(212, 160, 23, 0.16), transparent 62%);
+    background-size: 22px 22px, 100% 100%;
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-form-side {
+    background-color: var(--py-ivory);
+    background-image:
+        repeating-linear-gradient(45deg, rgba(16, 47, 74, 0.025) 0 2px, transparent 2px 16px),
+        radial-gradient(100% 80% at 92% 0%, rgba(155, 91, 59, 0.16), transparent 60%);
+    background-size: auto, 100% 100%;
+}
+
+/* The old rings/diagonal silk were designed for a dark panel. */
+.tl-lx-page .tl-lx2-form-side::before,
+.tl-lx-page .tl-lx2-form-side::after {
+    display: none;
+}
+
+.tl-lx-page .tl-lx2-card {
+    max-width: 452px;
+    padding: 38px 40px 30px;
+    border: 1px solid var(--py-line);
+    border-top: 3px solid var(--py-accent);
+    border-radius: 20px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF8 72%, #FBF7EE 100%);
+    box-shadow:
+        0 0 0 7px rgba(255, 255, 255, 0.42),
+        0 32px 72px rgba(8, 24, 40, 0.22);
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-card {
+    border-top-color: var(--py-accent);
+}
+
+/* Retire the old floating officer seal; the new emblem is in the markup. */
+.tl-lx-page.tl-lx-officer .tl-lx2-card::before {
+    display: none;
+}
+
+.tl-lx-page .tl-lx2-card::after {
+    border-radius: 0 20px 0 100%;
+    background: radial-gradient(circle at 100% 0, var(--py-accent-soft), transparent 72%);
+}
+
+/* A colonial arch emblem, centred above the card heading. */
+.tl-login-emblem {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 52px;
+    margin: 0 auto 16px;
+    border: 1px solid rgba(212, 160, 23, 0.62);
+    border-top-left-radius: 26px;
+    border-top-right-radius: 26px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background: linear-gradient(180deg, #153C5B, #0B2238);
+    color: #F4D897;
+    font-size: 1.02rem;
+    box-shadow:
+        0 12px 24px rgba(12, 40, 66, 0.26),
+        inset 0 0 0 4px rgba(255, 255, 255, 0.04);
+}
+
+.tl-login-emblem::after {
+    content: "";
+    position: absolute;
+    left: 9px;
+    right: 9px;
+    bottom: 6px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--py-gold-light), transparent);
+}
+
+.tl-lx-page.tl-lx-officer .tl-login-emblem {
+    border-color: rgba(183, 126, 62, 0.7);
+    background: linear-gradient(180deg, #453027, #211B1B);
+    color: #EBCB96;
+}
+
+.tl-lxp-step {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    margin: 0;
+    padding: 4px 9px;
+    border-color: #E6DCC8;
+    border-radius: 999px;
+    background: #FBF7EE;
+    color: #6E5A3C;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+}
+
+.tl-lxp-step-dot {
+    background: var(--py-accent);
+    box-shadow: 0 0 0 3px var(--py-accent-soft);
+}
+
+.tl-lx-page .tl-lx2-signin-label {
+    display: block;
+    color: #9A6E12;
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-align: center;
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-signin-label {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    color: #8B532F;
+}
+
+.tl-lx-page .tl-lx2-heading,
+.tl-lx-page.tl-lx-pro .tl-lx2-heading {
+    display: block;
+    margin: 8px 0 0;
+    font-family: 'Cormorant Garamond', 'Source Serif 4', Georgia, serif;
+    font-size: 2.05rem;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    color: var(--py-ink);
+    text-align: center;
+}
+
+.tl-lx-page .tl-lx2-heading::after,
+.tl-lx-page.tl-lx-officer .tl-lx2-heading::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 2px;
+    margin: 12px auto 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, var(--py-accent), transparent);
+}
+
+.tl-lxp-heading-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #F6E4B4, #D4A017);
+    color: #12304A;
+    font-size: 0.8rem;
+    box-shadow: none;
+}
+
+.tl-lx-page .tl-lx2-sub {
+    margin: 6px 0 24px;
+    color: var(--py-muted);
+    font-size: 0.82rem;
+    line-height: 1.65;
+    text-align: center;
+}
+
+.tl-lx-page .tl-lx2-alert {
+    border-left-color: #A4472F;
+    border-radius: 8px;
+    background: #FCF0EB;
+    color: #7A3624;
+    font-size: 0.77rem;
+}
+
+/* ---------------------------------------------------------------------
+   3. FIELDS, CAPTCHA AND ACTIONS
+   --------------------------------------------------------------------- */
+
+.tl-lx-page .tl-lx2-field {
+    margin-bottom: 15px;
+}
+
+.tl-lx-page .tl-lx2-field label {
+    margin-bottom: 7px;
+    color: #2B445C;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+.tl-lx-page .tl-lx2-control > i {
+    top: 50%;
+    left: 0;
+    width: 46px;
+    height: 46px;
+    border: 1px solid #DCD3C1;
+    border-right: 0;
+    border-radius: 10px 0 0 10px;
+    background: linear-gradient(135deg, #F8F4EA, #EFE7D6);
+    color: #8A6410;
+    font-size: 0.88rem;
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-control > i {
+    color: #8B532F;
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input {
+    height: 46px;
+    border: 1px solid #DCD3C1;
+    border-left: 0;
+    border-radius: 0 10px 10px 0;
+    background: #FFFDF8;
+    color: var(--py-ink);
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 10px 44px 10px 55px;
+    box-shadow: inset 0 1px 2px rgba(15, 36, 56, 0.03);
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input:focus {
+    border-color: #C79A28;
+    background: #FFFFFF;
+    box-shadow: 0 0 0 4px rgba(212, 160, 23, 0.16);
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-card .tl-lx2-field input.tl-lx2-input:focus {
+    border-color: #B27A32;
+    box-shadow: 0 0 0 4px rgba(178, 122, 50, 0.16);
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input::placeholder {
+    color: #9AA6B2;
+    font-weight: 500;
+}
+
+.tl-lx-page .tl-lx2-eye {
+    right: 5px;
+    color: #7A8794;
+}
+
+.tl-lx-page .tl-lx2-error {
+    color: #A4472F;
+    font-size: 0.71rem;
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-captcha-row {
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-captcha-img {
+    flex: 1 1 auto;
+    max-width: none;
+    height: 52px;
+    border: 1px solid #DCD3C1;
+    border-radius: 10px;
+    background: #FBF7EE;
+    -o-object-fit: cover;
+    object-fit: cover;
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-captcha-refresh {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    border: 1px solid #DCD3C1;
+    border-radius: 10px;
+    background: #F8F4EA;
+    color: #8A6410;
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-captcha-refresh:hover {
+    background: #EFE7D6;
+}
+
+.tl-lx-page .tl-lxp-captcha-hint {
+    color: #8B97A4;
+    font-size: 0.67rem;
+    margin: 0 0 8px;
+}
+
+.tl-lxp-captcha-hint i {
+    color: #9A6E12;
+}
+
+.tl-lx-page .tl-lx2-submit,
+.tl-lx-page.tl-lx-pro .tl-lx2-submit {
+    position: relative;
+    overflow: hidden;
+    height: 48px;
+    margin-top: 8px;
+    border: 1px solid rgba(240, 210, 138, 0.66);
+    border-radius: 10px;
+    background: linear-gradient(135deg, #173E5E 0%, #0E2C46 58%, #0A2136 100%);
+    color: #FFF7E4;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    box-shadow:
+        0 14px 28px rgba(10, 33, 54, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.13);
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-submit {
+    background: linear-gradient(135deg, #4A3529 0%, #2B2524 60%, #1C1B1E 100%);
+    border-color: rgba(233, 201, 141, 0.6);
+}
+
+.tl-lx-page .tl-lx2-submit:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 18px 34px rgba(10, 33, 54, 0.27),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.tl-lx-page .tl-lx2-submit i {
+    color: var(--py-gold-light);
+}
+
+.tl-lx-page .tl-lx2-forgot {
+    margin-top: 14px;
+}
+
+.tl-lx-page .tl-lx2-forgot a {
+    color: #8A6410;
+    font-size: 0.77rem;
+    font-weight: 700;
+}
+
+.tl-lx-page .tl-lx2-divider {
+    margin: 20px 0 13px;
+    color: #94A0AC;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tl-lx-page .tl-lx2-divider::before,
+.tl-lx-page .tl-lx2-divider::after {
+    background: #E6DCC8;
+}
+
+.tl-lx-page .tl-lx2-register {
+    height: 46px;
+    border: 1px solid #C7BCA6;
+    border-radius: 10px;
+    background: #FBF7EE;
+    color: var(--py-ink);
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+}
+
+.tl-lx-page .tl-lx2-register:hover {
+    border-color: var(--py-accent);
+    background: #F5ECD8;
+    color: #6E4B08;
+}
+
+.tl-lx-page .tl-lx2-secure {
+    margin-top: 14px;
+    color: #7A8794;
+    font-size: 0.68rem;
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-secure {
+    width: 100%;
+    margin: 16px 0 0;
+    padding: 8px;
+    border-color: rgba(155, 91, 59, 0.3);
+    background: rgba(155, 91, 59, 0.09);
+    color: #7E4A2F;
+}
+
+.tl-lx-page .tl-lx2-secure i {
+    color: #2E7D46;
+}
+
+.tl-lx-page .tl-lxp-trust span {
+    background: #F2F6F1;
+    color: #41704F;
+}
+
+.tl-lx-page .tl-lxp-official,
+.tl-lx-page .tl-lxp-official a {
+    color: #6F7D8B;
+    font-size: 0.69rem;
+}
+
+.tl-lx-page .tl-lxp-official a {
+    color: #8A6410;
+    font-weight: 700;
+}
+
+/* ---------------------------------------------------------------------
+   4. STACKED + SMALL SCREENS
+   --------------------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+    .tl-lx-page .tl-lx2-shell {
+        border-radius: 20px;
+    }
+
+    .tl-lx-page .tl-lx2-photo {
+        padding: 30px 26px;
+    }
+
+    .tl-lx-page .tl-lx2-photo::before {
+        background: none;
+        inset: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .tl-lx-page .tl-lx2-card {
+        max-width: 470px;
+        padding: 34px 32px 28px;
+    }
+}
+
+@media (max-width: 620px) {
+    .tl-lx-page .tl-lx2-services {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tl-lx-page .tl-lx2-hero-title {
+        font-size: clamp(1.95rem, 7vw, 2.6rem);
+    }
+
+    .tl-lx-page .tl-lx2-crest-img {
+        height: 46px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tl-lx-page .tl-lx2-card {
+        padding: 34px 22px 24px;
+    }
+
+    .tl-lx-page .tl-lx2-heading {
+        font-size: 1.75rem;
+    }
+
+    .tl-lxp-step {
+        top: 12px;
+        right: 12px;
+        font-size: 0.53rem;
+    }
+
+    .tl-lx-page .tl-lx2-points span {
+        font-size: 0.64rem;
+    }
+
+    .tl-lxp-journey {
+        gap: 6px;
+    }
+
+    .tl-lx-page .tl-lxp-jnum {
+        width: 27px;
+        height: 27px;
+        font-size: 0.6rem;
+    }
+}
+
+/* Keyboard focus must stay obvious on the light card. */
+.tl-lx-page a:focus-visible,
+.tl-lx-page button:focus-visible,
+.tl-lx-page input:focus-visible {
+    outline: 2px solid #8A6410;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tl-lx-page .tl-lx2-submit,
+    .tl-lx-page .tl-lx2-submit i {
+        transition: none;
+    }
+}
+
+/* =====================================================================
+   5. CLEAR PHOTO BACKDROP — final override
+   ---------------------------------------------------------------------
+   Both login pages now use a clean navy gradient instead of a photograph.
+   The arch frame, typography and sign-in card are unchanged. Placed last
+   so it beats every background declaration in login.css, including the
+   page-specific .tl-lx-pro / .tl-lx-officer rules.
+   ===================================================================== */
+
+.tl-lx-page .tl-lx2-shell,
+.tl-lx-page.tl-lx-pro .tl-lx2-shell,
+.tl-lx-page.tl-lx-officer .tl-lx2-shell {
+    background-color: #0A2438;
+    background-image: linear-gradient(145deg, #123A58 0%, #0A2438 52%, #071A2C 100%);
+}
+
+/* The old blurred photograph layer is no longer needed. */
+.tl-lx-page .tl-lx2-shell::before {
+    display: none;
+}
+
+/* Softer scrim now that there is no image to protect text from. */
+.tl-lx-page .tl-lx2-shell::after {
+    background:
+        radial-gradient(80% 70% at 12% 0%, rgba(240, 210, 138, 0.12) 0%, transparent 55%),
+        linear-gradient(135deg, rgba(7, 26, 44, 0.08) 0%, rgba(3, 12, 22, 0.34) 100%);
+    box-shadow: inset 0 0 120px 18px rgba(2, 8, 15, 0.2);
+}
+
+/* Stacked layout used to restore the photo on .tl-lx2-photo. */
+@media (max-width: 1000px) {
+    .tl-lx-page .tl-lx2-photo,
+    .tl-lx-page.tl-lx-pro .tl-lx2-photo,
+    .tl-lx-page.tl-lx-officer .tl-lx2-photo {
+        background-color: #0A2438;
+        background-image: linear-gradient(160deg, #123A58 0%, #0A2438 60%, #071A2C 100%);
+    }
+}
+
+/* Photo descriptions no longer apply on either page. */
+.tl-lx-page .tl-lx2-landmark,
+.tl-lx-page.tl-lx-pro .tl-lx2-landmark,
+.tl-lx-page.tl-lx-officer .tl-lx2-landmark {
+    display: none;
+}

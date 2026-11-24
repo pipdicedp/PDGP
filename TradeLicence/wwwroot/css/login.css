@@ -2380,3 +2380,1231 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-services-list {
 		font-size: 0.7rem;
 	}
 }
+
+/* =====================================================================
+   PROFESSIONAL ALIGNMENT + POLISH
+   - header, info cards and login banner now share ONE width and ONE
+     left/right edge
+   - equal-height cards, tidy tiles, stronger hero, better footer
+   - hides the empty red box (validation summary) on the login page
+
+   NOTE: this polish was authored against the older tl-lx-* classes, but
+   the Login / OfficerLogin views currently use the tl-lx2-* "Regal Split"
+   classes. The header / info-card / footer / page-width rules below are
+   class-agnostic and apply exactly as written; the login-banner rules are
+   provided for BOTH families (tl-lx2-* is the active one).
+===================================================================== */
+
+/* ---------- 0. empty red box ---------- */
+.tl-lx-alert.validation-summary-valid,
+.tl-lx-alert:empty,
+.tl-lx2-alert:empty {
+	display: none;
+}
+
+/* ---------- 1. one common width for header / cards / banner ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) {
+	--pg-width: 1320px;      /* outer width  (inner content = 1296px) */
+	--pg-gutter: 12px;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-topbar-container {
+	max-width: var(--pg-width);
+	width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: var(--pg-gutter);
+	padding-right: var(--pg-gutter);
+	box-sizing: border-box;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-section .container {
+	max-width: var(--pg-width);
+	padding-left: var(--pg-gutter);
+	padding-right: var(--pg-gutter);
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) main.tl-container {
+	max-width: var(--pg-width);
+	width: 100%;
+	padding-left: var(--pg-gutter);
+	padding-right: var(--pg-gutter);
+	box-sizing: border-box;
+}
+
+.tl-lx-page {
+	max-width: none;
+	margin: 32px auto 40px;
+	padding: 0;
+}
+
+/* ---------- 1b. header edges match the cards; menu never creates a sideways scrollbar ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-topbar {
+	padding-left: 0;
+	padding-right: 0;
+}
+
+/* menu: keep it on ONE line on laptops by tightening it a little, and let it
+   wrap onto a second line on small screens (no sideways scrollbar) */
+@media (max-width: 1500px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li > a {
+		padding-left: 8px;
+		padding-right: 8px;
+	}
+}
+
+@media (max-width: 1380px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu > li > a {
+		padding-left: 6px;
+		padding-right: 6px;
+		font-size: 12px;
+	}
+}
+
+@media (max-width: 1260px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-nav-menu {
+		flex-wrap: wrap !important;
+	}
+}
+
+/* ---------- 2. info cards: equal height, balanced content ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-section {
+	padding: 40px 0 44px;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-grid {
+	grid-template-columns: 1fr 1fr;
+	gap: 32px;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card {
+	display: flex;
+	flex-direction: column;
+	padding: 28px 32px 28px;
+}
+
+/* intro paragraph sits in the middle of its card, not stuck at the top */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-card > p {
+	flex: 1;
+	display: flex;
+	align-items: center;
+}
+
+/* ---------- 3. login banner / service tiles (active tl-lx2 markup) ---------- */
+.tl-lx2-services {
+	grid-auto-rows: 1fr;
+	gap: 14px;
+}
+
+.tl-lx2-service {
+	min-height: 112px;
+	justify-content: space-between;
+	padding: 16px 16px 18px;
+	border-radius: 14px;
+	background: rgba(255,255,255,0.08);
+	border: 1px solid rgba(255,255,255,0.18);
+	box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+
+.tl-lx2-service-icon {
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	font-size: 1.05rem;
+}
+
+.tl-lx2-service-title {
+	font-size: 0.84rem;
+	line-height: 1.4;
+}
+
+/* ---------- 4. login card ---------- */
+.tl-lx2-card {
+	max-width: 440px;
+	justify-self: end;
+	align-self: center;
+	border-radius: 18px;
+	box-shadow: 0 30px 70px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.10);
+}
+
+.tl-lx2-card .tl-lx2-input {
+	min-height: 46px;
+	border-radius: 10px;
+}
+
+.tl-lx2-card .tl-lx2-submit {
+	min-height: 48px;
+	border-radius: 10px;
+	font-size: 0.98rem;
+	letter-spacing: 0.02em;
+}
+
+.tl-lx2-register {
+	min-height: 46px;
+	border-radius: 10px;
+}
+
+/* ---------- 5. footer ---------- */
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer {
+	margin-top: 8px;
+	padding: 20px 16px;
+	background: linear-gradient(120deg, #0b2236 0%, #14405f 100%);
+	border-top: 3px solid #D4A017;
+	color: #BFD3E2;
+	text-align: center;
+	font-size: 0.85rem;
+}
+
+html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
+	margin: 0;
+	color: #BFD3E2;
+}
+
+/* ---------- 6. tablets and phones ---------- */
+@media (max-width: 1100px) {
+	.tl-lx2-card {
+		justify-self: center;
+	}
+}
+
+@media (max-width: 768px) {
+	html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-info-grid {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+}
+
+@media (max-width: 620px) {
+	.tl-lx2-services {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+/* =====================================================================
+   DARK BLUE LOGIN THEME
+   Applies to both the citizen (Login) and officer (OfficerLogin) pages,
+   which share the tl-lx2-* "Regal Split" markup. Keeps the Auroville
+   (Matrimandir) photo as the backdrop image and lays a deep-navy theme
+   over the whole sign-in side: photo on the left, navy glass card on the
+   right. Gold (#D4A017 / #E8B923) stays the accent colour.
+===================================================================== */
+
+/* ---------- 1. backdrop: keep the photo, deepen the navy wash ---------- */
+.tl-lx2-shell {
+	background: #071A2C url('../Images/Matrimandir_Auroville.jpg') center / cover no-repeat;
+}
+
+.tl-lx2-shell::before {
+	background:
+		linear-gradient(90deg, rgba(4,14,26,0.90) 0%, rgba(6,26,46,0.72) 46%, rgba(4,14,26,0.92) 100%),
+		linear-gradient(180deg, rgba(6,22,38,0.45) 0%, rgba(3,11,20,0.85) 100%);
+}
+
+/* ---------- 2. right panel: flat deep navy ---------- */
+.tl-lx2-form-side {
+	background: linear-gradient(160deg, #0A2136 0%, #071A2C 58%, #04101D 100%);
+}
+
+/* ---------- 3. sign-in card: navy glass instead of cream ---------- */
+.tl-lx2-card {
+	background: linear-gradient(180deg, rgba(14,40,64,0.96) 0%, rgba(8,25,44,0.98) 100%);
+	border-top: 4px solid #D4A017;
+	box-shadow:
+		0 0 0 1px rgba(212,160,23,0.30),
+		0 30px 70px rgba(0,0,0,0.55);
+}
+
+.tl-lx2-signin-label {
+	color: #E8B923;
+}
+
+.tl-lx2-heading {
+	color: #EAF2FA;
+}
+
+.tl-lx2-sub {
+	color: #9FB4C8;
+}
+
+/* ---------- 4. form fields ---------- */
+.tl-lx2-field label {
+	color: #C9DAE6;
+}
+
+.tl-lx2-input {
+	background: #0B2135;
+	border: 1px solid rgba(255,255,255,0.16);
+	color: #EAF2FA;
+}
+
+.tl-lx2-input::placeholder {
+	color: #6E8AA3;
+}
+
+.tl-lx2-input:focus {
+	background: #0E2740;
+	border-color: #E8B923;
+	box-shadow: 0 0 0 4px rgba(232,185,35,0.18);
+}
+
+.tl-lx2-eye {
+	color: #8FA8BC;
+}
+
+.tl-lx2-eye:hover {
+	color: #E8B923;
+}
+
+.tl-lx2-error {
+	color: #FF9B8F;
+}
+
+/* ---------- 5. captcha ---------- */
+.tl-lx2-captcha-img {
+	background: #EAF1F8;
+	border: 1px solid rgba(255,255,255,0.16);
+}
+
+.tl-lx2-captcha-refresh {
+	background: #0B2135;
+	border: 1px solid rgba(255,255,255,0.16);
+	color: #E8B923;
+}
+
+.tl-lx2-captcha-refresh:hover {
+	background: #123049;
+}
+
+/* ---------- 5b. password toggle icon colour ---------- */
+.tl-lx2-eye i {
+	color: inherit;
+}
+
+/* ---------- 6. links, divider, register ---------- */
+.tl-lx2-forgot a {
+	color: #E8B923;
+}
+
+.tl-lx2-divider {
+	color: #7E97AD;
+}
+
+.tl-lx2-divider::before,
+.tl-lx2-divider::after {
+	background: rgba(255,255,255,0.16);
+}
+
+.tl-lx2-register {
+	border: 1.5px solid rgba(232,185,35,0.75);
+	color: #F3D27A;
+	background: rgba(232,185,35,0.06);
+}
+
+.tl-lx2-register:hover {
+	background: #E8B923;
+	color: #0A2136;
+}
+
+.tl-lx2-secure {
+	color: #7E97AD;
+}
+
+/* ---------- 7. alerts on the dark card ---------- */
+.tl-lx2-alert {
+	background: rgba(179,38,30,0.22);
+	border-left: 3px solid #FF9B8F;
+	color: #FFC9C2;
+}
+
+/* =====================================================================
+   ALIGNMENT FIXES
+   Lining up the service tiles and the sign-in card fields on both the
+   citizen (Login) and officer (OfficerLogin) pages.
+===================================================================== */
+
+/* ---------- 1. service tiles: icon + title sit together at the top ---------- */
+/* The tiles used `justify-content: space-between`, which pinned the title to
+   the bottom of the tile. With 1-, 2- and 3-line titles the titles then began
+   at 3 different heights and drifted away from their icon. Top-aligning keeps
+   every icon and every first title line on the same line. */
+.tl-lx2-service {
+	justify-content: flex-start;
+	gap: 12px;
+}
+
+/* ---------- 2. sign-in card: captcha row spans the field width ---------- */
+/* The 160x56 captcha SVG plus its refresh button only filled the left half of
+   the field. Pin the image left and the refresh button right so the row lines
+   up with the inputs above and below it. */
+.tl-lx2-card .tl-lx2-captcha-row {
+	justify-content: space-between;
+}
+
+.tl-lx2-card .tl-lx2-captcha-img,
+.tl-lx2-card .tl-lx2-captcha-refresh {
+	height: 46px;
+}
+
+/* ---------- 3. sign-in card: make the input boxes read as aligned fields ---------- */
+/* On the navy card the input fill was almost the same shade as the card, so
+   the boxes and their leading icons looked like they floated out of line.
+   A slightly lifted fill plus a clearer border gives every field a visible,
+   aligned box edge. */
+.tl-lx2-input {
+	background: #102A44;
+	border: 1px solid rgba(255,255,255,0.22);
+}
+
+.tl-lx2-input:focus {
+	background: #14314F;
+	border-color: #E8B923;
+}
+
+/* =====================================================================
+   FULL AUROVILLE BACKDROP — dark navy, softly blurred
+   One full-bleed Matrimandir (Auroville) photograph now sits behind the
+   WHOLE login shell — it is no longer split between a photo panel and a
+   flat-navy panel. It is oversized, blurred and laid under a deep-navy
+   duotone with a vignette, and the sign-in card floats on top as frosted
+   glass. Applies to the citizen (Login) and officer (OfficerLogin) pages.
+===================================================================== */
+
+/* fallback fill so there is never a flash of white before the photo paints */
+.tl-lx2-shell {
+	background: #061726;
+}
+
+/* ---------- 1. the photograph: full-bleed, oversized, blurred ---------- */
+.tl-lx2-shell::before {
+	inset: -8%;
+	background: #061726 url('../Images/Matrimandir_Auroville.jpg') center / cover no-repeat;
+	filter: blur(17px) saturate(1.02) brightness(1.02) contrast(1.06);
+	transform: scale(1.12);
+	transform-origin: center;
+	animation: tl-lx2-drift 48s ease-in-out infinite alternate;
+	will-change: transform;
+}
+
+/* ---------- 2. navy duotone + vignette + a soft glow where the dome sits ---------- */
+.tl-lx2-shell::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background:
+		radial-gradient(125% 115% at 50% 40%, rgba(30,74,110,0.26) 0%, rgba(7,22,38,0.82) 58%, rgba(3,10,18,0.96) 100%),
+		linear-gradient(180deg, rgba(6,20,36,0.58) 0%, rgba(5,17,30,0.66) 55%, rgba(3,11,20,0.84) 100%);
+	box-shadow: inset 0 0 170px 45px rgba(2,8,15,0.62);
+}
+
+/* keep both panels transparent so the single backdrop reads edge-to-edge */
+.tl-lx2-photo,
+.tl-lx2-form-side {
+	background: transparent;
+}
+
+/* ---------- 3. sign-in card floats as frosted glass over the photo ---------- */
+.tl-lx2-card {
+	background: linear-gradient(180deg, rgba(15,42,68,0.72) 0%, rgba(6,20,36,0.82) 100%);
+	-webkit-backdrop-filter: blur(20px) saturate(1.15);
+	backdrop-filter: blur(20px) saturate(1.15);
+	box-shadow:
+		0 0 0 1px rgba(212,160,23,0.32),
+		0 30px 70px rgba(0,0,0,0.55),
+		inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* ---------- 4. very slow drift so the backdrop feels alive, not static ---------- */
+@keyframes tl-lx2-drift {
+	from { transform: scale(1.12) translate3d(-1.2%, -0.8%, 0); }
+	to   { transform: scale(1.19) translate3d(1.4%, 1.2%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx2-shell::before { animation: none; }
+}
+
+/* =====================================================================
+   OFFICER LOGIN — officer-only polish
+   Scoped to .tl-lx-page.tl-lx-officer, a hook present ONLY on
+   Views/Account/OfficerLogin.cshtml — the citizen Login page is untouched.
+   Appended after the recovered theme; nothing above is overwritten.
+===================================================================== */
+
+/* ---------- 1. an "Official Use" seal pinned to the sign-in card ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-card::before {
+	content: "\f3ed"; /* fa-shield-halved */
+	font-family: "Font Awesome 6 Free";
+	font-weight: 900;
+	position: absolute;
+	top: -20px;
+	right: 24px;
+	width: 46px;
+	height: 46px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: radial-gradient(circle at 34% 28%, #F6DC93 0%, #D4A017 55%, #A0750A 100%);
+	color: #0A2136;
+	font-size: 1.08rem;
+	box-shadow:
+		0 12px 26px rgba(0,0,0,0.5),
+		0 0 0 4px rgba(10,33,54,0.9);
+	z-index: 3;
+}
+
+/* ---------- 2. the sign-in label becomes a solid "OFFICIAL ACCESS" chip ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-signin-label {
+	display: inline-block;
+	padding: 5px 12px;
+	border-radius: 999px;
+	background: linear-gradient(135deg, #E8B923, #C28F0C);
+	color: #10293F;
+	box-shadow: 0 6px 16px rgba(212,160,23,0.35);
+}
+
+/* ---------- 3. a gold rule under the heading ties the card together ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-heading::after {
+	content: "";
+	display: block;
+	width: 46px;
+	height: 3px;
+	border-radius: 2px;
+	margin-top: 10px;
+	background: linear-gradient(90deg, #E8B923, rgba(232,185,35,0));
+}
+
+/* ---------- 4. the security note reads as a verified badge, not grey fine print ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-secure {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 7px;
+	width: fit-content;
+	margin: 16px auto 0;
+	padding: 7px 14px;
+	border-radius: 999px;
+	background: rgba(27,127,59,0.12);
+	border: 1px solid rgba(27,127,59,0.35);
+	color: #A9D6B8;
+	font-weight: 600;
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-secure i {
+	margin-right: 0;
+	color: #38C172;
+}
+
+/* ---------- 5. hero eyebrow gains a live "restricted" dot ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-eyebrow::before {
+	content: "";
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: #38C172;
+	box-shadow: 0 0 0 0 rgba(56,193,114,0.7);
+	animation: tl-lx-officer-pulse 2.4s ease-out infinite;
+}
+
+@keyframes tl-lx-officer-pulse {
+	0%   { box-shadow: 0 0 0 0 rgba(56,193,114,0.6); }
+	70%  { box-shadow: 0 0 0 9px rgba(56,193,114,0); }
+	100% { box-shadow: 0 0 0 0 rgba(56,193,114,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx-page.tl-lx-officer .tl-lx2-eyebrow::before { animation: none; }
+}
+
+/* =====================================================================
+   AUROVILLE BACKDROPS — one photograph per audience
+   ---------------------------------------------------------------------
+   Appended only; nothing above is rewritten. Both login pages share the
+   .tl-lx2-shell backdrop, but they now carry DIFFERENT photographs, so the
+   image does a job instead of being generic decoration:
+     • citizen  (Views/Account/Login.cshtml)        -> Matrimandir
+     • officer  (Views/Account/OfficerLogin.cshtml) -> Auroville Town Hall
+   The officer page is told apart by the .tl-lx-officer hook on .tl-lx-page.
+   Each photo is also labelled by a placard (.tl-lx2-landmark) that names the
+   building and says what it is — see part 6.
+
+   Assets — both licence-clean, no attribution duty on the department:
+     Images/Matrimandir_Auroville.jpg  3200x1800  CC0
+       "Auroville" by Ramya Srivastav
+       https://commons.wikimedia.org/wiki/File:Auroville.jpg
+     Images/Auroville_Town_Hall.jpg    3200x2134  Public domain
+       "Town Hall of Auroville" by Kaspar Konrad
+       https://commons.wikimedia.org/wiki/File:Town_Hall_of_Auroville.jpg
+   Both are DOWNSCALED by `cover` at every width (never upscaled), so they
+   stay sharp. Full provenance: Images/CREDITS.md.
+
+   Every re-sampling trick from the base theme stays switched off:
+     • filter: none    — no blur(17px);
+     • transform: none — no 1.06-1.19 zoom;
+     • animation: none — no drift (which forces constant re-sampling).
+   ===================================================================== */
+
+/* ---------- 1. base field: solid navy (also retires the old 960x540 file) ---------- */
+.tl-lx-page,
+.tl-lx2-shell {
+	background: #071A2C;
+	background-image: none;
+}
+
+/* ---------- 2. citizen photograph, painted 1:1 — no blur, no zoom, no drift ---------- */
+.tl-lx2-shell::before {
+	inset: 0;
+	background: #071A2C url('../Images/Matrimandir_Auroville.jpg') center 45% / cover no-repeat;
+	filter: none;      /* the base theme's blur(17px) is what buried the photo */
+	transform: none;   /* the 1.06-1.19 scale re-sampled it on every frame */
+	animation: none;   /* the drift forced constant re-sampling */
+	will-change: auto;
+}
+
+/* ---------- 3. officer login swaps in the civic photograph ---------- */
+.tl-lx-page.tl-lx-officer .tl-lx2-shell::before {
+	background-image: url('../Images/Auroville_Town_Hall.jpg');
+}
+
+/* ---------- 4. navy scrim: dark where the copy sits, clear through the middle ---------- */
+.tl-lx2-shell::after {
+	background:
+		radial-gradient(135% 110% at 60% 30%, rgba(6,20,36,0.00) 0%, rgba(6,20,36,0.16) 50%, rgba(3,11,20,0.70) 100%),
+		linear-gradient(96deg, rgba(4,14,26,0.78) 0%, rgba(6,22,38,0.34) 44%, rgba(5,16,28,0.16) 66%, rgba(4,13,23,0.60) 100%);
+	box-shadow: inset 0 0 130px 24px rgba(2,8,15,0.38);
+}
+
+/* ---------- 5. STACKED LAYOUT: show the whole photograph ----------
+   Below 1000px the shell collapses to one column and its backdrop box
+   becomes a ~900x1500 portrait strip, so `cover` used to zoom ~2.8x into
+   the middle of the picture. Here the photograph moves onto the photo
+   panel instead (a normal landscape box, so ~82% of the scene width stays
+   visible) and the sign-in column gets a clean navy field. */
+@media (max-width: 1000px) {
+	.tl-lx2-shell {
+		background: #071A2C;
+	}
+
+	.tl-lx2-shell::before {
+		background-image: none;
+	}
+
+	/* ...including on the officer page: its desktop rule (part 3) is MORE
+	   SPECIFIC than the plain `.tl-lx2-shell::before` above, so without this
+	   the town hall would still paint across the whole stacked page as well
+	   as on the panel below. */
+	.tl-lx-page.tl-lx-officer .tl-lx2-shell::before {
+		background-image: none;
+	}
+
+	.tl-lx2-shell::after {
+		background: none;
+		box-shadow: none;
+	}
+
+	.tl-lx2-photo {
+		background: #071A2C url('../Images/Matrimandir_Auroville.jpg') center 45% / cover no-repeat;
+	}
+
+	/* the officer page keeps its own photograph when stacked */
+	.tl-lx-page.tl-lx-officer .tl-lx2-photo {
+		background-image: url('../Images/Auroville_Town_Hall.jpg');
+	}
+
+	/* the panel's own copy needs its own scrim once the shell one is off */
+	.tl-lx2-photo::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background: linear-gradient(180deg, rgba(4,14,26,0.74) 0%, rgba(5,17,30,0.36) 40%, rgba(4,13,23,0.66) 100%);
+	}
+}
+
+/* ---------- 6. the placard: tells the visitor what the photograph is ----------
+   Sits as the last line of the photo panel, under the footline. The panel
+   is a flex column whose footline already owns `margin-top: auto`, so this
+   simply trails it. Below 1000px the footline is hidden and the placard
+   becomes the bottom line instead. */
+.tl-lx2-landmark {
+	margin: 14px 0 0;
+	display: flex;
+	align-items: flex-start;
+	gap: 9px;
+	max-width: 430px;
+	text-shadow: 0 1px 3px rgba(2,10,20,0.72);
+}
+
+.tl-lx2-landmark > i {
+	flex: 0 0 auto;
+	margin-top: 2px;
+	color: #D4A017;
+	font-size: 0.78rem;
+}
+
+.tl-lx2-landmark-name {
+	display: block;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #EEF3F8;
+}
+
+.tl-lx2-landmark-note {
+	display: block;
+	margin-top: 3px;
+	font-size: 0.69rem;
+	line-height: 1.5;
+	color: rgba(203,220,236,0.74);
+}
+
+/* ---------- 7. hero copy stays crisp over the backdrop ---------- */
+.tl-lx2-hero-title,
+.tl-lx2-hero-text,
+.tl-lx2-crest-govt,
+.tl-lx2-crest-dept {
+	text-shadow: 0 1px 3px rgba(2,10,20,0.78), 0 2px 14px rgba(2,10,20,0.68);
+}
+
+/* =====================================================================
+   INVESTOR LOGIN 2026 — "Puducherry Invest" refinement
+   ---------------------------------------------------------------------
+   APPENDED ONLY: every rule below is scoped to .tl-lx-pro, a hook added
+   solely to Views/Account/Login.cshtml. The officer login page and all
+   previously recovered baselines are left exactly as they were.
+
+   Design intent: a calm, civic-precise shell (navy / warm gold / ivory)
+   with three investor-specific signals on the left - a masthead, a
+   three-step journey and a place line - and a focused, elevated sign-in
+   card on the right. No fabricated statistics or invented certifications.
+   ===================================================================== */
+
+/* ---------- 1. shell: a finer keyline and a softer scrim ---------- */
+.tl-lx-pro .tl-lx2-shell {
+	min-height: 700px;
+	border-radius: 22px;
+	box-shadow:
+		0 0 0 1px rgba(232,185,35,0.30),
+		0 34px 84px rgba(2,10,20,0.55);
+}
+
+/* ---------- 2. wide-layout scrim + a quiet colonial-arch motif ----------
+   Scoped to the two-column layout only: the stacked layout turns the shell
+   scrim off and gives .tl-lx2-photo::before its own scrim, so layering these
+   there would double-darken the photograph. */
+@media (min-width: 1001px) {
+	.tl-lx-pro .tl-lx2-shell::after {
+		background:
+			radial-gradient(115% 95% at 10% 4%, rgba(232,185,35,0.13) 0%, transparent 44%),
+			radial-gradient(100% 90% at 92% 96%, rgba(8,42,72,0.52) 0%, transparent 62%),
+			linear-gradient(96deg, rgba(4,14,26,0.74) 0%, rgba(6,22,38,0.32) 45%, rgba(5,16,28,0.22) 66%, rgba(4,13,23,0.68) 100%);
+		box-shadow: inset 0 0 120px 18px rgba(2,8,15,0.30);
+	}
+
+	.tl-lx-pro .tl-lx2-photo::before {
+		content: "";
+		position: absolute;
+		top: -86px;
+		right: -70px;
+		width: 300px;
+		height: 300px;
+		border: 1px solid rgba(232,185,35,0.20);
+		border-radius: 50%;
+		box-shadow:
+			0 0 0 28px rgba(232,185,35,0.035),
+			0 0 0 58px rgba(232,185,35,0.025),
+			0 0 0 90px rgba(232,185,35,0.018);
+		pointer-events: none;
+	}
+}
+
+/* ---------- 3. masthead: "Investor Facilitation / Single Window" ---------- */
+.tl-lxp-masthead {
+	display: inline-flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 20px;
+	color: #E8D6A0;
+	font-size: 0.65rem;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	text-shadow: 0 1px 4px rgba(2,10,20,0.8);
+}
+
+.tl-lxp-masthead-rule {
+	display: block;
+	width: 26px;
+	height: 1px;
+	background: #E8B923;
+}
+
+.tl-lx-pro .tl-lx2-hero {
+	margin-top: 18px;
+}
+
+/* ---------- 4. hero display type: larger, with a gold underline ---------- */
+.tl-lx-pro .tl-lx2-hero-title {
+	font-size: clamp(2rem, 3.1vw, 2.9rem);
+	line-height: 1.1;
+	letter-spacing: -0.012em;
+	margin: 14px 0 12px;
+}
+
+.tl-lx-pro .tl-lx2-hero-title em {
+	position: relative;
+	white-space: nowrap;
+}
+
+.tl-lx-pro .tl-lx2-hero-title em::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -5px;
+	height: 2px;
+	border-radius: 2px;
+	background: linear-gradient(90deg, #E8B923, rgba(232,185,35,0.10));
+}
+
+.tl-lx-pro .tl-lx2-hero-text {
+	font-size: 0.94rem;
+	line-height: 1.7;
+	max-width: 540px;
+}
+
+/* ---------- 5. the investor journey: 3 numbered steps ---------- */
+.tl-lxp-journey {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 2px 0 18px;
+	max-width: 520px;
+}
+
+.tl-lxp-jstep {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	flex: 0 0 auto;
+	text-align: center;
+}
+
+.tl-lxp-jnum {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	border: 1px solid rgba(232,185,35,0.62);
+	background: rgba(232,185,35,0.12);
+	color: #F3D27A;
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 0.68rem;
+	font-weight: 500;
+	box-shadow: 0 0 0 4px rgba(232,185,35,0.05);
+}
+
+.tl-lxp-jlabel {
+	color: #DCE7F0;
+	font-size: 0.66rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	text-shadow: 0 1px 4px rgba(2,10,20,0.85);
+}
+
+.tl-lxp-jline {
+	flex: 1 1 auto;
+	height: 1px;
+	margin-top: 15px;
+	background: linear-gradient(90deg, rgba(232,185,35,0.45), rgba(232,185,35,0.12));
+}
+
+/* ---------- 6. place line, above the existing landmark placard ---------- */
+.tl-lxp-place {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 16px;
+	padding: 6px 12px;
+	border: 1px solid rgba(255,255,255,0.16);
+	border-radius: 999px;
+	background: rgba(255,255,255,0.06);
+	color: #E6EEF5;
+	font-size: 0.68rem;
+	letter-spacing: 0.06em;
+	text-shadow: 0 1px 3px rgba(2,10,20,0.8);
+}
+
+.tl-lxp-place i { color: #E8B923; }
+.tl-lxp-place b { color: rgba(232,185,35,0.75); font-weight: 400; }
+.tl-lx-pro .tl-lx2-landmark { margin-top: 10px; }
+
+/* ---------- 7. sign-in card: ivory glass with a precise gold edge ---------- */
+.tl-lx-pro .tl-lx2-card {
+	max-width: 442px;
+	padding: 28px 34px 26px;
+	border: 1px solid rgba(212,160,23,0.38);
+	border-top: 3px solid #D4A017;
+	border-radius: 20px;
+	background: linear-gradient(180deg, #FFFDF7 0%, #FFFFFF 60%, #FCFDFE 100%);
+	box-shadow:
+		0 0 0 6px rgba(255,255,255,0.05),
+		0 32px 74px rgba(2,10,20,0.56);
+}
+
+/* small warm corner glow */
+.tl-lx-pro .tl-lx2-card::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 110px;
+	height: 110px;
+	border-radius: 0 20px 0 100%;
+	background: radial-gradient(circle at 100% 0, rgba(212,160,23,0.16), transparent 72%);
+	pointer-events: none;
+}
+
+.tl-lxp-step {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 14px;
+	padding: 5px 11px;
+	border: 1px solid #E4E9EF;
+	border-radius: 999px;
+	background: #F6F9FC;
+	color: #41546a;
+	font-size: 0.67rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.tl-lxp-step-dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #D4A017;
+	box-shadow: 0 0 0 3px rgba(212,160,23,0.16);
+}
+
+.tl-lxp-step-count {
+	font-family: 'IBM Plex Mono', monospace;
+	color: #94A3B8;
+	letter-spacing: 0;
+}
+
+.tl-lx-pro .tl-lx2-signin-label {
+	display: inline-block;
+	color: #A8760A;
+	letter-spacing: 0.15em;
+}
+
+.tl-lx-pro .tl-lx2-heading {
+	display: flex;
+	align-items: center;
+	gap: 11px;
+	font-size: 1.85rem;
+	letter-spacing: -0.01em;
+	margin: 8px 0 7px;
+}
+
+.tl-lxp-heading-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 34px;
+	height: 34px;
+	flex: 0 0 auto;
+	border-radius: 10px;
+	background: linear-gradient(135deg, #12304A, #1E4F70);
+	color: #F3D27A;
+	font-size: 0.86rem;
+	box-shadow: 0 6px 14px rgba(18,48,74,0.22);
+}
+
+.tl-lx-pro .tl-lx2-sub {
+	margin-bottom: 20px;
+}
+
+/* ---------- 8. fields: icon tab, calm focus, clearer labels ---------- */
+.tl-lx-pro .tl-lx2-field label {
+	color: #34495E;
+	font-size: 0.73rem;
+	font-weight: 700;
+	letter-spacing: 0.035em;
+	text-transform: uppercase;
+}
+
+.tl-lx-pro .tl-lx2-control > i {
+	left: 0;
+	width: 44px;
+	height: 44px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-right: 1px solid #E2E8F0;
+	border-radius: 10px 0 0 10px;
+	background: linear-gradient(135deg, #F5F8FB, #EDF3F8);
+	color: #1E4F70;
+	font-size: 0.9rem;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-input {
+	height: 44px;
+	border-color: #DCE4EC;
+	background: #FFFFFF;
+	border-radius: 0 10px 10px 0;
+	padding: 10px 44px 10px 55px;
+	box-shadow: inset 0 1px 2px rgba(15,36,56,0.035);
+	font-size: 0.88rem;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-input:focus {
+	border-color: #C28F0C;
+	background: #FFFDF7;
+	box-shadow: 0 0 0 4px rgba(212,160,23,0.17);
+}
+
+.tl-lx-pro .tl-lx2-eye {
+	right: 4px;
+	color: #64748B;
+}
+
+/* ---------- 9. captcha: framed image, helper line ---------- */
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-row {
+	gap: 10px;
+	margin-bottom: 6px;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-img,
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-refresh {
+	height: 46px;
+	border-radius: 10px;
+	border-color: #D8E0E8;
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-img {
+	flex: 1 1 auto;
+	max-width: 230px;
+	object-fit: cover;
+	box-shadow: 0 4px 10px rgba(15,36,56,0.08);
+}
+
+.tl-lx-pro .tl-lx2-card .tl-lx2-captcha-refresh {
+	width: 46px;
+	flex: 0 0 46px;
+	background: #F8FAFC;
+	color: #1E4F70;
+}
+
+.tl-lxp-captcha-hint {
+	color: #8A98A8;
+	font-size: 0.69rem;
+	margin: 0 0 8px;
+}
+
+.tl-lxp-captcha-hint i { color: #B07F0A; margin-right: 4px; }
+
+/* ---------- 10. submit: gold bar with a light sweep ---------- */
+.tl-lx-pro .tl-lx2-submit {
+	position: relative;
+	overflow: hidden;
+	height: 46px;
+	margin-top: 8px;
+	border-radius: 10px;
+	background: linear-gradient(135deg, #F2CB55 0%, #D4A017 55%, #B8860A 100%);
+	color: #0E2A40;
+	font-size: 0.91rem;
+	letter-spacing: 0.045em;
+	text-transform: uppercase;
+	box-shadow: 0 12px 26px rgba(3,12,22,0.26), inset 0 1px 0 rgba(255,255,255,0.55);
+}
+
+.tl-lx-pro .tl-lx2-submit::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	transform: translateX(-125%);
+	background: linear-gradient(100deg, transparent 20%, rgba(255,255,255,0.42) 50%, transparent 80%);
+	transition: transform 0.65s ease;
+}
+
+.tl-lx-pro .tl-lx2-submit:hover::after { transform: translateX(125%); }
+.tl-lx-pro .tl-lx2-submit i { transition: transform 0.2s ease; }
+.tl-lx-pro .tl-lx2-submit:hover i { transform: translateX(4px); }
+
+/* ---------- 11. secondary actions and trust footer ---------- */
+.tl-lx-pro .tl-lx2-divider { margin: 17px 0 12px; }
+.tl-lx-pro .tl-lx2-register {
+	height: 44px;
+	border-radius: 10px;
+	border-color: #1E4F70;
+	background: #F7FAFC;
+}
+.tl-lx-pro .tl-lx2-secure { margin-top: 15px; }
+
+.tl-lxp-trust {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 6px;
+	margin-top: 14px;
+	padding-top: 13px;
+	border-top: 1px solid #EDF1F5;
+}
+
+.tl-lxp-trust span {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 4px 9px;
+	border-radius: 999px;
+	background: #F2F7F4;
+	color: #41704F;
+	font-size: 0.65rem;
+	font-weight: 600;
+}
+
+.tl-lxp-trust i { color: #2E7D46; }
+
+.tl-lxp-official {
+	margin-top: 14px;
+	text-align: center;
+	color: #8A98A8;
+	font-size: 0.7rem;
+}
+
+.tl-lxp-official a {
+	color: #1E4F70;
+	font-weight: 700;
+	text-decoration: none;
+}
+
+.tl-lxp-official a:hover { text-decoration: underline; }
+.tl-lxp-official i { font-size: 0.62rem; margin-left: 2px; }
+
+/* ---------- 12. stacked layout and small screens ---------- */
+@media (max-width: 1000px) {
+	.tl-lx-pro .tl-lx2-shell { min-height: 0; }
+	.tl-lx-pro .tl-lx2-card { max-width: 460px; }
+	.tl-lx-pro .tl-lx2-hero-title { font-size: clamp(1.8rem, 5vw, 2.5rem); }
+}
+
+@media (max-width: 520px) {
+	.tl-lx-pro .tl-lx2-card { padding: 24px 20px 22px; }
+	.tl-lx-pro .tl-lx2-heading { font-size: 1.6rem; }
+	.tl-lxp-journey { gap: 6px; }
+	.tl-lxp-jnum { width: 26px; height: 26px; font-size: 0.6rem; }
+	.tl-lxp-jlabel { font-size: 0.6rem; }
+	.tl-lxp-jline { margin-top: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.tl-lx-pro .tl-lx2-submit::after { transition: none; }
+}
+
+/* =====================================================================
+   SHARED AUROVILLE HERO + BOLD BLACK INPUT TEXT
+   ---------------------------------------------------------------------
+   Appended only. The CC0 Auroville aerial photograph is used by BOTH
+   login pages. User Name, Password and Captcha values are always typed
+   in bold black text on a light field, on the citizen AND official page.
+   NOTE: the shared hero below is superseded by the per-page backdrops in
+   the final "DISTINCT LOGIN BACKDROPS" section at the end of this file.
+   ===================================================================== */
+
+/* ---------- 1. bold black text for all three fields, both pages ---------- */
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input {
+	background: #FFFFFF;
+	color: #000000;
+	-webkit-text-fill-color: #000000;
+	caret-color: #000000;
+	font-weight: 700;
+	border-color: #C9D6E2;
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input:focus {
+	border-color: #C28F0C;
+	box-shadow: 0 0 0 4px rgba(212,160,23,0.18);
+}
+
+.tl-lx-page .tl-lx2-card .tl-lx2-field input.tl-lx2-input::placeholder {
+	color: #8A98A8;
+	-webkit-text-fill-color: #8A98A8;
+	font-weight: 500;
+	opacity: 1;
+}
+
+/* The officer card keeps its gold focus ring on the light field. */
+.tl-lx-page.tl-lx-officer .tl-lx2-card .tl-lx2-field input.tl-lx2-input:focus {
+	border-color: #E8B923;
+	box-shadow: 0 0 0 4px rgba(232,185,35,0.22);
+}
+
+/* ---------- 2. one Auroville hero for both login pages ---------- */
+.tl-lx-pro .tl-lx2-shell,
+.tl-lx-page.tl-lx-officer .tl-lx2-shell {
+	background-image: url('../Images/Auroville_Drone_Hero.jpg');
+}
+
+@media (min-width: 1001px) {
+	.tl-lx-pro .tl-lx2-shell::before,
+	.tl-lx-page.tl-lx-officer .tl-lx2-shell::before {
+		background-image: url('../Images/Auroville_Drone_Hero.jpg');
+	}
+}
+
+@media (max-width: 1000px) {
+	.tl-lx-pro .tl-lx2-photo,
+	.tl-lx-page.tl-lx-officer .tl-lx2-photo {
+		background-image: url('../Images/Auroville_Drone_Hero.jpg');
+	}
+}
+
+/* =====================================================================
+   DISTINCT LOGIN BACKDROPS — Matrimandir for citizens, drone view for
+   officials. Appended last so it wins over the earlier "shared hero"
+   block above without rewriting the theme history:
+     • citizen  (.tl-lx-pro)     -> Matrimandir_Auroville.jpg
+     • official (.tl-lx-officer) -> Auroville_Drone_Hero.jpg
+       (optimised 1904x929 copy of the CC0 "drone view of Auroville")
+   ===================================================================== */
+
+/* ---------- desktop: shell + blurred-source ::before layer ---------- */
+.tl-lx-pro .tl-lx2-shell {
+	background-image: url('../Images/Matrimandir_Auroville.jpg');
+}
+
+.tl-lx-page.tl-lx-officer .tl-lx2-shell {
+	background-image: url('../Images/Auroville_Drone_Hero.jpg');
+}
+
+@media (min-width: 1001px) {
+	.tl-lx-pro .tl-lx2-shell::before {
+		background-image: url('../Images/Matrimandir_Auroville.jpg');
+	}
+
+	.tl-lx-page.tl-lx-officer .tl-lx2-shell::before {
+		background-image: url('../Images/Auroville_Drone_Hero.jpg');
+	}
+}
+
+/* ---------- stacked layout (<=1000px): photo panel ---------- */
+@media (max-width: 1000px) {
+	.tl-lx-pro .tl-lx2-photo {
+		background-image: url('../Images/Matrimandir_Auroville.jpg');
+	}
+
+	.tl-lx-page.tl-lx-officer .tl-lx2-photo {
+		background-image: url('../Images/Auroville_Drone_Hero.jpg');
+	}
+}

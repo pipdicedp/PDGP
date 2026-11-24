@@ -36,9 +36,18 @@ namespace TradeLicence.Data
         public DbSet<WorkflowHistory> WorkflowHistories { get; set; } = null!;
         public DbSet<WorkflowSupportingDocument> WorkflowSupportingDocuments { get; set; } = null!;
         public DbSet<WorkflowPayment> WorkflowPayments { get; set; } = null!;
+
         // ---------------- CAF forwarded to a department (Industry officer -> receiving department) ----------------
         public DbSet<CafDepartmentApplication> CafDepartmentApplications { get; set; } = null!;
         public DbSet<CafIndustryReview> CafIndustryReviews { get; set; } = null!;
+
+        // ---------------- Name Change of Society (Request for Name/Business Place/Members) ----------------
+        // Own table: dbo.SocietyNameChangeRequest.
+        public DbSet<SocietyNameChangeRequest> SocietyNameChangeRequests { get; set; } = null!;
+
+        // ---------------- Name Change of Firms (Request for Name/Business Place/Partners) ----------------
+        // Own table: dbo.FirmNameChangeRequest.
+        public DbSet<FirmNameChangeRequest> FirmNameChangeRequests { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -150,7 +159,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Restrict (not SetNull/Cascade) � an Officer with history
+                // Restrict (not SetNull/Cascade) ù an Officer with history
                 // rows can't be deleted outright, which is the right call
                 // for an audit trail. Officer.IsLocked is how you retire
                 // an officer account instead.
@@ -219,7 +228,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Restrict, same reasoning as ApplicationWorkflowHistory —
+                // Restrict, same reasoning as ApplicationWorkflowHistory ΓÇö
                 // an officer who's uploaded a file shouldn't be deletable
                 // outright; ToggleOfficerStatus (Inactive) is the fallback.
                 entity.HasOne(e => e.UploadedByOfficer)
@@ -236,7 +245,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.SetNull);
 
-                // Officer workflow routing � nullable FK, so deleting an
+                // Officer workflow routing ù nullable FK, so deleting an
                 // Officer account never blocks (it just un-assigns the
                 // application, leaving it visible to the rest of that stage).
                 entity.HasOne<Officer>()
@@ -266,7 +275,7 @@ namespace TradeLicence.Data
             });
 
             // ---------------- Shared Workflow Engine tables ----------------
-            // ApplicationId is a SOFT reference here (no FK) — it points at a
+            // ApplicationId is a SOFT reference here (no FK) ΓÇö it points at a
             // different physical table depending on ServiceType (Water,
             // Electricity, ...), so a single FK constraint isn't possible.
             // ServiceType + ApplicationId together identify the application.
@@ -278,7 +287,7 @@ namespace TradeLicence.Data
                 entity.HasIndex(e => new { e.ServiceType, e.ApplicationId });
 
                 // Officers IS genuinely shared across every service, so this
-                // FK is real (same reasoning as ApplicationWorkflowHistory —
+                // FK is real (same reasoning as ApplicationWorkflowHistory ΓÇö
                 // Restrict, not Cascade/SetNull: an officer with history rows
                 // can't be deleted outright; Officer.IsLocked is the fallback).
                 entity.HasOne(e => e.FromOfficer)
@@ -297,7 +306,7 @@ namespace TradeLicence.Data
                 entity.ToTable("WorkflowSupportingDocuments");
                 entity.HasKey(e => e.WorkflowSupportingDocumentId);
 
-                // One file per (ServiceType, ApplicationId, Stage) — same
+                // One file per (ServiceType, ApplicationId, Stage) ΓÇö same
                 // "one row per key" idea as OfficerSupportingDocument's
                 // (ApplicationId, Stage) index, with ServiceType added since
                 // this table is shared across services.
@@ -322,6 +331,76 @@ namespace TradeLicence.Data
                 entity.HasIndex(e => new { e.ServiceType, e.ApplicationId }).IsUnique();
             });
 
+            // ---------------- CAF forwarded to a department ----------------
+            // One row per (CAF, department) ΓÇö a CAF is forwarded to a department at most once.
+            modelBuilder.Entity<CafDepartmentApplication>(entity =>
+            {
+                entity.ToTable("CafDepartmentApplications");
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => new { e.LoginId, e.Department }).IsUnique();
+
+                entity.HasOne<Officer>()
+                      .WithMany()
+                      .HasForeignKey(e => e.ForwardedByOfficerId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne<Officer>()
+                      .WithMany()
+                      .HasForeignKey(e => e.AssignedOfficerId)
+                      .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // ---------------- Name Change of Society ----------------
+            modelBuilder.Entity<SocietyNameChangeRequest>(entity =>
+            {
+                entity.ToTable("SocietyNameChangeRequest");
+                entity.HasKey(e => e.RequestId);
+                entity.Property(e => e.RequestId).HasColumnName("RequestId").ValueGeneratedOnAdd();
+                entity.Property(e => e.ApplicationNo).HasColumnName("ApplicationNo").HasMaxLength(50);
+                entity.Property(e => e.SerialNo).HasColumnName("SerialNo").HasMaxLength(50);
+                entity.Property(e => e.IsNameChange).HasColumnName("IsNameChange");
+                entity.Property(e => e.IsAddressChange).HasColumnName("IsAddressChange");
+                entity.Property(e => e.IsMemberChange).HasColumnName("IsMemberChange");
+                entity.Property(e => e.IsOthers).HasColumnName("IsOthers");
+                entity.Property(e => e.FormFileName).HasColumnName("FormFileName").HasMaxLength(520);
+                entity.Property(e => e.FormFilePath).HasColumnName("FormFilePath").HasMaxLength(1000);
+                entity.Property(e => e.FormContentType).HasColumnName("FormContentType").HasMaxLength(100);
+                entity.Property(e => e.FormFileSizeKB).HasColumnName("FormFileSizeKB");
+                entity.Property(e => e.Remarks).HasColumnName("Remarks").HasMaxLength(2000);
+                entity.Property(e => e.RequestStatus).HasColumnName("RequestStatus").HasMaxLength(20);
+                entity.Property(e => e.CreatedBy).HasColumnName("CreatedBy").HasMaxLength(100);
+                entity.Property(e => e.CreatedOn).HasColumnName("CreatedOn");
+                entity.Property(e => e.ModifiedBy).HasColumnName("ModifiedBy").HasMaxLength(100);
+                entity.Property(e => e.ModifiedOn).HasColumnName("ModifiedOn");
+                entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            });
+
+            // ---------------- Name Change of Firms ----------------
+            modelBuilder.Entity<FirmNameChangeRequest>(entity =>
+            {
+                entity.ToTable("FirmNameChangeRequest");
+                entity.HasKey(e => e.RequestId);
+                entity.Property(e => e.RequestId).HasColumnName("RequestId").ValueGeneratedOnAdd();
+                entity.Property(e => e.IsNameChange).HasColumnName("IsNameChange");
+                entity.Property(e => e.IsAddressChange).HasColumnName("IsAddressChange");
+                entity.Property(e => e.IsPartnership).HasColumnName("IsPartnership");
+                entity.Property(e => e.IsOthers).HasColumnName("IsOthers");
+                entity.Property(e => e.FormFileName).HasColumnName("FormFileName").HasMaxLength(520);
+                entity.Property(e => e.FormFilePath).HasColumnName("FormFilePath").HasMaxLength(1000);
+                entity.Property(e => e.FormContentType).HasColumnName("FormContentType").HasMaxLength(100);
+                entity.Property(e => e.FormFileSizeKB).HasColumnName("FormFileSizeKB");
+                entity.Property(e => e.ApplicationNo).HasColumnName("ApplicationNo").HasMaxLength(50);
+                entity.Property(e => e.ChallanNo).HasColumnName("ChallanNo").HasMaxLength(50);
+                entity.Property(e => e.ChallanDate).HasColumnName("ChallanDate");
+                entity.Property(e => e.Amount).HasColumnName("Amount").HasColumnType("decimal(18,2)");
+                entity.Property(e => e.Remarks).HasColumnName("Remarks").HasMaxLength(2000);
+                entity.Property(e => e.RequestStatus).HasColumnName("RequestStatus").HasMaxLength(20);
+                entity.Property(e => e.CreatedBy).HasColumnName("CreatedBy").HasMaxLength(100);
+                entity.Property(e => e.CreatedOn).HasColumnName("CreatedOn");
+                entity.Property(e => e.ModifiedBy).HasColumnName("ModifiedBy").HasMaxLength(100);
+                entity.Property(e => e.ModifiedOn).HasColumnName("ModifiedOn");
+                entity.Property(e => e.IsActive).HasColumnName("IsActive");
+            });
         }
     }
 }

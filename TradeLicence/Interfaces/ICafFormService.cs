@@ -51,7 +51,6 @@ namespace TradeLicence.Interfaces
         /// <summary>The stored bytes of one document, or null if none was uploaded.</summary>
         Task<byte[]?> GetDocumentAsync(long loginId, string column);
 
-        /// <summary>Marks the whole application Submitted (caf_basic_details.statuss = 'S') once the final step is saved.</summary>
         /// <summary>caf_basic_details.statuss for this applicant: 'P' = pending (still editable), 'S' = submitted, null = nothing saved yet. Anything other than null/'P' means the form is locked.</summary>
         Task<string?> GetStatusAsync(long loginId);
 

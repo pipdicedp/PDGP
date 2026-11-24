@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_UserLayout.cshtml";
 }
@@ -10,7 +10,7 @@
 
     <div class="dashboard-body">
 
-        <div class="dashboard-banner">
+        <div class="dashboard-banner dashboard-banner-photo">
             <div class="dashboard-banner-text">
                 <span class="dashboard-banner-icon">🗂️</span>
                 <div>
@@ -107,13 +107,21 @@
             </div>
 
 
+            <div class="dashboard-card dashboard-accent-5" data-name="name change of society" data-category="other">
+                <div class="card-icon">✍️</div>
+                <h4>Name Change of Society</h4>
+                <p>Request for change of Society Name / Business Place / Members and Track Application Status</p>
+                <a asp-controller="SocietyNameChange" asp-action="Create" class="dashboard-btn">New Application</a>
+                <a asp-controller="SocietyNameChange" asp-action="Index" class="dashboard-btn" style="background:#4a6b85;">View Submitted Requests</a>
+            </div>
 
-            <!--
-                To add a new service, copy one .dashboard-card block above and:
-                1. Set data-name to the service name in lowercase (used by search)
-                2. Add one of dashboard-accent-1 through dashboard-accent-5 (cycle through them)
-                3. Update the icon, title, description, and the asp-controller/asp-action link
-            -->
+            <div class="dashboard-card dashboard-accent-4" data-name="name change of firms" data-category="other">
+                <div class="card-icon">✍️</div>
+                <h4>Name Change of Firms</h4>
+                <p>Request for change of Firm Name / Business Place / Partners and Track Application Status</p>
+                <a asp-controller="FirmNameChange" asp-action="Create" class="dashboard-btn">New Application</a>
+                <a asp-controller="FirmNameChange" asp-action="Index" class="dashboard-btn" style="background:#4a6b85;">View Submitted Requests</a>
+            </div>
 
         </div>
 

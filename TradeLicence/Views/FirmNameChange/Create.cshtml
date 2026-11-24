@@ -1,0 +1,109 @@
+@model TradeLicence.Models.FirmNameChangeRequest
+@{
+    ViewData["Title"] = "Name Change of Firms";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+}
+
+<style>
+    .fnc-card { max-width: 780px; margin: 20px auto; border: 1px solid #337ab7; border-radius: 4px; background: #fff; }
+    .fnc-header { background: #337ab7; color: #fff; text-align: center; font-weight: 700; padding: 14px; font-size: 14px; }
+    .fnc-body { padding: 30px 40px 40px; font-size: 11px; }
+    .fnc-body label, .fnc-body .fnc-label { font-weight: 700; font-size: 11px; display: block; margin-bottom: 6px; }
+    .fnc-body .req { color: #d00; }
+    .fnc-body .form-control { width: 100%; border: 1px solid #2e9e1f; border-radius: 3px; padding: 6px 8px; font-size: 11px; }
+    .fnc-body .form-control:focus { outline: none; box-shadow: 0 0 3px #2e9e1f; }
+    .fnc-body textarea.form-control { height: 62px; resize: vertical; }
+    .fnc-body input[type="file"] { font-size: 11px; }
+    .fnc-section { font-weight: 700; font-size: 11px; margin: 0 0 12px; }
+    .fnc-block { margin-bottom: 20px; }
+    .fnc-options { display: flex; flex-wrap: wrap; gap: 26px; align-items: center; }
+    .fnc-options label { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; margin: 0; cursor: pointer; }
+    .fnc-options input[type="checkbox"] { margin: 0; }
+    .fnc-row { display: flex; flex-wrap: wrap; gap: 20px; }
+    .fnc-col { flex: 1 1 220px; min-width: 220px; }
+    .fnc-note { text-align: center; font-weight: 700; font-size: 11px; color: #a94442; margin-top: 12px; }
+    .fnc-actions { text-align: center; margin-top: 20px; }
+    .btn-save { background: #337ab7; color: #fff; border: none; padding: 9px 34px; border-radius: 3px; font-size: 13px; cursor: pointer; }
+    .btn-save:hover { background: #286090; }
+    .btn-reset { background: #777; color: #fff; border: none; padding: 9px 26px; border-radius: 3px; font-size: 13px; cursor: pointer; margin-left: 8px; }
+    .text-danger { color: #d00; font-size: 10px; }
+    .fnc-alert { background: #dff0d8; border: 1px solid #3c763d; color: #3c763d; padding: 10px 14px; margin-bottom: 18px; border-radius: 3px; font-size: 12px; }
+</style>
+
+<div class="fnc-card">
+    <div class="fnc-header">Firms - Request for Name/Business Place/Partners</div>
+
+    <div class="fnc-body">
+        @if (TempData["Success"] != null)
+        {
+            <div class="fnc-alert">@TempData["Success"]</div>
+        }
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
+
+            <div asp-validation-summary="ModelOnly" class="text-danger" style="font-size:12px;margin-bottom:10px;"></div>
+
+            <div class="fnc-block">
+                <span class="fnc-label">Requested Change For <span class="req">*</span></span>
+                <div class="fnc-options">
+                    <label><input asp-for="IsNameChange" /> Name Change</label>
+                    <label><input asp-for="IsAddressChange" /> Address Change</label>
+                    <label><input asp-for="IsPartnership" /> Partnership</label>
+                    <label><input asp-for="IsOthers" /> Others</label>
+                </div>
+            </div>
+
+            <div class="fnc-block">
+                <label>1. Upload Change Request Form (FORM II) <span class="req">*</span></label>
+                <input asp-for="ChangeRequestFormFile" type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                <br /><span asp-validation-for="ChangeRequestFormFile" class="text-danger"></span>
+            </div>
+
+            <div class="fnc-block">
+                <div class="fnc-row">
+                    <div class="fnc-col">
+                        <label>2. Application No. <span class="req">*</span></label>
+                        <input asp-for="ApplicationNo" class="form-control" placeholder="Application No." />
+                        <span asp-validation-for="ApplicationNo" class="text-danger"></span>
+                    </div>
+                    <div class="fnc-col">
+                        <label>3. Challan No. <span class="req">*</span></label>
+                        <input asp-for="ChallanNo" class="form-control" placeholder="Challan No." />
+                        <span asp-validation-for="ChallanNo" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fnc-block">
+                <div class="fnc-row">
+                    <div class="fnc-col">
+                        <label>4. Challan Date <span class="req">*</span></label>
+                        <input asp-for="ChallanDate" class="form-control" />
+                        <span asp-validation-for="ChallanDate" class="text-danger"></span>
+                    </div>
+                    <div class="fnc-col">
+                        <label>5. Amount <span class="req">*</span></label>
+                        <input asp-for="Amount" class="form-control" type="number" step="0.01" min="0" placeholder="Amount" />
+                        <span asp-validation-for="Amount" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fnc-block">
+                <label>6. Remarks <span class="req">*</span></label>
+                <textarea asp-for="Remarks" class="form-control" placeholder="Remarks"></textarea>
+                <span asp-validation-for="Remarks" class="text-danger"></span>
+            </div>
+
+            <div class="fnc-note">Note: Only allowed PDF/JPG/PNG file and Maximum size of uploading file is 1MB</div>
+
+            <div class="fnc-actions">
+                <button type="submit" class="btn-save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,100 @@
+@model IEnumerable<TradeLicence.Models.SocietyNameChangeRequest>
+@{
+    ViewData["Title"] = "Name Change of Society";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    var rows = Model?.ToList() ?? new List<TradeLicence.Models.SocietyNameChangeRequest>();
+}
+
+<style>
+    .snc-list-card { max-width: 1250px; margin: 20px auto; border: 1px solid #337ab7; border-radius: 4px; background: #fff; }
+    .snc-list-header { background: #337ab7; color: #fff; text-align: center; font-weight: 700; padding: 14px; font-size: 14px; }
+    .snc-list-body { padding: 20px 22px 28px; font-size: 11px; }
+    .snc-list-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+    .snc-list-toolbar .count { font-weight: 700; color: #555; font-size: 12px; }
+    .snc-btn { display: inline-block; background: #337ab7; color: #fff; border: none; padding: 8px 18px; border-radius: 3px; font-size: 12px; text-decoration: none; cursor: pointer; }
+    .snc-btn:hover { background: #286090; color: #fff; text-decoration: none; }
+    .snc-btn.secondary { background: #777; }
+    .snc-btn.secondary:hover { background: #5f5f5f; }
+    .snc-table-wrap { overflow-x: auto; border: 1px solid #ddd; border-radius: 3px; }
+    .snc-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1050px; }
+    .snc-table th { background: #eef4fa; color: #1f4e79; text-align: left; padding: 9px 8px; border-bottom: 2px solid #337ab7; white-space: nowrap; font-size: 11px; }
+    .snc-table td { padding: 8px; border-bottom: 1px solid #e6e6e6; vertical-align: top; }
+    .snc-table tbody tr:nth-child(even) { background: #fafcfe; }
+    .snc-table tbody tr:hover { background: #eef7ff; }
+    .snc-table a.doc { color: #337ab7; text-decoration: underline; white-space: nowrap; }
+    .snc-empty { text-align: center; padding: 40px 10px; color: #777; font-size: 12px; }
+    .snc-badge { display: inline-block; background: #eef4fa; color: #1f4e79; border: 1px solid #c9dbf0; border-radius: 10px; padding: 1px 8px; font-size: 10px; font-weight: 700; }
+</style>
+
+<div class="snc-list-card">
+    <div class="snc-list-header">Name Change of Society — Submitted Requests</div>
+
+    <div class="snc-list-body">
+        <div class="snc-list-toolbar">
+            <span class="count">Total requests: @rows.Count</span>
+            <div>
+                <a asp-controller="SocietyNameChange" asp-action="Create" class="snc-btn">New Request</a>
+                <a asp-controller="Dashboard" asp-action="Index" class="snc-btn secondary">Back to Dashboard</a>
+            </div>
+        </div>
+
+        @if (rows.Count == 0)
+        {
+            <div class="snc-empty">No name change of Society requests found yet.</div>
+        }
+        else
+        {
+            <div class="snc-table-wrap">
+                <table class="snc-table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Ref. No</th>
+                            <th>Application No.</th>
+                            <th>Serial No.</th>
+                            <th>Requested Change For</th>
+                            <th>Remarks</th>
+                            <th>Change Request Form</th>
+                            <th>Status</th>
+                            <th>Submitted By</th>
+                            <th>Submitted On</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{ var i = 1; }
+                        @foreach (var row in rows)
+                        {
+                            <tr>
+                                <td>@i</td>
+                                <td>@row.RequestId</td>
+                                <td>@row.ApplicationNo</td>
+                                <td>@(string.IsNullOrWhiteSpace(row.SerialNo) ? "-" : row.SerialNo)</td>
+                                <td>@row.RequestedChangeFor</td>
+                                <td>@(string.IsNullOrWhiteSpace(row.Remarks) ? "-" : row.Remarks)</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(row.FormFilePath))
+                                    {
+                                        var label = string.IsNullOrWhiteSpace(row.FormFileName) ? "View / Download" : row.FormFileName;
+                                        <a class="doc" href="@row.FormFilePath" target="_blank">@label</a>
+                                        @if (row.FormFileSizeKB.HasValue && row.FormFileSizeKB.Value > 0)
+                                        {
+                                            <span style="color:#777;"> (@(row.FormFileSizeKB.Value) KB)</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span>-</span>
+                                    }
+                                </td>
+                                <td><span class="snc-badge">@row.RequestStatus</span></td>
+                                <td>@(string.IsNullOrWhiteSpace(row.CreatedBy) ? "-" : row.CreatedBy)</td>
+                                <td style="white-space:nowrap;">@row.CreatedOn.ToString("dd-MM-yyyy HH:mm")</td>
+                            </tr>
+                            i++;
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,11 +1,12 @@
 ﻿@model TradeLicence.Models.OfficerLoginViewModel
 @{
-    ViewData["Title"] = "Official Login";
+    ViewData["Title"] = "Official Sign-in";
 }
 
 @section Styles {
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@500&family=Public+Sans:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap">
     <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/login-puducherry.css" asp-append-version="true" />
 }
 
 <div class="tl-lx-page">
@@ -24,13 +25,13 @@
             </div>
 
             <div class="tl-lx2-hero">
-                <span class="tl-lx2-eyebrow"><i class="fa-solid fa-landmark"></i> Official Access</span>
-                <h1 class="tl-lx2-hero-title">Department <em>Officials</em></h1>
-                <p class="tl-lx2-hero-text">Restricted access for department officials &mdash; process, verify and approve investor applications and trade licences online.</p>
+                <span class="tl-lx2-eyebrow"><i class="fa-solid fa-shield-halved"></i> Restricted &middot; Official Access</span>
+                <h1 class="tl-lx2-hero-title">Serve Puducherry <em>with confidence.</em></h1>
+                <p class="tl-lx2-hero-text">A secure workspace for department officials to review applications, verify documents and record approvals online.</p>
 
                 <div class="tl-lx2-points">
-                    <span><i class="fa-solid fa-circle-check"></i> Application Processing</span>
-                    <span><i class="fa-solid fa-circle-check"></i> Verification &amp; Inspection</span>
+                    <span><i class="fa-solid fa-circle-check"></i> Application Review</span>
+                    <span><i class="fa-solid fa-circle-check"></i> Document Verification</span>
                     <span><i class="fa-solid fa-circle-check"></i> Approval Workflow</span>
                 </div>
 
@@ -54,9 +55,10 @@
         <!-- ===== RIGHT: official login card ===== -->
         <main class="tl-lx2-form-side">
             <div class="tl-lx2-card">
-                <div class="tl-lx2-signin-label">Official Access</div>
+                <div class="tl-login-emblem" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="tl-lx2-signin-label">Department Officials Only</div>
                 <h1 class="tl-lx2-heading">Welcome, Officer</h1>
-                <p class="tl-lx2-sub">For authorized department staff only. Log in to manage applications.</p>
+                <p class="tl-lx2-sub">Use your official credentials to access the approval workspace.</p>
 
                 @if (!ViewData.ModelState.IsValid && ViewData.ModelState[string.Empty]?.Errors.Count > 0)
                 {

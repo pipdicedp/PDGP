@@ -112,6 +112,10 @@ namespace TradeLicence.Controllers
             return View("Step", vm);
         }
 
+        // ---------------- Preview & Submit ----------------
+
+
+
         // 9 documents x 5 MB each, plus headroom. The global 25 MB request-body cap in Program.cs
         // is too small for the documents step, so it is raised for this action only (the
         // multipart form limit is raised globally in Program.cs for the reason noted there).

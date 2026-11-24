@@ -206,62 +206,6 @@ namespace TradeLicence.Services
             finally { CloseIfWeOpenedIt(conn, opened); }
         }
 
-        public async Task<List<CafSubmittedSummary>> GetSubmittedSummariesAsync(IEnumerable<long>? loginIds = null)
-        {
-            var result = new List<CafSubmittedSummary>();
-            var idList = loginIds?.Distinct().ToList();
-            if (idList != null && idList.Count == 0) return result;
-
-            var (conn, opened) = await GetOpenConnectionAsync();
-            try
-            {
-                using var cmd = new SqlCommand();
-                cmd.Connection = conn;
-
-                var sql = "SELECT [loginid], [indname], [promotername], [mobileno], [appliedon] " +
-                          "FROM dbo.caf_basic_details WHERE [statuss] = 'S'";
-
-                if (idList != null)
-                {
-                    var names = new List<string>();
-                    for (var i = 0; i < idList.Count; i++)
-                    {
-                        var name = "@id" + i;
-                        names.Add(name);
-                        cmd.Parameters.Add(new SqlParameter(name, System.Data.SqlDbType.BigInt) { Value = idList[i] });
-                    }
-                    sql += " AND [loginid] IN (" + string.Join(",", names) + ")";
-                }
-
-                cmd.CommandText = sql + " ORDER BY [appliedon] DESC, [loginid] DESC";
-
-                using var reader = await cmd.ExecuteReaderAsync();
-                while (await reader.ReadAsync())
-                {
-                    string? mobile = null;
-                    if (!reader.IsDBNull(3))
-                    {
-                        var raw = reader.GetValue(3);
-                        mobile = decimal.TryParse(Convert.ToString(raw, System.Globalization.CultureInfo.InvariantCulture),
-                                     System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var m)
-                            ? m.ToString("0", System.Globalization.CultureInfo.InvariantCulture)
-                            : Convert.ToString(raw);
-                    }
-
-                    result.Add(new CafSubmittedSummary
-                    {
-                        LoginId = Convert.ToInt64(reader.GetValue(0)),
-                        UnitName = reader.IsDBNull(1) ? null : reader.GetString(1),
-                        PromoterName = reader.IsDBNull(2) ? null : reader.GetString(2),
-                        Mobile = mobile,
-                        AppliedOn = reader.IsDBNull(4) ? null : Convert.ToDateTime(reader.GetValue(4))
-                    });
-                }
-            }
-            finally { CloseIfWeOpenedIt(conn, opened); }
-
-            return result;
-        }
 
         public async Task<CafPreviewViewModel> LoadPreviewAsync(long loginId)
         {
@@ -636,6 +580,65 @@ namespace TradeLicence.Services
                     "UPDATE dbo.caf_basic_details SET [statuss] = 'P' WHERE [loginid] = @loginid AND [statuss] = 'S'", conn);
                 cmd.Parameters.Add(LoginIdParam(loginId));
                 return await cmd.ExecuteNonQueryAsync() > 0;
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+        }
+
+        // ---------------- submitted queue + read-only preview ----------------
+
+        public async Task<List<CafSubmittedSummary>> GetSubmittedSummariesAsync(IEnumerable<long>? loginIds = null)
+        {
+            var summaries = new List<CafSubmittedSummary>();
+
+            var ids = loginIds?.Distinct().ToList();
+            // Caller asked for "these specific applicants" and there are none — nothing to return.
+            if (ids is { Count: 0 }) return summaries;
+
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                var sql = "SELECT [loginid], [indname], [promotername], [mobileno], [appliedon] " +
+                          "FROM dbo.[caf_basic_details] WHERE [statuss] = 'S'";
+                if (ids is { Count: > 0 })
+                    sql += " AND [loginid] IN (" + string.Join(", ", ids.Select((_, i) => $"@id{i}")) + ")";
+                sql += " ORDER BY [appliedon] DESC, [loginid] DESC";
+
+                using var cmd = new SqlCommand(sql, conn);
+                if (ids is { Count: > 0 })
+                {
+                    for (int i = 0; i < ids.Count; i++)
+                        cmd.Parameters.Add(new SqlParameter($"@id{i}", SqlDbType.Decimal) { Precision = 18, Scale = 0, Value = ids[i] });
+                }
+
+                using var reader = await cmd.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var applied = reader["appliedon"];
+                    summaries.Add(new CafSubmittedSummary
+                    {
+                        LoginId = Convert.ToInt64(reader["loginid"], CultureInfo.InvariantCulture),
+                        UnitName = ReadCell(reader, "indname"),
+                        PromoterName = ReadCell(reader, "promotername"),
+                        Mobile = ReadCell(reader, "mobileno"),
+                        AppliedOn = applied is DateTime dt ? dt : null
+                    });
+                }
+            }
+            finally { CloseIfWeOpenedIt(conn, opened); }
+
+            return summaries;
+        }
+
+
+        private async Task<bool> IsSubmittedAsync(long loginId)
+        {
+            var (conn, opened) = await GetOpenConnectionAsync();
+            try
+            {
+                using var cmd = new SqlCommand("SELECT [statuss] FROM dbo.[caf_basic_details] WHERE [loginid] = @loginid", conn);
+                cmd.Parameters.Add(LoginIdParam(loginId));
+                var value = await cmd.ExecuteScalarAsync();
+                return value is string s && string.Equals(s.Trim(), "S", StringComparison.OrdinalIgnoreCase);
             }
             finally { CloseIfWeOpenedIt(conn, opened); }
         }
