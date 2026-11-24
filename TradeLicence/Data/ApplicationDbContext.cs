@@ -40,16 +40,6 @@ namespace TradeLicence.Data
         // ---------------- CAF forwarded to a department (Industry officer -> receiving department) ----------------
         public DbSet<CafDepartmentApplication> CafDepartmentApplications { get; set; } = null!;
 
-<<<<<<< Updated upstream
-=======
-        // ---------------- Fire NOC / Fire Safety Clearance (deptcode 9, serviceid 1017) ----------------
-        public DbSet<FireClearanceApplication> FireClearanceApplications { get; set; } = null!;
-
-        // ---------------- Name Availability of Societies / Firms ----------------
-        // Two separate tables: dbo.SocietyNameAvailabilities and dbo.FirmNameAvailabilities.
-        public DbSet<SocietyNameAvailability> SocietyNameAvailabilities { get; set; } = null!;
-        public DbSet<FirmNameAvailability> FirmNameAvailabilities { get; set; } = null!;
-
         // ---------------- Name Change of Society (Request for Name/Business Place/Members) ----------------
         // Own table: dbo.SocietyNameChangeRequest.
         public DbSet<SocietyNameChangeRequest> SocietyNameChangeRequests { get; set; } = null!;
@@ -58,7 +48,6 @@ namespace TradeLicence.Data
         // Own table: dbo.FirmNameChangeRequest.
         public DbSet<FirmNameChangeRequest> FirmNameChangeRequests { get; set; } = null!;
 
->>>>>>> Stashed changes
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -169,7 +158,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Restrict (not SetNull/Cascade) — an Officer with history
+                // Restrict (not SetNull/Cascade) ï¿½ an Officer with history
                 // rows can't be deleted outright, which is the right call
                 // for an audit trail. Officer.IsLocked is how you retire
                 // an officer account instead.
@@ -255,7 +244,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.SetNull);
 
-                // Officer workflow routing — nullable FK, so deleting an
+                // Officer workflow routing ï¿½ nullable FK, so deleting an
                 // Officer account never blocks (it just un-assigns the
                 // application, leaving it visible to the rest of that stage).
                 entity.HasOne<Officer>()
@@ -360,98 +349,6 @@ namespace TradeLicence.Data
                       .OnDelete(DeleteBehavior.SetNull);
             });
 
-<<<<<<< Updated upstream
-=======
-            // ---------------- Fire NOC / Fire Safety Clearance ----------------
-            // One row per citizen (loginid = Users.UserId) holds BOTH the form the
-            // applicant fills in and the officer workflow state â€” so only the key /
-            // workflow / summary columns (plus name + mobileno, read by the officer
-            // queue) are mapped here. Every other applicant column is read/written by
-            // name at runtime via FireFormService + FireFormMetadata.
-            modelBuilder.Entity<FireClearanceApplication>(entity =>
-            {
-                entity.ToTable("FireClearanceApplications");
-                entity.HasKey(e => e.Id);
-
-                // Columns are lower-case legacy names, so each mapping is explicit.
-                entity.Property(e => e.LoginId).HasColumnName("loginid");
-                entity.Property(e => e.UserId).HasColumnName("userid");
-                entity.Property(e => e.ApplicationCode).HasColumnName("appcode");
-                entity.Property(e => e.Name).HasColumnName("name");
-                entity.Property(e => e.MobileNo).HasColumnName("mobileno");
-                entity.Property(e => e.DistCode).HasColumnName("distcode");
-                entity.Property(e => e.ServiceId).HasColumnName("serviceid");
-                entity.Property(e => e.ServiceDes).HasColumnName("servicedes");
-                entity.Property(e => e.DeptCode).HasColumnName("deptcode");
-                entity.Property(e => e.Status).HasColumnName("status");
-                entity.Property(e => e.CurrentStage).HasColumnName("currentstage");
-                entity.Property(e => e.AssignedOfficerId).HasColumnName("assignedofficerid");
-                entity.Property(e => e.PaymentStatus).HasColumnName("paymentstatus");
-                entity.Property(e => e.OfficerRemarks).HasColumnName("officerremarks");
-                entity.Property(e => e.ModifiedDate).HasColumnName("modifieddate");
-                entity.Property(e => e.SubmittedDate).HasColumnName("submitteddate");
-
-                // One fire application per citizen.
-                entity.HasIndex(e => e.LoginId).IsUnique();
-
-                // Same "un-assign on officer delete" behaviour as every other workflow.
-                entity.HasOne<Officer>()
-                      .WithMany()
-                      .HasForeignKey(e => e.AssignedOfficerId)
-                      .OnDelete(DeleteBehavior.SetNull);
-            });
-
-            // ---------------- Name Availability of Societies / Firms ----------------
-            // Shared columns come from NameAvailabilityBase; each concrete type gets
-            // its own table. Column names match Database/NameAvailability_Tables.sql.
-            modelBuilder.Entity<SocietyNameAvailability>(entity =>
-            {
-                entity.ToTable("SocietyNameAvailabilities");
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.ProposedName1).HasColumnName("ProposedName1");
-                entity.Property(e => e.ProposedName2).HasColumnName("ProposedName2");
-                entity.Property(e => e.ProposedName3).HasColumnName("ProposedName3");
-                entity.Property(e => e.ProposedName4).HasColumnName("ProposedName4");
-                entity.Property(e => e.ProposedName5).HasColumnName("ProposedName5");
-                entity.Property(e => e.Purpose).HasColumnName("Purpose");
-                entity.Property(e => e.ApplicantName).HasColumnName("ApplicantName");
-                entity.Property(e => e.ApplicantAddress).HasColumnName("ApplicantAddress");
-                entity.Property(e => e.MobileNo).HasColumnName("MobileNo");
-                entity.Property(e => e.Email).HasColumnName("Email");
-                entity.Property(e => e.IdentityProofPath).HasColumnName("IdentityProofPath");
-                entity.Property(e => e.SignatureProofPath).HasColumnName("SignatureProofPath");
-                entity.Property(e => e.NocPath).HasColumnName("NocPath");
-                entity.Property(e => e.Status).HasColumnName("Status").HasMaxLength(20);
-                entity.Property(e => e.ApprovedName).HasColumnName("ApprovedName").HasMaxLength(200);
-                entity.Property(e => e.AdminRemarks).HasColumnName("AdminRemarks").HasMaxLength(500);
-                entity.Property(e => e.ApprovedBy).HasColumnName("ApprovedBy").HasMaxLength(100);
-                entity.Property(e => e.ApprovedOn).HasColumnName("ApprovedOn");
-            });
-
-            modelBuilder.Entity<FirmNameAvailability>(entity =>
-            {
-                entity.ToTable("FirmNameAvailabilities");
-                entity.HasKey(e => e.Id);
-                entity.Property(e => e.ProposedName1).HasColumnName("ProposedName1");
-                entity.Property(e => e.ProposedName2).HasColumnName("ProposedName2");
-                entity.Property(e => e.ProposedName3).HasColumnName("ProposedName3");
-                entity.Property(e => e.ProposedName4).HasColumnName("ProposedName4");
-                entity.Property(e => e.ProposedName5).HasColumnName("ProposedName5");
-                entity.Property(e => e.Purpose).HasColumnName("Purpose");
-                entity.Property(e => e.ApplicantName).HasColumnName("ApplicantName");
-                entity.Property(e => e.ApplicantAddress).HasColumnName("ApplicantAddress");
-                entity.Property(e => e.MobileNo).HasColumnName("MobileNo");
-                entity.Property(e => e.Email).HasColumnName("Email");
-                entity.Property(e => e.IdentityProofPath).HasColumnName("IdentityProofPath");
-                entity.Property(e => e.SignatureProofPath).HasColumnName("SignatureProofPath");
-                entity.Property(e => e.NocPath).HasColumnName("NocPath");
-                entity.Property(e => e.Status).HasColumnName("Status").HasMaxLength(20);
-                entity.Property(e => e.ApprovedName).HasColumnName("ApprovedName").HasMaxLength(200);
-                entity.Property(e => e.AdminRemarks).HasColumnName("AdminRemarks").HasMaxLength(500);
-                entity.Property(e => e.ApprovedBy).HasColumnName("ApprovedBy").HasMaxLength(100);
-                entity.Property(e => e.ApprovedOn).HasColumnName("ApprovedOn");
-            });
-
             // ---------------- Name Change of Society ----------------
             modelBuilder.Entity<SocietyNameChangeRequest>(entity =>
             {
@@ -503,7 +400,6 @@ namespace TradeLicence.Data
                 entity.Property(e => e.ModifiedOn).HasColumnName("ModifiedOn");
                 entity.Property(e => e.IsActive).HasColumnName("IsActive");
             });
->>>>>>> Stashed changes
         }
     }
 }

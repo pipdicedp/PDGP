@@ -2824,8 +2824,6 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 @media (prefers-reduced-motion: reduce) {
 	.tl-lx2-shell::before { animation: none; }
 }
-<<<<<<< Updated upstream
-=======
 
 /* =====================================================================
    OFFICER LOGIN — officer-only polish
@@ -3610,4 +3608,3 @@ html:not(.tl-high-contrast) body:has(.tl-lx-page) .tl-footer p {
 		background-image: url('../Images/Auroville_Drone_Hero.jpg');
 	}
 }
->>>>>>> Stashed changes
