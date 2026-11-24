@@ -1,832 +1,1634 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+
 using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Identity;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Microsoft.EntityFrameworkCore;
+
 using TradeLicence.Data;
+
 using TradeLicence.Helpers;
+
 using TradeLicence.Interfaces;
+
 using TradeLicence.Models;
+
+using TradeLicence.Models.Drugs;
+
 using TradeLicence.Services;
+
 using WaterConnection.Data;
+
 using WaterConnection.Models;
 
+
+
 namespace TradeLicence.Controllers
+
 {
+
     [Authorize(Roles = "Officer")]
+
     public class OfficerController : Controller
+
     {
+
         private readonly ApplicationDbContext _context;
+
         private readonly ITradeLicenceService _service;
+
         private readonly IFileEncryptionService _encryption;
+
         private readonly WaterApplicationDbContext _waterContext;
+
         private readonly ElectricityApplicationDbContext _electricityContext;
-        private readonly FirmRegistrationDbContext _firmContext;
-        private readonly SocietyRegistrationDbContext _societyContext;
+
+        private readonly DrugsApplicationDbContext _drugsContext;
+
         private readonly ICafFormService _cafService;
+
         private readonly ICafDepartmentProvider _cafDepartments;
+
         private readonly PasswordHasher<Officer> _officerPasswordHasher = new();
 
-        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext, ICafFormService cafService, ICafDepartmentProvider cafDepartments, FirmRegistrationDbContext firmContext, SocietyRegistrationDbContext societyContext)
+
+
+        public OfficerController(ApplicationDbContext context, ITradeLicenceService service, IFileEncryptionService encryption, WaterApplicationDbContext waterContext, ElectricityApplicationDbContext electricityContext, ICafFormService cafService, ICafDepartmentProvider cafDepartments, DrugsApplicationDbContext drugsContext)
+
         {
+
+            _drugsContext = drugsContext;
+
             _cafService = cafService;
+
             _cafDepartments = cafDepartments;
+
             _context = context;
+
             _service = service;
+
             _encryption = encryption;
+
             _waterContext = waterContext;
+
             _electricityContext = electricityContext;
-            _firmContext = firmContext;
-            _societyContext = societyContext;
+
         }
+
+
 
         // The officer's own id is set as ClaimTypes.NameIdentifier at login
+
         // (see AccountController.OfficerLogin) — NOT a separate "OfficerId"
+
         // claim, so we read the standard claim type here.
+
         private int GetCurrentOfficerId()
+
         {
+
             var raw = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
             return int.TryParse(raw, out var id) ? id : 0;
+
         }
 
+
+
         // Only the Admin designation (e.g. tladmin) may create officer
+
         // accounts — every officer has Role "Officer" (see
+
         // AccountController.OfficerLogin), so Designation is what actually
+
         // tells Admin apart from DEO/Manager/Inspection Officer/GM here.
+
         private bool IsCurrentOfficerAdmin() =>
+
             User.FindFirst("Designation")?.Value == "Admin";
 
+
+
         // CAF applications forwarded to THIS officer's department and visible to them (same visibility
+
         // rule as every other service: unassigned at one of their stages, or assigned to them by name).
+
         private async Task<List<OfficerQueueItem>> BuildCafQueueItemsAsync(Officer officer)
+
         {
+
             var engine = new WorkflowEngineService<CafDepartmentApplication>(_context, _context, CafWorkflowConfig.ServiceType);
+
             var apps = (await engine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId))
+
                 .Where(a => string.Equals(a.Department, officer.Department, StringComparison.OrdinalIgnoreCase))
+
                 .ToList();
+
+
 
             if (apps.Count == 0) return new List<OfficerQueueItem>();
 
+
+
             var summaries = (await _cafService.GetSubmittedSummariesAsync(apps.Select(a => a.LoginId)))
+
                 .ToDictionary(s => s.LoginId);
 
+
+
             return apps.Select(a =>
+
             {
+
                 summaries.TryGetValue(a.LoginId, out var s);
+
                 return new OfficerQueueItem
+
                 {
+
                     ApplicationId = a.Id,
+
                     ServiceType = "CAF",
+
                     DisplayName = s?.UnitName ?? s?.PromoterName ?? "-",
+
                     Contact = s?.Mobile ?? "-",
+
                     CurrentStage = a.CurrentStage,
+
                     Status = a.Status,
+
                     SubmittedDate = a.ForwardedDate,
+
                     ViewUrl = Url.Action("ViewApplication", "CafDepartmentOfficer", new { id = a.Id })!
+
                 };
+
             }).ToList();
+
         }
 
-        public async Task<IActionResult> Index()
+
+
+        // Form 20A / 21A applications waiting for THIS officer (same visibility rule as every other service).
+
+        private async Task<List<OfficerQueueItem>> BuildDrugQueueAsync<TApp>(Officer officer, DrugFormDefinition form)
+
+            where TApp : DrugLicenceApplicationBase, new()
+
         {
+
+            var engine = new WorkflowEngineService<TApp>(_drugsContext, _context, form.ServiceType);
+
+            var apps = await engine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+
+
+            return apps.Select(a => new OfficerQueueItem
+
+            {
+
+                ApplicationId = a.ApplicationId,
+
+                ServiceType = $"Drug Licence - Form {form.Code}",
+
+                DisplayName = string.IsNullOrWhiteSpace(a.FirmName) ? a.ApplicantName : $"{a.FirmName} ({a.ApplicantName})",
+
+                Contact = a.MobileNumber,
+
+                CurrentStage = a.CurrentStage,
+
+                Status = a.Status,
+
+                SubmittedDate = a.SubmittedDate ?? a.CreatedDate,
+
+                ViewUrl = Url.Action("ViewApplication", form.OfficerController, new { id = a.ApplicationId })!
+
+            }).ToList();
+
+        }
+
+
+
+        public async Task<IActionResult> Index()
+
+        {
+
             var currentOfficerId = GetCurrentOfficerId();
+
             var officer = await _context.Officers.FindAsync(currentOfficerId);
+
             if (officer == null) return Forbid();
 
+
+
             // Every officer lands on THIS action after login now (see
+
             // AccountController.OfficerLogin) — Department routes them from
+
             // here. TradeLicence's own officers fall through to the
+
             // unchanged code below exactly as before; every other
+
             // department (Water now, Electricity/Transport/... later) is
+
             // handled by the shared-queue branch here, one "else if" per
+
             // new service, no new controller or Index view needed.
+
             // ---------------- CAF (Common Application Form) ----------------
+
             // Industry department officers only work CAF: they review submitted CAFs and forward
+
             // them to the departments they choose (CafOfficerController).
+
             if (string.Equals(officer.Department, CafWorkflowConfig.IndustryDepartment, StringComparison.OrdinalIgnoreCase))
+
                 return RedirectToAction("Index", "CafOfficer");
 
+
+
             if (officer.Department == "Water")
+
             {
+
                 var waterEngine = new WorkflowEngineService<WaterConnectionApplication>(_waterContext, _context, "Water");
+
                 var waterApps = await waterEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
 
+
+
                 var items = waterApps.Select(a => new OfficerQueueItem
+
                 {
+
                     ApplicationId = a.ApplicationId,
+
                     ServiceType = "Water",
+
                     DisplayName = a.Name,
+
                     Contact = a.PhoneNumber,
+
                     CurrentStage = a.CurrentStage,
+
                     Status = a.Status,
+
                     SubmittedDate = a.ApplicationDate,
+
                     ViewUrl = Url.Action("ViewApplication", "WaterOfficer", new { id = a.ApplicationId })!
+
                 }).ToList();
 
+
+
                 // CAFs the Industry department forwarded to Water
+
+                items.AddRange(await BuildCafQueueItemsAsync(officer));
+
+
+
+                ViewBag.Designation = officer.Designation;
+
+                ViewBag.Department = officer.Department;
+
+                return View("SharedQueue", items);
+
+            }
+
+
+
+            // else if (officer.Department == "Electricity") { ... same shape ... }
+
+            if (officer.Department == "Electricity")
+
+            {
+
+                var electricityEngine = new WorkflowEngineService<EBapplication>(_electricityContext, _context, "Electricity");
+
+                var electricityApps = await electricityEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
+
+
+
+                var electricityItems = electricityApps.Select(a => new OfficerQueueItem
+
+                {
+
+                    ApplicationId = a.ApplicationId,
+
+                    ServiceType = "Electricity",
+
+                    DisplayName = a.ApplicantName ?? "-",
+
+                    Contact = a.MobileNumber ?? "-",
+
+                    CurrentStage = a.CurrentStage,
+
+                    Status = a.Status,
+
+                    SubmittedDate = a.CreatedDate ?? DateTime.UtcNow,
+
+                    ViewUrl = Url.Action("ViewApplication", "ElectricityOfficer", new { id = a.ApplicationId })!
+
+                }).ToList();
+
+
+
+                // CAFs the Industry department forwarded to Electricity
+
+                electricityItems.AddRange(await BuildCafQueueItemsAsync(officer));
+
+
+
+                ViewBag.Designation = officer.Designation;
+
+                ViewBag.Department = officer.Department;
+
+                return View("SharedQueue", electricityItems);
+
+            }
+
+
+
+            // ---------------- Restricted Drug Licence: Form 20A / Form 21A ----------------
+
+            if (officer.Department == DrugLicenceConfig.Form20ADepartment)
+
+            {
+
+                var items = await BuildDrugQueueAsync<Form20AApplication>(officer, DrugLicenceConfig.Form20A);
+
                 items.AddRange(await BuildCafQueueItemsAsync(officer));
 
                 ViewBag.Designation = officer.Designation;
+
                 ViewBag.Department = officer.Department;
+
                 return View("SharedQueue", items);
+
             }
 
-            // else if (officer.Department == "Electricity") { ... same shape ... }
-            if (officer.Department == "Electricity")
+
+
+            if (officer.Department == DrugLicenceConfig.Form21ADepartment)
+
             {
-                var electricityEngine = new WorkflowEngineService<EBapplication>(_electricityContext, _context, "Electricity");
-                var electricityApps = await electricityEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
 
-                var electricityItems = electricityApps.Select(a => new OfficerQueueItem
-                {
-                    ApplicationId = a.ApplicationId,
-                    ServiceType = "Electricity",
-                    DisplayName = a.ApplicantName ?? "-",
-                    Contact = a.MobileNumber ?? "-",
-                    CurrentStage = a.CurrentStage,
-                    Status = a.Status,
-                    SubmittedDate = a.CreatedDate ?? DateTime.UtcNow,
-                    ViewUrl = Url.Action("ViewApplication", "ElectricityOfficer", new { id = a.ApplicationId })!
-                }).ToList();
+                var items = await BuildDrugQueueAsync<Form21AApplication>(officer, DrugLicenceConfig.Form21A);
 
-                // CAFs the Industry department forwarded to Electricity
-                electricityItems.AddRange(await BuildCafQueueItemsAsync(officer));
+                items.AddRange(await BuildCafQueueItemsAsync(officer));
 
                 ViewBag.Designation = officer.Designation;
+
                 ViewBag.Department = officer.Department;
-                return View("SharedQueue", electricityItems);
+
+                return View("SharedQueue", items);
+
             }
 
-            // ---------------- Registration of Firms ----------------
-            if (RegistrationWorkflowConfig.IsFirmsOfficer(officer.Department))
-            {
-                var firmEngine = new WorkflowEngineService<FirmApplication>(_firmContext, _context, RegistrationWorkflowConfig.FirmServiceType);
-                var firmApps = await firmEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
 
-                var firmItems = firmApps.Select(a => new OfficerQueueItem
-                {
-                    ApplicationId = a.ApplicationId,
-                    ServiceType = "Registration of Firms",
-                    DisplayName = a.FirmName ?? a.ApplicantName ?? "-",
-                    Contact = a.MobileNumber ?? "-",
-                    CurrentStage = a.CurrentStage,
-                    Status = a.Status,
-                    SubmittedDate = a.SubmittedDate ?? a.CreatedDate ?? DateTime.UtcNow,
-                    ViewUrl = Url.Action("ViewApplication", "FirmRegistrationOfficer", new { id = a.ApplicationId })!
-                }).ToList();
-
-                ViewBag.Designation = officer.Designation;
-                ViewBag.Department = officer.Department;
-                return View("SharedQueue", firmItems);
-            }
-
-            // ---------------- Registration / Renewal of Society ----------------
-            if (RegistrationWorkflowConfig.IsSocietyOfficer(officer.Department))
-            {
-                var societyEngine = new WorkflowEngineService<SocietyApplication>(_societyContext, _context, RegistrationWorkflowConfig.SocietyServiceType);
-                var societyApps = await societyEngine.GetOfficerQueueAsync(officer.Designation, officer.OfficerId);
-
-                var societyItems = societyApps.Select(a => new OfficerQueueItem
-                {
-                    ApplicationId = a.ApplicationId,
-                    ServiceType = a.ApplicationType == "Renewal" ? "Society Renewal" : "Society Registration",
-                    DisplayName = a.SocietyName ?? a.ApplicantName ?? "-",
-                    Contact = a.MobileNumber ?? "-",
-                    CurrentStage = a.CurrentStage,
-                    Status = a.Status,
-                    SubmittedDate = a.SubmittedDate ?? a.CreatedDate ?? DateTime.UtcNow,
-                    ViewUrl = Url.Action("ViewApplication", "SocietyRegistrationOfficer", new { id = a.ApplicationId })!
-                }).ToList();
-
-                ViewBag.Designation = officer.Designation;
-                ViewBag.Department = officer.Department;
-                return View("SharedQueue", societyItems);
-            }
 
             // Any other department CAF can be forwarded to (Town & Country Planning, Factory & Boiler,
+
             // Science & Technology, ...): their queue is the CAFs forwarded to them.
+
             var cafDepartmentNames = await _cafDepartments.GetForwardableDepartmentsAsync();
+
             if (cafDepartmentNames.Any(d => string.Equals(d, officer.Department, StringComparison.OrdinalIgnoreCase)))
+
             {
+
                 var cafItems = await BuildCafQueueItemsAsync(officer);
 
+
+
                 ViewBag.Designation = officer.Designation;
+
                 ViewBag.Department = officer.Department;
+
                 return View("SharedQueue", cafItems);
+
             }
 
+
+
             // ---------------- TradeLicence — unchanged from here down ----------------
+
             var currentDesignation = User.FindFirst("Designation")?.Value;
 
+
+
             // A Designation can cover more than one stage (e.g. "Manager"
+
             // covers both Verification and Inspection) — see OfficerWorkflow.cs.
+
             var myStages = OfficerWorkflow.StagesForDesignation(currentDesignation);
 
+
+
             // Visible to this officer if either:
+
             //  - it's sitting unassigned at one of their stages (anyone with
+
             //    that designation can pick it up), or
+
             //  - it's specifically been forwarded to them by name.
+
             var applications = await _context.TradeLicenceApplications
+
                 .Where(a => a.Status == "Submitted" &&
+
                     (
+
                         (a.AssignedOfficerId == null && myStages.Contains(a.CurrentStage))
+
                         || a.AssignedOfficerId == currentOfficerId
+
                     ))
+
                 .OrderByDescending(a => a.CreatedDate)
+
                 .ToListAsync();
+
+
 
             ViewBag.Designation = currentDesignation;
 
+
+
             return View(applications);
+
         }
 
+
+
         // Read-only application detail view, kept entirely on the officer
+
         // side (its own layout, no citizen wizard) — reuses the same
+
         // _PreviewApplication partial the citizen wizard's Preview tab uses,
+
         // just with the Edit links turned off.
+
         [HttpGet]
+
         public async Task<IActionResult> ViewApplication(int id)
+
         {
+
             var model = await _service.GetApplicationPreviewAsync(id);
+
             if (model == null) return NotFound();
+
+
 
             model.ShowEditLinks = false;
 
+
+
             var application = await _context.TradeLicenceApplications.FindAsync(id);
+
             var currentStage = application?.CurrentStage ?? OfficerWorkflow.Stages[0];
+
             var currentIndex = OfficerWorkflow.StageIndex(currentStage);
 
+
+
             // Officers can only forward FORWARD through the stage order
+
             // (Initial Scrutiny -> Verification -> Inspection -> Approval),
+
             // never back a step — so only later stages are offered here.
+
             var laterStages = OfficerWorkflow.Stages.Skip(currentIndex + 1).ToList();
 
+
+
             // One entry per (stage, officer) — a Manager appears once under
+
             // "Verification" and again under "Inspection", since the same
+
             // person can be the target of either stage.
-            // Only officers of the logged-in officer's OWN department are offered, so a Trade Licence
-            // application can't be forwarded into another department's officers (PPA, Revenue, ...).
-            var currentOfficer = await _context.Officers.FindAsync(GetCurrentOfficerId());
-            var myDepartment = currentOfficer?.Department;
 
             var forwardableByStage = new List<(string Stage, Officer Officer)>();
+
             foreach (var stage in laterStages)
+
             {
+
                 var designation = OfficerWorkflow.StageToDesignation[stage];
+
                 var officers = await _context.Officers
-                    .Where(o => o.Designation == designation && !o.IsLocked && o.Department == myDepartment)
+
+                    .Where(o => o.Designation == designation && !o.IsLocked)
+
                     .OrderBy(o => o.FullName)
+
                     .ToListAsync();
 
+
+
                 forwardableByStage.AddRange(officers.Select(o => (stage, o)));
+
             }
+
+
 
             ViewBag.CurrentStage = currentStage;
+
             ViewBag.IsFinalStage = laterStages.Count == 0;
+
             ViewBag.ForwardableByStage = forwardableByStage;
 
+
+
             // Full audit trail — every Forward/Revert so far, oldest first.
+
             // Powers the "Forwarded by ..." timeline at the top of the page
+
             // (and for GM, this naturally shows the whole DEO -> Manager ->
+
             // Inspection Officer chain since it's just this list).
+
             var history = await _context.ApplicationWorkflowHistories
+
                 .Where(h => h.ApplicationId == id)
+
                 .OrderBy(h => h.ActionDate)
+
                 .ToListAsync();
+
+
 
             // Officer names for display — one query instead of N+1 per history row.
+
             var officerIds = history
+
                 .SelectMany(h => new[] { h.FromOfficerId, h.ToOfficerId })
+
                 .Where(x => x.HasValue).Select(x => x!.Value)
+
                 .Distinct().ToList();
+
             var officerNames = await _context.Officers
+
                 .Where(o => officerIds.Contains(o.OfficerId))
+
                 .ToDictionaryAsync(o => o.OfficerId, o => o.FullName ?? o.Username);
+
+
 
             // Revert target — the most recent Forward entry that landed the
+
             // application at its CURRENT stage tells us who to send it back
+
             // to. Nothing to revert to at Initial Scrutiny (the first stage).
+
             var revertTarget = history
+
                 .Where(h => h.ActionType == "Forward" && h.ToStage == currentStage)
+
                 .OrderByDescending(h => h.ActionDate)
+
                 .FirstOrDefault();
 
+
+
             ViewBag.WorkflowHistory = history;
+
             ViewBag.OfficerNames = officerNames;
+
             ViewBag.RevertTarget = revertTarget;
 
+
+
             // One row per stage at most (unique index), oldest-uploaded
+
             // stage first — so Verification's file (if any) shows before
+
             // Inspection's. Visible to every officer viewing this
+
             // application regardless of their own stage (e.g. the final
+
             // Approval officer sees both Verification's and Inspection's
+
             // uploads here), not just the officer currently holding it.
+
             var stageDocuments = await _context.OfficerSupportingDocuments
+
                 .Where(d => d.ApplicationId == id)
+
                 .OrderBy(d => d.UploadedDate)
+
                 .ToListAsync();
+
+
 
             var stageDocOfficerIds = stageDocuments.Select(d => d.UploadedByOfficerId).Distinct().ToList();
+
             var stageDocOfficerNames = await _context.Officers
+
                 .Where(o => stageDocOfficerIds.Contains(o.OfficerId))
+
                 .ToDictionaryAsync(o => o.OfficerId, o => o.FullName ?? o.Username);
 
+
+
             // Only "Verification" and "Inspection" ever get an upload
+
             // widget — Initial Scrutiny and Approval are excluded by design
+
             // (see the Officer Document Upload feature note).
+
             var canUploadStageDocument = currentStage == "Verification" || currentStage == "Inspection";
 
+
+
             ViewBag.StageDocuments = stageDocuments;
+
             ViewBag.StageDocumentOfficerNames = stageDocOfficerNames;
+
             ViewBag.CanUploadStageDocument = canUploadStageDocument;
+
             ViewBag.ExistingStageDocumentForCurrentStage = stageDocuments.FirstOrDefault(d => d.Stage == currentStage);
 
+
+
             // Inspection-stage payment (Application Payment + Extra Charge) —
+
             // null if it hasn't been requested yet.
+
             ViewBag.Payment = await _context.TradeLicencePayments
+
                 .FirstOrDefaultAsync(p => p.ApplicationId == id);
+
+
 
             return View(model);
+
         }
+
+
 
         // Verification/Inspection officer's own supporting file (verification
+
         // report, site inspection photos) — separate from citizen-uploaded
+
         // documents. One file per stage: re-uploading at the same stage
+
         // replaces the previous file rather than adding a second one.
+
         //
+
         // Called via fetch() from officer.js, not a normal form post — the
+
         // page stays exactly where it is (no redirect, no TempData popup;
+
         // that popup wiring is Index.cshtml's, for Forward/Approve/Return).
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> UploadStageDocument(int id, IFormFile file)
+
         {
+
             var application = await _context.TradeLicenceApplications.FindAsync(id);
+
             if (application == null) return NotFound(new { error = "Application not found." });
 
+
+
             if (application.CurrentStage != "Verification" && application.CurrentStage != "Inspection")
+
                 return BadRequest(new { error = "A supporting document can only be uploaded at the Verification or Inspection stage." });
 
+
+
             if (file == null || file.Length == 0)
+
                 return BadRequest(new { error = "Please choose a file to upload." });
 
+
+
             using var ms = new MemoryStream();
+
             await file.CopyToAsync(ms);
+
             var (cipher, iv) = _encryption.Encrypt(ms.ToArray());
 
+
+
             var existing = await _context.OfficerSupportingDocuments
+
                 .FirstOrDefaultAsync(d => d.ApplicationId == id && d.Stage == application.CurrentStage);
 
+
+
             if (existing == null)
+
             {
+
                 existing = new OfficerSupportingDocument
+
                 {
+
                     ApplicationId = id,
+
                     Stage = application.CurrentStage
+
                 };
+
                 _context.OfficerSupportingDocuments.Add(existing);
+
             }
+
+
 
             existing.UploadedByOfficerId = GetCurrentOfficerId();
+
             existing.FileName = file.FileName;
+
             existing.ContentType = file.ContentType;
+
             existing.FileData = cipher;
+
             existing.FileIV = iv;
+
             existing.UploadedDate = DateTime.UtcNow;
 
+
+
             await _context.SaveChangesAsync();
+
+
 
             return Json(new
+
             {
+
                 success = true,
+
                 docId = existing.OfficerSupportingDocumentId,
+
                 fileName = existing.FileName,
+
                 contentType = existing.ContentType,
+
                 stage = existing.Stage,
+
                 uploadedDate = existing.UploadedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
+
             });
+
         }
+
+
 
         // Forces a download (Content-Disposition: attachment) — used by the
+
         // "Uploaded Documents" audit list, where downloading to view is fine.
+
         [HttpGet]
+
         public async Task<IActionResult> DownloadStageDocument(int docId)
+
         {
+
             var doc = await _context.OfficerSupportingDocuments.FindAsync(docId);
+
             if (doc?.FileData == null || doc.FileIV == null) return NotFound();
 
+
+
             var bytes = _encryption.Decrypt(doc.FileData, doc.FileIV);
+
             return File(bytes, doc.ContentType ?? "application/octet-stream", doc.FileName ?? "document");
+
         }
+
+
 
         // No fileDownloadName -> no Content-Disposition: attachment, so the
+
         // browser renders it inline instead of downloading it. Used by the
+
         // "Preview" button's popup (image/PDF shown directly in the modal).
+
         [HttpGet]
+
         public async Task<IActionResult> PreviewStageDocument(int docId)
+
         {
+
             var doc = await _context.OfficerSupportingDocuments.FindAsync(docId);
+
             if (doc?.FileData == null || doc.FileIV == null) return NotFound();
 
+
+
             var bytes = _encryption.Decrypt(doc.FileData, doc.FileIV);
+
             return File(bytes, doc.ContentType ?? "application/octet-stream");
+
         }
+
+
 
         // Sends the application back to the applicant for correction —
+
         // status changes so it drops off this officer's "Submitted" queue,
+
         // and the remarks tell the applicant what needs fixing.
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> ReturnToApplicant(int id, string remarks)
+
         {
+
             var application = await _context.TradeLicenceApplications.FindAsync(id);
+
             if (application == null) return NotFound();
+
+
 
             // While a payment is Pending, the applicant's dashboard shows a
+
             // "Pay Now" button for this exact application. Returning it for
+
             // correction switches Status to "ReturnedToApplicant", which
+
             // takes priority in that dashboard's button logic — the Pay Now
+
             // button would disappear and the payment could never be completed.
+
             if (application.PaymentStatus == "Pending")
+
                 return BadRequest(new { error = "This application can't be returned to the applicant while a payment is pending." });
 
+
+
             application.Status = "ReturnedToApplicant";
+
             application.OfficerRemarks = remarks;
+
             application.ModifiedDate = DateTime.UtcNow;
 
+
+
             await _context.SaveChangesAsync();
+
+
 
             TempData["OfficerActionMessage"] = "Application returned to the applicant successfully.";
+
             TempData["OfficerActionType"] = "return";
+
             return RedirectToAction("Index");
+
         }
+
+
 
         // Inspection officer sends the applicant a payment request — fixed
+
         // Application Payment (1000) + Extra Charge (500) = Total (1500).
+
         // Only valid at the Inspection stage; doesn't move CurrentStage or
+
         // AssignedOfficerId, so the application stays with this same officer
+
         // the whole time — nothing to "resend" once the applicant pays.
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> SendPaymentRequest(int id)
+
         {
+
             var application = await _context.TradeLicenceApplications.FindAsync(id);
+
             if (application == null) return NotFound();
+
+
 
             if (application.CurrentStage != "Inspection")
+
                 return BadRequest(new { error = "Payment can only be requested at the Inspection stage." });
 
+
+
             const decimal applicationPayment = 1000m;
+
             const decimal extraCharge = 500m;
 
+
+
             var payment = await _context.TradeLicencePayments
+
                 .FirstOrDefaultAsync(p => p.ApplicationId == id);
 
+
+
             if (payment == null)
+
             {
+
                 payment = new TradeLicencePayment { ApplicationId = id };
+
                 _context.TradeLicencePayments.Add(payment);
+
             }
+
+
 
             payment.PaymentAmount = applicationPayment;
+
             payment.ExtraCharge = extraCharge;
+
             payment.TotalPaymentAmount = applicationPayment + extraCharge;
+
             payment.PaymentStatus = "Pending";
+
             payment.PaymentRequestedDate = DateTime.UtcNow;
+
             payment.PaymentCompletedDate = null;
 
+
+
             application.PaymentStatus = "Pending";
+
             application.ModifiedDate = DateTime.UtcNow;
 
+
+
             await _context.SaveChangesAsync();
+
+
 
             TempData["OfficerActionMessage"] = "Payment request sent to the applicant.";
+
             TempData["OfficerActionType"] = "payment";
+
             return RedirectToAction("ViewApplication", new { id });
+
         }
+
+
 
         // Forwards the application to a specific officer AT A SPECIFIC STAGE
+
         // (Initial Scrutiny -> Verification -> Inspection -> Approval).
+
         // The stage is taken from the form (not derived from the officer's
+
         // Designation) because one designation — "Manager" — covers two
+
         // stages, so Designation alone can't tell them apart.
+
         // Replaces the old fixed "Forward to GM" action.
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> ForwardToOfficer(int id, int officerId, string targetStage, string remarks)
+
         {
+
             var application = await _context.TradeLicenceApplications.FindAsync(id);
+
             if (application == null) return NotFound();
 
+
+
             var officer = await _context.Officers.FindAsync(officerId);
+
             if (officer == null)
+
                 return BadRequest(new { error = "Please choose a valid officer to forward to." });
 
-            // Server-side twin of the department filter in ViewApplication.
-            var me = await _context.Officers.FindAsync(GetCurrentOfficerId());
-            if (me == null || !string.Equals(me.Department ?? "", officer.Department ?? "", StringComparison.OrdinalIgnoreCase))
-                return BadRequest(new { error = "You can only forward to an officer of your own department." });
+
 
             var expectedDesignation = OfficerWorkflow.StageToDesignation.GetValueOrDefault(targetStage);
+
             if (expectedDesignation == null || officer.Designation != expectedDesignation)
+
                 return BadRequest(new { error = "That officer doesn't match the selected stage." });
 
+
+
             var currentIndex = OfficerWorkflow.StageIndex(application.CurrentStage);
+
             var targetIndex = OfficerWorkflow.StageIndex(targetStage);
 
+
+
             if (targetIndex <= currentIndex)
+
                 return BadRequest(new { error = "You can only forward to a later stage, not the current or an earlier one." });
 
+
+
             // Inspection can't hand off to Approval until the applicant has
+
             // paid — mirrors the disabled Forward button in ViewApplication.cshtml,
+
             // this is the server-side enforcement of the same rule.
+
             if (application.CurrentStage == "Inspection" && application.PaymentStatus != "Paid")
+
                 return BadRequest(new { error = "This application can't be forwarded until the payment has been received." });
 
+
+
             var fromStage = application.CurrentStage;
+
             var fromOfficerId = application.AssignedOfficerId;
+
+
 
             application.AssignedOfficerId = officer.OfficerId;
+
             application.CurrentStage = targetStage;
+
             application.OfficerRemarks = remarks;
+
             application.ModifiedDate = DateTime.UtcNow;
 
+
+
             _context.ApplicationWorkflowHistories.Add(new ApplicationWorkflowHistory
+
             {
+
                 ApplicationId = application.ApplicationId,
+
                 FromOfficerId = fromOfficerId ?? GetCurrentOfficerId(),
+
                 FromStage = fromStage,
+
                 ToOfficerId = officer.OfficerId,
+
                 ToStage = targetStage,
+
                 ActionType = "Forward",
+
                 Remarks = remarks,
+
                 ActionDate = DateTime.UtcNow
+
             });
 
+
+
             await _context.SaveChangesAsync();
+
+
 
             TempData["OfficerActionMessage"] = $"Application successfully forwarded to {officer.FullName} ({targetStage}).";
+
             TempData["OfficerActionType"] = "forward";
+
             return RedirectToAction("Index");
+
         }
+
+
 
         // Sends the application back one step to whichever officer most
+
         // recently forwarded it to the current stage — GM reverts to the
+
         // Inspection Officer who sent it to them, Inspection Officer
+
         // reverts to the Manager, Manager reverts to the DEO. Not offered
+
         // at Initial Scrutiny (nothing before it to revert to).
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> RevertToPreviousOfficer(int id, string remarks)
+
         {
+
             var application = await _context.TradeLicenceApplications.FindAsync(id);
+
             if (application == null) return NotFound();
+
+
 
             // A pending payment is tied to the current stage — reverting
+
             // moves the application away from it, orphaning the payment
+
             // request the applicant is expected to act on.
+
             if (application.PaymentStatus == "Pending")
+
                 return BadRequest(new { error = "This application can't be reverted while a payment is pending with the applicant." });
 
+
+
             var revertTarget = await _context.ApplicationWorkflowHistories
+
                 .Where(h => h.ApplicationId == id && h.ActionType == "Forward" && h.ToStage == application.CurrentStage)
+
                 .OrderByDescending(h => h.ActionDate)
+
                 .FirstOrDefaultAsync();
 
+
+
             if (revertTarget == null || revertTarget.FromOfficerId == null)
+
                 return BadRequest(new { error = "There's no earlier officer to revert this application to." });
 
+
+
             var previousOfficer = await _context.Officers.FindAsync(revertTarget.FromOfficerId.Value);
+
             if (previousOfficer == null)
+
                 return BadRequest(new { error = "The previous officer's account could not be found." });
 
+
+
             var fromStage = application.CurrentStage;
+
             var fromOfficerId = application.AssignedOfficerId;
 
+
+
             application.AssignedOfficerId = previousOfficer.OfficerId;
+
             application.CurrentStage = revertTarget.FromStage;
+
             application.OfficerRemarks = remarks;
+
             application.ModifiedDate = DateTime.UtcNow;
+
+
 
             _context.ApplicationWorkflowHistories.Add(new ApplicationWorkflowHistory
+
             {
+
                 ApplicationId = application.ApplicationId,
+
                 FromOfficerId = fromOfficerId ?? GetCurrentOfficerId(),
+
                 FromStage = fromStage,
+
                 ToOfficerId = previousOfficer.OfficerId,
+
                 ToStage = revertTarget.FromStage,
+
                 ActionType = "Revert",
+
                 Remarks = remarks,
+
                 ActionDate = DateTime.UtcNow
+
             });
 
+
+
             await _context.SaveChangesAsync();
+
+
 
             TempData["OfficerActionMessage"] = $"Application reverted to {previousOfficer.FullName} ({revertTarget.FromStage}).";
+
             TempData["OfficerActionType"] = "revert";
+
             return RedirectToAction("Index");
+
         }
+
+
 
         // Final sign-off — only valid once the application has reached the
+
         // last stage (Approval / GM). Sets Status to "Approved", which is
+
         // what drives citizen-side actions like "Download Certificate" —
+
         // check GenerateAcknowledgementPdfAsync / the citizen dashboard's
+
         // Download Certificate condition if you gate that on Status too.
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> ApproveApplication(int id, string? remarks)
+
         {
+
             var application = await _context.TradeLicenceApplications.FindAsync(id);
+
             if (application == null) return NotFound();
 
+
+
             var lastStage = OfficerWorkflow.Stages[^1]; // "Approval"
+
             if (application.CurrentStage != lastStage)
+
                 return BadRequest(new { error = "This application hasn't reached the final approval stage yet." });
 
+
+
             application.Status = "Approved";
+
             application.OfficerRemarks = remarks;
+
             application.ModifiedDate = DateTime.UtcNow;
 
+
+
             await _context.SaveChangesAsync();
+
+
 
             TempData["OfficerActionMessage"] = "Application approved successfully.";
+
             TempData["OfficerActionType"] = "approve";
+
             return RedirectToAction("Index");
+
         }
+
+
 
         // ---------------- Admin: Officer (User) Creation ----------------
+
         // Admin-only "User Creation" page. Creates a row in the Officers
+
         // table. The Designation picked here is exactly the value
+
         // ForwardToOfficer/ViewApplication filter Officers by (see
+
         // OfficerWorkflow.StageToDesignation) — so e.g. a new officer
+
         // created with Designation "Manager" shows up in the Verification
+
         // stage's "Forward To" dropdown immediately, with no other change
+
         // needed anywhere else in the app.
+
         [HttpGet]
-        public IActionResult CreateUser()
+
+        public async Task<IActionResult> CreateUser()
+
         {
+
             if (!IsCurrentOfficerAdmin()) return Forbid();
 
+
+
             ViewBag.Designations = OfficerWorkflow.AllDesignations;
+
+            // Officers.Department must match the CAF department name exactly to receive forwarded CAFs
+
+            ViewBag.CafDepartments = await _cafDepartments.GetForwardableDepartmentsAsync();
+
             return View(new OfficerCreateViewModel());
+
         }
 
+
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> CreateUser(OfficerCreateViewModel model)
+
         {
+
             if (!IsCurrentOfficerAdmin()) return Forbid();
+
+
 
             ViewBag.Designations = OfficerWorkflow.AllDesignations;
 
+            ViewBag.CafDepartments = await _cafDepartments.GetForwardableDepartmentsAsync();
+
+
+
             if (!ModelState.IsValid)
+
             {
+
                 return View(model);
+
             }
+
+
 
             var usernameTaken = await _context.Officers.AnyAsync(o => o.Username == model.Username);
+
             if (usernameTaken)
+
             {
+
                 ModelState.AddModelError(nameof(model.Username), "This username is already taken.");
+
             }
+
+
 
             if (!string.IsNullOrWhiteSpace(model.Email))
+
             {
+
                 var emailTaken = await _context.Officers.AnyAsync(o => o.Email == model.Email);
+
                 if (emailTaken)
+
                 {
+
                     ModelState.AddModelError(nameof(model.Email), "This email is already registered.");
+
                 }
+
             }
+
+
 
             if (!ModelState.IsValid)
+
             {
+
                 return View(model);
+
             }
+
+
 
             var newOfficer = new Officer
+
             {
+
                 Username = model.Username,
+
                 FullName = model.FullName,
+
                 Department = model.Department,
+
                 Designation = model.Designation,
+
                 Email = model.Email,
+
                 IsLocked = model.IsLocked,
+
                 FailedLoginAttempts = 0,
+
                 LastLoginDate = null,
+
                 CreatedDate = DateTime.UtcNow,
+
                 CreatedBy = User.Identity?.Name
+
             };
+
             // Same PasswordHasher<Officer> approach AccountController uses to
+
             // verify logins — never store the typed password as-is.
+
             newOfficer.PasswordHash = _officerPasswordHasher.HashPassword(newOfficer, model.Password);
 
+
+
             _context.Officers.Add(newOfficer);
+
             await _context.SaveChangesAsync();
 
+
+
             TempData["OfficerActionMessage"] =
+
                 $"Officer account '{newOfficer.Username}' created successfully as {newOfficer.Designation}.";
+
             TempData["OfficerActionType"] = "created";
 
+
+
             return RedirectToAction("CreateUser");
+
         }
+
+
 
         // Read-only list of every officer account, with an Active/Inactive
+
         // toggle and a delete option per row. Separate page from CreateUser
+
         // so the creation form isn't cluttered with the full list every time.
+
         [HttpGet]
+
         public async Task<IActionResult> ExistingOfficers()
+
         {
+
             if (!IsCurrentOfficerAdmin()) return Forbid();
+
+
 
             var officers = await _context.Officers
+
                 .OrderByDescending(o => o.CreatedDate)
+
                 .ToListAsync();
 
+
+
             return View(officers);
+
         }
 
+
+
         // Flips Officer.IsLocked — the same flag AccountController.OfficerLogin
+
         // checks before verifying a password, so "Inactive" here means the
+
         // account genuinely can't log in, not just a cosmetic label.
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> ToggleOfficerStatus(int officerId)
+
         {
+
             if (!IsCurrentOfficerAdmin()) return Forbid();
 
+
+
             var officer = await _context.Officers.FindAsync(officerId);
+
             if (officer == null) return NotFound();
 
+
+
             // Guard against an admin locking themselves out mid-session —
+
             // there's no other way back in if they're the only Admin account.
+
             if (officerId == GetCurrentOfficerId() && !officer.IsLocked)
+
             {
+
                 TempData["OfficerActionMessage"] = "You can't set your own account to Inactive while logged in.";
+
                 TempData["OfficerActionType"] = "return";
+
                 return RedirectToAction("ExistingOfficers");
+
             }
+
+
 
             officer.IsLocked = !officer.IsLocked;
 
+
+
             // Unlocking without resetting this would leave them one or two
+
             // bad logins away from being auto-locked again immediately —
+
             // see AccountController.OfficerLogin's MaxFailedAttempts check.
+
             if (!officer.IsLocked)
+
             {
+
                 officer.FailedLoginAttempts = 0;
+
             }
+
+
 
             await _context.SaveChangesAsync();
 
+
+
             TempData["OfficerActionMessage"] =
+
                 $"'{officer.Username}' is now {(officer.IsLocked ? "Inactive" : "Active")}.";
+
             TempData["OfficerActionType"] = "toggled";
 
+
+
             return RedirectToAction("ExistingOfficers");
+
         }
 
+
+
         // Permanently removes an officer account. Officers.OfficerId is
+
         // referenced by ApplicationWorkflowHistories.FromOfficerId/ToOfficerId
+
         // with no cascade or set-null configured (see the Database script) —
+
         // deleting an officer who has ever forwarded/received an application
+
         // would violate that FK, so that case is caught and turned into a
+
         // friendly message rather than a raw SQL error. Locking (via
+
         // ToggleOfficerStatus) is the fallback for those accounts.
+
         [HttpPost]
+
         [ValidateAntiForgeryToken]
+
         public async Task<IActionResult> DeleteOfficer(int officerId)
+
         {
+
             if (!IsCurrentOfficerAdmin()) return Forbid();
 
+
+
             var officer = await _context.Officers.FindAsync(officerId);
+
             if (officer == null) return NotFound();
 
+
+
             if (officerId == GetCurrentOfficerId())
+
             {
+
                 TempData["OfficerActionMessage"] = "You can't delete your own account while logged in.";
+
                 TempData["OfficerActionType"] = "return";
+
                 return RedirectToAction("ExistingOfficers");
+
             }
+
+
 
             var username = officer.Username;
 
+
+
             try
+
             {
+
                 _context.Officers.Remove(officer);
+
                 await _context.SaveChangesAsync();
 
+
+
                 TempData["OfficerActionMessage"] = $"Officer account '{username}' deleted.";
+
                 TempData["OfficerActionType"] = "deleted";
-            }
-            catch (DbUpdateException)
-            {
-                TempData["OfficerActionMessage"] =
-                    $"'{username}' can't be deleted — they appear in the workflow history of one or more applications. Set them to Inactive instead.";
-                TempData["OfficerActionType"] = "return";
+
             }
 
+            catch (DbUpdateException)
+
+            {
+
+                TempData["OfficerActionMessage"] =
+
+                    $"'{username}' can't be deleted — they appear in the workflow history of one or more applications. Set them to Inactive instead.";
+
+                TempData["OfficerActionType"] = "return";
+
+            }
+
+
+
             return RedirectToAction("ExistingOfficers");
+
         }
+
     }
+
 }
+

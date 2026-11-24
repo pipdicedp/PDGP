@@ -12,7 +12,6 @@ using TradeLicence.Helpers;
 using TradeLicence.Interfaces;
 using TradeLicence.Models;
 using TradeLicence.Models.Caf;
-using TradeLicence.Services;
 
 namespace TradeLicence.Controllers
 {
@@ -41,15 +40,14 @@ namespace TradeLicence.Controllers
         private readonly ICafFormService _service;
         private readonly ILogger<CommonApplicationFormController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        private readonly ICafCertificateGenerator _certificates;
-
-        public CommonApplicationFormController(ICafFormService service, ILogger<CommonApplicationFormController> logger, ApplicationDbContext context, ICafCertificateGenerator certificates)
+        public CommonApplicationFormController(ICafFormService service, ILogger<CommonApplicationFormController> logger, ApplicationDbContext context, IWebHostEnvironment env)
         {
-            _certificates = certificates;
             _service = service;
             _logger = logger;
             _context = context;
+            _env = env;
         }
 
         private long? GetLoginId()
@@ -393,6 +391,48 @@ namespace TradeLicence.Controllers
             return File(bytes, "application/pdf", $"CAF_{loginId.Value}_Acknowledgement.pdf");
         }
 
+        // ---------------- Department approval (NOC) download ----------------
+
+        // One certificate per department that has APPROVED this applicant's forwarded CAF (Revenue,
+        // Puducherry Planning Authority). id = CafDepartmentApplication.Id, the same id the Track Status
+        // card carries. The applicant can only fetch their OWN CAF's approval, and only once approved.
+        [HttpGet("download-approval/{id:int}")]
+        public async Task<IActionResult> DownloadApproval(int id)
+        {
+            if (User.IsInRole("Officer")) return Forbid();
+
+            var loginId = GetLoginId();
+            if (loginId == null) return Unauthorized();
+
+            var forward = await _context.CafDepartmentApplications.AsNoTracking()
+                .FirstOrDefaultAsync(f => f.Id == id && f.LoginId == loginId.Value);
+
+            if (forward == null || forward.Status != "Approved" || !CafApprovalPdfBuilder.HasApproval(forward.Department))
+                return NotFound();
+
+            // Town & Country Planning issues a scanned Site Clearance certificate (image), not a generated PDF.
+            // Reached only after the department's 4-stage workflow ended in Approved (checked above).
+            if (string.Equals(forward.Department?.Trim(), CafWorkflowConfig.TownAndCountryPlanningDepartment, StringComparison.OrdinalIgnoreCase))
+            {
+                var certPath = Path.Combine(_env.ContentRootPath, "Certificates", "Site_clearance_certificate.jpeg");
+                if (!System.IO.File.Exists(certPath)) return NotFound();
+                return PhysicalFile(certPath, "image/jpeg", $"CAF_{loginId.Value}_SiteClearance_Certificate.jpeg");
+            }
+
+            var step = CafFormMetadata.ByNumber(CafFormMetadata.MinStep);
+            if (step == null) return NotFound();
+            var main = await _service.LoadMainRowAsync(step, loginId.Value);
+
+            var bytes = CafApprovalPdfBuilder.Build(
+                forward.Department,
+                loginId.Value.ToString(),
+                forward.ModifiedDate ?? forward.ForwardedDate,
+                main);
+
+            return File(bytes, "application/pdf",
+                $"CAF_{loginId.Value}_{CafApprovalPdfBuilder.FileTag(forward.Department)}_Approval.pdf");
+        }
+
         // ---------------- Track Status (separate page) ----------------
 
         [HttpGet("status")]
@@ -420,58 +460,6 @@ namespace TradeLicence.Controllers
                     : null,
                 Status = await BuildApplicantStatusAsync(loginId.Value, isSubmitted)
             });
-        }
-
-        // ---------------- Certificate (Approved CAFs only, ONE download) ----------------
-
-        [HttpGet("download-certificate")]
-        public async Task<IActionResult> DownloadCertificate()
-        {
-            if (User.IsInRole("Officer")) return Forbid();
-
-            var loginId = GetLoginId();
-            if (loginId == null) return Unauthorized();
-
-            var review = await _context.CafIndustryReviews.AsNoTracking().FirstOrDefaultAsync(r => r.LoginId == loginId.Value);
-
-            // checked here, not just hidden in the page: nothing before final approval, nothing twice
-            if (review == null || review.Status != "Approved" || !await IsSubmittedAsync(loginId.Value))
-                return BadRequest(new { error = "Certificate is available only for approved applications." });
-
-            if (review.IsCertificateDownloaded)
-                return BadRequest(new { error = "This certificate has already been downloaded and cannot be downloaded again." });
-
-            // Approved before certificates existed: allocate the number now, from the approval date.
-            if (string.IsNullOrEmpty(review.CertificateNumber))
-            {
-                var issued = review.LastActionDate ?? DateTime.UtcNow;
-                var number = $"CAF/{DateTime.Now:yyyy}/{loginId.Value:D6}";
-                await _context.CafIndustryReviews
-                    .Where(r => r.LoginId == loginId.Value && r.CertificateNumber == null)
-                    .ExecuteUpdateAsync(u => u
-                        .SetProperty(r => r.CertificateNumber, number)
-                        .SetProperty(r => r.CertificateIssuedDate, issued));
-                review = await _context.CafIndustryReviews.AsNoTracking().FirstAsync(r => r.LoginId == loginId.Value);
-            }
-
-            var preview = await _service.LoadPreviewAsync(loginId.Value);
-            var appliedOn = (await _service.GetSubmittedSummariesAsync(new[] { loginId.Value })).FirstOrDefault()?.AppliedOn;
-
-            var data = CafCertificateData.From(preview, loginId.Value, review.CertificateNumber!,
-                (review.CertificateIssuedDate ?? DateTime.UtcNow).ToLocalTime(), review.Remarks, appliedOn);
-            var pdf = _certificates.Generate(data);
-
-            // One atomic flip: if two requests race, only the first one gets the file.
-            var downloadedAt = DateTime.Now;
-            var flipped = await _context.CafIndustryReviews
-                .Where(r => r.LoginId == loginId.Value && !r.IsCertificateDownloaded)
-                .ExecuteUpdateAsync(u => u
-                    .SetProperty(r => r.IsCertificateDownloaded, true)
-                    .SetProperty(r => r.CertificateDownloadedDate, downloadedAt));
-            if (flipped == 0)
-                return BadRequest(new { error = "This certificate has already been downloaded and cannot be downloaded again." });
-
-            return File(pdf, "application/pdf", $"CAF_{loginId.Value}_Certificate.pdf");
         }
 
         [HttpPost("submit")]
@@ -573,11 +561,6 @@ namespace TradeLicence.Controllers
                     vm.Headline = "Approved";
                     vm.Detail = "Your application has been approved by the Industry Department.";
                     vm.Remarks = review?.Remarks;
-                    vm.CertificateNumber = review?.CertificateNumber;
-                    vm.CertificateDownloaded = review?.IsCertificateDownloaded == true;
-                    vm.CertificateDownloadedDate = review?.CertificateDownloadedDate;
-                    // old approvals (before certificates existed) get their number on the first download
-                    vm.CertificateAvailable = review != null && !review.IsCertificateDownloaded;
                     break;
                 case "Rejected":
                     vm.Tone = "danger";

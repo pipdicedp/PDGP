@@ -80,12 +80,6 @@ namespace TradeLicence.Models.Caf
         public DateTime? DecisionDate { get; set; }
         public string? Remarks { get; set; }
 
-        // Approved CAF: certificate download (allowed once)
-        public string? CertificateNumber { get; set; }
-        public bool CertificateAvailable { get; set; }
-        public bool CertificateDownloaded { get; set; }
-        public DateTime? CertificateDownloadedDate { get; set; }
-
         /// <summary>One entry per department the CAF was forwarded to, with that department's own stage / status.</summary>
         public List<CafDepartmentApplication> Forwards { get; set; } = new();
     }

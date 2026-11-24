@@ -50,6 +50,19 @@
                 }
             </ol>
 
+            @* The applicant gets this department's approval certificate once the department approves.
+               Never shown on the Industry officer's view (ShowInternal). *@
+            @if (!Model.ShowInternal && approved && TradeLicence.Helpers.CafApprovalPdfBuilder.HasApproval(f.Department))
+            {
+                <div class="caf-dp-approval">
+                    <a class="btn btn-success caf-dp-approval-btn"
+                       href="@Url.Action("DownloadApproval", "CommonApplicationForm", new { id = f.Id })">
+                        <span aria-hidden="true">&#128196;</span> Download Approval
+                    </a>
+                    <span class="caf-dp-approval-note">@f.Department &mdash; @(string.Equals(f.Department?.Trim(), TradeLicence.Helpers.CafWorkflowConfig.TownAndCountryPlanningDepartment, StringComparison.OrdinalIgnoreCase) ? "Site Clearance Certificate (Image)" : "No Objection Certificate (PDF)")</span>
+                </div>
+            }
+
             @if (Model.ShowInternal && !string.IsNullOrWhiteSpace(f.ForwardRemarks))
             {
                 <div class="caf-dp-remarks">Forwarding remarks: "@f.ForwardRemarks"</div>

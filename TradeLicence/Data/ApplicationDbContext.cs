@@ -44,6 +44,15 @@ namespace TradeLicence.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // caf_basic_details.loginid (and the FK columns that point at it) are numeric(18,0) in SQL Server,
+            // which ADO.NET returns as System.Decimal. The models expose LoginId as long, so tell EF the real
+            // column type and convert long <-> decimal. Without this, reading these tables throws
+            // "Unable to cast object of type 'System.Decimal' to type 'System.Int64'".
+            modelBuilder.Entity<CafDepartmentApplication>()
+                .Property(e => e.LoginId).HasColumnType("numeric(18,0)").HasConversion<decimal>();
+            modelBuilder.Entity<CafIndustryReview>()
+                .Property(e => e.LoginId).HasColumnType("numeric(18,0)").HasConversion<decimal>();
+
             modelBuilder.Entity<TradeLicenceApplication>(entity =>
             {
                 entity.ToTable("TradeLicenceApplications");
@@ -150,7 +159,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Restrict (not SetNull/Cascade) — an Officer with history
+                // Restrict (not SetNull/Cascade)   an Officer with history
                 // rows can't be deleted outright, which is the right call
                 // for an audit trail. Officer.IsLocked is how you retire
                 // an officer account instead.
@@ -219,7 +228,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.ApplicationId)
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Restrict, same reasoning as ApplicationWorkflowHistory â€”
+                // Restrict, same reasoning as ApplicationWorkflowHistory —
                 // an officer who's uploaded a file shouldn't be deletable
                 // outright; ToggleOfficerStatus (Inactive) is the fallback.
                 entity.HasOne(e => e.UploadedByOfficer)
@@ -236,7 +245,7 @@ namespace TradeLicence.Data
                       .HasForeignKey(e => e.UserId)
                       .OnDelete(DeleteBehavior.SetNull);
 
-                // Officer workflow routing — nullable FK, so deleting an
+                // Officer workflow routing   nullable FK, so deleting an
                 // Officer account never blocks (it just un-assigns the
                 // application, leaving it visible to the rest of that stage).
                 entity.HasOne<Officer>()
@@ -266,7 +275,7 @@ namespace TradeLicence.Data
             });
 
             // ---------------- Shared Workflow Engine tables ----------------
-            // ApplicationId is a SOFT reference here (no FK) â€” it points at a
+            // ApplicationId is a SOFT reference here (no FK) — it points at a
             // different physical table depending on ServiceType (Water,
             // Electricity, ...), so a single FK constraint isn't possible.
             // ServiceType + ApplicationId together identify the application.
@@ -278,7 +287,7 @@ namespace TradeLicence.Data
                 entity.HasIndex(e => new { e.ServiceType, e.ApplicationId });
 
                 // Officers IS genuinely shared across every service, so this
-                // FK is real (same reasoning as ApplicationWorkflowHistory â€”
+                // FK is real (same reasoning as ApplicationWorkflowHistory —
                 // Restrict, not Cascade/SetNull: an officer with history rows
                 // can't be deleted outright; Officer.IsLocked is the fallback).
                 entity.HasOne(e => e.FromOfficer)
@@ -297,7 +306,7 @@ namespace TradeLicence.Data
                 entity.ToTable("WorkflowSupportingDocuments");
                 entity.HasKey(e => e.WorkflowSupportingDocumentId);
 
-                // One file per (ServiceType, ApplicationId, Stage) â€” same
+                // One file per (ServiceType, ApplicationId, Stage) — same
                 // "one row per key" idea as OfficerSupportingDocument's
                 // (ApplicationId, Stage) index, with ServiceType added since
                 // this table is shared across services.

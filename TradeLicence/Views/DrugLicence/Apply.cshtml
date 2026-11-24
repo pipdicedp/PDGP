@@ -1,0 +1,324 @@
+@model TradeLicence.Models.Drugs.DrugLicenceFormViewModel
+@using TradeLicence.Models.Drugs
+@{
+    ViewData["Title"] = Model.Form.Title;
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+
+    bool StorageChecked(string prop) =>
+        (bool)(typeof(DrugLicenceFormViewModel).GetProperty(prop)?.GetValue(Model) ?? false);
+
+    var pharmacistJson = System.Text.Json.JsonSerializer.Serialize(Model.Pharmacists.Select(p => new
+    {
+        name = p.Name ?? "",
+        sex = p.Sex ?? "",
+        qualification = p.Qualification ?? "",
+        experience = p.Experience ?? "",
+        councilNo = p.CouncilNo ?? "",
+        validityDate = p.ValidityDate?.ToString("yyyy-MM-dd") ?? "",
+        dateOfBirth = p.DateOfBirth?.ToString("yyyy-MM-dd") ?? "",
+        yearOfPassing = p.YearOfPassing?.ToString() ?? ""
+    }));
+
+    var editable = Model.Status == "Draft" || Model.Status == "ReturnedToApplicant";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/drugs_css/drug_licence.css" asp-append-version="true" />
+}
+
+<div class="dashboard-body drug-wrapper">
+
+    <div class="drug-header">
+        <div>
+            <h2>@Model.Form.Title</h2>
+            <p>Government of Puducherry &mdash; Department of Industries and Commerce</p>
+        </div>
+        <a class="drug-link" asp-controller="@Model.Form.Controller" asp-action="MyApplications">My Applications</a>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">@TempData["Message"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (Model.ApplicationNumber != null)
+    {
+        <p class="drug-appno">Application No.: <strong>@Model.ApplicationNumber</strong> &bull; Status: <strong>@(Model.Status == "ReturnedToApplicant" ? "Returned for Correction" : Model.Status)</strong></p>
+    }
+    @if (Model.Status == "ReturnedToApplicant" && !string.IsNullOrWhiteSpace(Model.OfficerRemarks))
+    {
+        <div class="alert alert-warning"><strong>Officer's note:</strong> @Model.OfficerRemarks</div>
+    }
+
+    <div asp-validation-summary="All" class="alert alert-danger drug-summary"></div>
+
+    <form id="drugForm" method="post" enctype="multipart/form-data" asp-controller="@Model.Form.Controller" asp-action="Apply" novalidate>
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ApplicationId" />
+
+        <div class="drug-radio-row">
+            <label><input type="radio" name="IsRenewal" value="false" checked="@(!Model.IsRenewal)" /> Registration</label>
+            <label><input type="radio" name="IsRenewal" value="true" checked="@Model.IsRenewal" /> Renewal</label>
+        </div>
+
+        <!-- ================= 1. Firm details ================= -->
+        <fieldset class="tl-section">
+            <legend>1. Firm Details</legend>
+            <div class="tl-grid-2">
+                <div class="form-group">
+                    <label asp-for="ApplicantName">1. Applicant Name <span class="req">*</span></label>
+                    <input asp-for="ApplicantName" class="form-control" placeholder="APPLICANT NAME" maxlength="200" />
+                    <span asp-validation-for="ApplicantName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="FirmName">2. Firm Name <span class="req">*</span></label>
+                    <input asp-for="FirmName" class="form-control" placeholder="Firm Name" maxlength="250" />
+                    <span asp-validation-for="FirmName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ManagerInchargeName">3. Manager/Incharge Name <span class="req">*</span></label>
+                    <input asp-for="ManagerInchargeName" class="form-control" placeholder="MANAGER/INCHARGE NAME" maxlength="200" />
+                    <span asp-validation-for="ManagerInchargeName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ConstitutionType">4. Constitution Type <span class="req">*</span></label>
+                    <select asp-for="ConstitutionType" class="form-control">
+                        <option value="">-- Select --</option>
+                        @foreach (var v in Model.ConstitutionTypes)
+                        {
+                            <option value="@v" selected="@(v == Model.ConstitutionType)">@v</option>
+                        }
+                    </select>
+                    <span asp-validation-for="ConstitutionType" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="AddressOfTheFirm">5. Address of the Firm <span class="req">*</span></label>
+                    <textarea asp-for="AddressOfTheFirm" class="form-control" rows="2" placeholder="Address of the Firm" maxlength="500"></textarea>
+                    <span asp-validation-for="AddressOfTheFirm" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Landmark">6. Landmark</label>
+                    <input asp-for="Landmark" class="form-control" placeholder="Landmark" maxlength="200" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Districts">7. Districts <span class="req">*</span></label>
+                    <select asp-for="Districts" class="form-control">
+                        <option value="">-- Select --</option>
+                        @foreach (var v in Model.DistrictList)
+                        {
+                            <option value="@v" selected="@(v == Model.Districts)">@v</option>
+                        }
+                    </select>
+                    <span asp-validation-for="Districts" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="PostalZipCode">8. Postal / Zip Code <span class="req">*</span></label>
+                    <input asp-for="PostalZipCode" class="form-control" placeholder="Postal / Zip Code" maxlength="6" inputmode="numeric" />
+                    <span asp-validation-for="PostalZipCode" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="EMail">9. E-Mail <span class="req">*</span></label>
+                    <input asp-for="EMail" type="email" class="form-control" placeholder="E-Mail" maxlength="150" />
+                    <span asp-validation-for="EMail" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="MobileNumber">10. Mobile Number <span class="req">*</span></label>
+                    <input asp-for="MobileNumber" class="form-control" placeholder="Mobile Number" maxlength="10" inputmode="numeric" />
+                    <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="TypeOfCeilings">11. Type of Ceilings <span class="req">*</span></label>
+                    <select asp-for="TypeOfCeilings" class="form-control">
+                        <option value="">-- Select --</option>
+                        @foreach (var v in Model.CeilingTypes)
+                        {
+                            <option value="@v" selected="@(v == Model.TypeOfCeilings)">@v</option>
+                        }
+                    </select>
+                    <span asp-validation-for="TypeOfCeilings" class="text-danger"></span>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ================= 2. Ownership details ================= -->
+        <fieldset class="tl-section">
+            <legend>2. Ownership Details</legend>
+            <div class="tl-grid-2">
+                <div class="form-group">
+                    <label asp-for="NameOfProprietorPartnerDirector">(i). Name of the Proprietor/Partner/Director</label>
+                    <input asp-for="NameOfProprietorPartnerDirector" class="form-control" placeholder="Name of the Proprietor/Partner/Director" maxlength="200" />
+                    <span asp-validation-for="NameOfProprietorPartnerDirector" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="DinNoSinNoRegistrationDetails">(ii). Din No./ Sin No./ Registration Details</label>
+                    <input asp-for="DinNoSinNoRegistrationDetails" class="form-control" placeholder="Din No./ Sin No/ Registration Details" maxlength="100" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="PanCardNo">(iii). PAN CARD No. <span class="req">*</span></label>
+                    <input asp-for="PanCardNo" class="form-control" placeholder="PAN CARD No" maxlength="10" style="text-transform:uppercase;" />
+                    <span asp-validation-for="PanCardNo" class="text-danger"></span>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- ================= 3. Pharmacist / Competent details (separate box, any number) ================= -->
+        <fieldset class="tl-section drug-pharmacist-box" id="pharmacistBox">
+            <legend>3. Pharmacist / Competent Details</legend>
+
+            <div class="tl-grid-2">
+                <div class="form-group">
+                    <label for="ph_Name">Name</label>
+                    <input id="ph_Name" class="form-control" placeholder="Name" maxlength="150" />
+                </div>
+                <div class="form-group">
+                    <label for="ph_Sex">Sex</label>
+                    <select id="ph_Sex" class="form-control">
+                        <option value="">-- Select --</option>
+                        @foreach (var s in DrugLicenceConfig.SexOptions)
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ph_Qualification">Qualification</label>
+                    <input id="ph_Qualification" class="form-control" placeholder="Qualification" maxlength="150" />
+                </div>
+                <div class="form-group">
+                    <label for="ph_Experience">Experience</label>
+                    <input id="ph_Experience" class="form-control" placeholder="Experience" maxlength="50" />
+                </div>
+                <div class="form-group">
+                    <label for="ph_CouncilNo">Council No.</label>
+                    <input id="ph_CouncilNo" class="form-control" placeholder="Council No" maxlength="50" />
+                </div>
+                <div class="form-group">
+                    <label for="ph_ValidityDate">Validity Date</label>
+                    <input id="ph_ValidityDate" type="date" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="ph_DateOfBirth">Date Of Birth</label>
+                    <input id="ph_DateOfBirth" type="date" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <label for="ph_YearOfPassing">Year Of Passing</label>
+                    <input id="ph_YearOfPassing" class="form-control" placeholder="Year Of Passing" maxlength="4" inputmode="numeric" />
+                </div>
+            </div>
+
+            <p id="ph_Error" class="text-danger" style="display:none;"></p>
+            <button type="button" id="ph_Add" class="btn btn-outline-primary drug-add-btn">Add</button>
+
+            <div class="drug-table-wrap">
+                <table class="drug-table" id="pharmacistTable">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Name</th><th>Sex</th><th>Qualification</th><th>Experience</th>
+                            <th>Council No.</th><th>Validity</th><th>DOB</th><th>Year of Passing</th><th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <p id="ph_Empty" class="tl-note">No pharmacist added yet. Fill in the details above and click <strong>Add</strong> &mdash; you can add more than one.</p>
+            </div>
+            <div id="pharmacistHidden"></div>
+            @Html.ValidationMessage("Pharmacists", new { @class = "text-danger" })
+        </fieldset>
+        <script type="application/json" id="pharmacistData">@Html.Raw(pharmacistJson)</script>
+
+        <!-- ================= 4. Licence details ================= -->
+        <fieldset class="tl-section">
+            <legend>4. Licence Details</legend>
+
+            <div class="form-group">
+                <label>(i). Schedule of Drugs: <span class="req">*</span></label>
+                <div class="drug-radio-col">
+                    @foreach (var o in DrugLicenceConfig.ScheduleOptions)
+                    {
+                        <label><input type="radio" name="ScheduleOfDrugs" value="@o.Value" checked="@(Model.ScheduleOfDrugs == o.Value)" /> @o.Label</label>
+                    }
+                </div>
+                <span asp-validation-for="ScheduleOfDrugs" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label>(ii). Storage Details: <span class="req">*</span></label>
+                <div class="drug-radio-col" id="storageGroup">
+                    @foreach (var o in DrugLicenceConfig.StorageOptions)
+                    {
+                        <label>
+                            <input type="checkbox" name="@o.Value" value="true" checked="@StorageChecked(o.Value)" />
+                            <input type="hidden" name="@o.Value" value="false" />
+                            @o.Label
+                        </label>
+                    }
+                </div>
+                @Html.ValidationMessage("StorageDetails", new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group">
+                <label>(iii) Cold Storage <span class="req">*</span></label>
+                <div class="drug-radio-row drug-radio-left">
+                    <label><input type="radio" name="ColdStorage" value="true" checked="@Model.ColdStorage" /> Yes</label>
+                    <label><input type="radio" name="ColdStorage" value="false" checked="@(!Model.ColdStorage)" /> No</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>(iv) 24 Hours <span class="req">*</span></label>
+                <div class="drug-radio-row drug-radio-left">
+                    <label><input type="radio" name="TwentyFourHours" value="true" checked="@Model.TwentyFourHours" /> Yes</label>
+                    <label><input type="radio" name="TwentyFourHours" value="false" checked="@(!Model.TwentyFourHours)" /> No</label>
+                </div>
+            </div>
+
+            <!-- uploads: PDF only, max 1 MB each; stored in the database -->
+            <div class="drug-uploads">
+                @foreach (var def in DrugLicenceConfig.Documents)
+                {
+                    Model.ExistingDocuments.TryGetValue(def.Key, out var existingDoc);
+                    <div class="form-group drug-upload" data-doc-key="@def.Key">
+                        <label for="file_@def.Key">
+                            @def.Label
+                            @if (def.AlwaysRequired)
+                            {
+                                <span class="req">*</span>
+                            }
+                            else if (def.Key == "ColdStorageProof")
+                            {
+                                <span class="req" id="coldProofStar" style="@(Model.ColdStorage ? "" : "display:none;")">*</span>
+                            }
+                        </label>
+                        <input type="file" id="file_@def.Key" name="file_@def.Key" accept="application/pdf,.pdf" class="drug-file" />
+                        @if (existingDoc != null)
+                        {
+                            <div class="drug-uploaded">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <a href="@Url.Action("ViewDocument", Model.Form.Controller, new { docId = existingDoc.DocumentId })" target="_blank" rel="noopener">View previously uploaded file</a>
+                                <span class="text-muted">(@existingDoc.FileName &mdash; choose a new file only if you want to replace it)</span>
+                            </div>
+                        }
+                        <span class="drug-file-error text-danger"></span>
+                        @Html.ValidationMessage("file_" + def.Key, new { @class = "text-danger" })
+                    </div>
+                }
+                <p class="tl-note">Note: Only allowed PDF file and Maximum size of uploading file is 1MB</p>
+            </div>
+        </fieldset>
+
+        <div class="drug-actions">
+            @if (editable)
+            {
+                <button type="submit" name="actionButton" value="draft" class="btn btn-secondary" id="btnDraft">Save as Draft</button>
+                <button type="submit" name="actionButton" value="submit" class="btn btn-primary" id="btnSubmit">@(Model.Status == "ReturnedToApplicant" ? "Resubmit Application" : "Submit Application")</button>
+            }
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/js/drugs_js/drug_licence.js" asp-append-version="true"></script>
+}

@@ -44,11 +44,10 @@ namespace TradeLicence.Services
         private readonly string? _department;
         private readonly bool _requirePaymentAtInspection;
 
-        // "Forward to officer" is always limited to ONE department, worked out automatically:
-        //   - department given here (CAF: the department the CAF was forwarded to), else
-        //   - the department of the officer who is doing the forwarding.
-        //   So a new department needs no code - just create its officers with the same Department
-        //   text and they only ever see (and can only forward to) each other.
+        // department: when set, "forward to officer" is limited to officers of that department.
+        //   CAF needs this because the same workflow runs in several departments at once.
+        //   Null keeps the original behaviour (any officer with the right designation), so
+        //   Water / Electricity are unchanged.
         // requirePaymentAtInspection: false for workflows with no applicant-payment step (CAF).
         public WorkflowEngineService(DbContext appContext, ApplicationDbContext sharedContext, string serviceType,
             string? department = null, bool requirePaymentAtInspection = true)
@@ -70,24 +69,26 @@ namespace TradeLicence.Services
         {
             var myStages = TradeLicence.Models.OfficerWorkflow.StagesForDesignation(designation);
 
-            return await Applications
+            var apps = await Applications
                 .Where(a => a.Status == "Submitted" &&
                     (
                         (a.AssignedOfficerId == null && myStages.Contains(a.CurrentStage))
                         || a.AssignedOfficerId == officerId
                     ))
-                .OrderByDescending(a => a.Id)
                 .ToListAsync();
+
+            // Newest first. Sorted here, not in SQL: "Id" is a computed property on some entities
+            // (e.g. WaterConnectionApplication.Id => ApplicationId) with no column behind it, so EF
+            // can't translate OrderBy on it.
+            return apps.OrderByDescending(a => a.Id).ToList();
         }
 
         public async Task<TApp?> GetApplicationAsync(int id) => await Applications.FindAsync(id);
 
         // One entry per (stage, officer) for every stage AFTER the current
         // one — officers can only forward forward, never skip backward.
-        public async Task<List<(string Stage, TradeLicence.Models.Officer Officer)>> GetForwardableOfficersAsync(string currentStage, int actingOfficerId)
+        public async Task<List<(string Stage, TradeLicence.Models.Officer Officer)>> GetForwardableOfficersAsync(string currentStage)
         {
-            var department = await ResolveDepartmentAsync(actingOfficerId);
-
             var currentIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(currentStage);
             var laterStages = TradeLicence.Models.OfficerWorkflow.Stages.Skip(currentIndex + 1).ToList();
 
@@ -95,22 +96,18 @@ namespace TradeLicence.Services
             foreach (var stage in laterStages)
             {
                 var designation = TradeLicence.Models.OfficerWorkflow.StageToDesignation[stage];
-                var officers = await _sharedContext.Officers
-                    .Where(o => o.Designation == designation && !o.IsLocked && o.Department == department)
+                var officersQuery = _sharedContext.Officers
+                    .Where(o => o.Designation == designation && !o.IsLocked);
+                if (_department != null)
+                    officersQuery = officersQuery.Where(o => o.Department == _department);
+
+                var officers = await officersQuery
                     .OrderBy(o => o.FullName)
                     .ToListAsync();
 
                 result.AddRange(officers.Select(o => (stage, o)));
             }
             return result;
-        }
-
-        // The one department "Forward to officer" is limited to (null = officers with no department).
-        private async Task<string?> ResolveDepartmentAsync(int actingOfficerId)
-        {
-            if (_department != null) return _department;
-            var acting = await _sharedContext.Officers.FindAsync(actingOfficerId);
-            return acting?.Department;
         }
 
         public bool IsFinalStage(string currentStage) =>
@@ -172,6 +169,7 @@ namespace TradeLicence.Services
             var application = await Applications.FindAsync(applicationId);
             if (application == null) return WorkflowActionResult.Fail("Application not found.");
 
+
             var officer = await _sharedContext.Officers.FindAsync(officerId);
             if (officer == null) return WorkflowActionResult.Fail("Please choose a valid officer to forward to.");
 
@@ -179,9 +177,8 @@ namespace TradeLicence.Services
             if (expectedDesignation == null || officer.Designation != expectedDesignation)
                 return WorkflowActionResult.Fail("That officer doesn't match the selected stage.");
 
-            var department = await ResolveDepartmentAsync(actingOfficerId);
-            if (!string.Equals(officer.Department ?? "", department ?? "", StringComparison.OrdinalIgnoreCase))
-                return WorkflowActionResult.Fail("You can only forward to an officer of your own department.");
+            if (_department != null && !string.Equals(officer.Department, _department, StringComparison.OrdinalIgnoreCase))
+                return WorkflowActionResult.Fail($"That officer doesn't belong to the {_department} department.");
 
             var currentIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(application.CurrentStage);
             var targetIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(targetStage);

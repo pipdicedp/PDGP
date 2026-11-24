@@ -1,0 +1,96 @@
+@model TradeLicence.Models.Drugs.DrugLicenceDetailsViewModel
+@using TradeLicence.Models.Drugs
+@{
+    var app = Model.Application;
+    string Dash(string? v) => string.IsNullOrWhiteSpace(v) ? "-" : v;
+    var storage = DrugLicenceConfig.StorageOptions.Where(o => app.GetStorage(o.Value)).Select(o => o.Label).ToList();
+    // The officer controller serves documents from OfficerDocument, the citizen one from ViewDocument.
+    var docAction = ViewContext.RouteData.Values["controller"]?.ToString()?.EndsWith("Officer") == true ? "OfficerDocument" : "ViewDocument";
+    void Field(string label, string? value)
+    {
+        <div class="drug-detail-field"><span class="drug-detail-label">@label</span><span class="drug-detail-value">@Dash(value)</span></div>
+    }
+}
+
+<fieldset class="tl-section">
+    <legend>Firm Details</legend>
+    <div class="drug-detail-grid">
+        @{ Field("Application For", app.IsRenewal ? "Renewal" : "Registration"); }
+        @{ Field("Applicant Name", app.ApplicantName); }
+        @{ Field("Firm Name", app.FirmName); }
+        @{ Field("Manager / Incharge", app.ManagerInchargeName); }
+        @{ Field("Constitution Type", app.ConstitutionType); }
+        @{ Field("Address of the Firm", app.AddressOfTheFirm); }
+        @{ Field("Landmark", app.Landmark); }
+        @{ Field("District", app.Districts); }
+        @{ Field("Postal / Zip Code", app.PostalZipCode); }
+        @{ Field("E-Mail", app.EMail); }
+        @{ Field("Mobile Number", app.MobileNumber); }
+        @{ Field("Type of Ceilings", app.TypeOfCeilings); }
+    </div>
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend>Ownership Details</legend>
+    <div class="drug-detail-grid">
+        @{ Field("Proprietor / Partner / Director", app.NameOfProprietorPartnerDirector); }
+        @{ Field("Din No. / Sin No. / Registration", app.DinNoSinNoRegistrationDetails); }
+        @{ Field("PAN Card No.", app.PanCardNo); }
+    </div>
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend>Pharmacist / Competent Details</legend>
+    @if (Model.Pharmacists.Any())
+    {
+        <div class="drug-table-wrap">
+            <table class="drug-table">
+                <thead><tr><th>#</th><th>Name</th><th>Sex</th><th>Qualification</th><th>Experience</th><th>Council No.</th><th>Validity</th><th>DOB</th><th>Year of Passing</th></tr></thead>
+                <tbody>
+                @foreach (var (p, i) in Model.Pharmacists.Select((p, i) => (p, i)))
+                {
+                    <tr>
+                        <td>@(i + 1)</td><td>@p.Name</td><td>@Dash(p.Sex)</td><td>@Dash(p.Qualification)</td><td>@Dash(p.Experience)</td>
+                        <td>@Dash(p.CouncilNo)</td><td>@(p.ValidityDate?.ToString("dd-MM-yyyy") ?? "-")</td>
+                        <td>@(p.DateOfBirth?.ToString("dd-MM-yyyy") ?? "-")</td><td>@(p.YearOfPassing?.ToString() ?? "-")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="tl-note">No pharmacist details on file.</p>
+    }
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend>Licence Details</legend>
+    <div class="drug-detail-grid">
+        @{ Field("Schedule of Drugs", app.ScheduleOfDrugsLabel); }
+        @{ Field("Storage Details", storage.Count == 0 ? null : string.Join(", ", storage)); }
+        @{ Field("Cold Storage", app.ColdStorage ? "Yes" : "No"); }
+        @{ Field("24 Hours", app.TwentyFourHours ? "Yes" : "No"); }
+    </div>
+</fieldset>
+
+<fieldset class="tl-section">
+    <legend>Documents Submitted</legend>
+    @foreach (var def in DrugLicenceConfig.Documents)
+    {
+        var doc = Model.Documents.FirstOrDefault(d => d.DocumentType == def.Key);
+        if (doc == null && !def.AlwaysRequired) { continue; }
+        <div class="drug-doc-row">
+            <div>
+                <span class="drug-detail-label">@def.Label</span>
+                <span class="drug-detail-value">@(doc?.FileName ?? "Not uploaded")</span>
+            </div>
+            @if (doc != null)
+            {
+                <a class="btn btn-sm btn-secondary" target="_blank" rel="noopener"
+                   href="@Url.Action(docAction, new { docId = doc.DocumentId })"><i class="fas fa-eye"></i> View</a>
+            }
+        </div>
+    }
+</fieldset>

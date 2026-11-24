@@ -1,128 +1,247 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
+
 using Microsoft.EntityFrameworkCore;
+
 using TradeLicence.Data;
+
 using TradeLicence.Interfaces;
+
 using TradeLicence.Repositories;
+
 using TradeLicence.Services;
+
 using WaterConnection.Data;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+
 // Add services to the container.
+
 builder.Services.AddControllersWithViews();
 
+
+
 // Documents are now stored as bytes directly in the DB (Application_Documents.File_Path
+
 // is varbinary(max)), so raise the default request body limit to comfortably fit
+
 // scanned ID/ownership documents. Adjust if you expect larger files.
+
 builder.Services.Configure<Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions>(options =>
+
 {
+
     options.Limits.MaxRequestBodySize = 26_214_400; // 25 MB
+
 });
+
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+
 {
+
     // 50 MB: the Common Application Form's documents step posts up to 9 files of 5 MB each in
+
     // one request, and the antiforgery check reads the form before any per-action limit applies.
+
     // The request-body cap above stays at 25 MB; the CAF SaveStep action raises it for itself.
+
     options.MultipartBodyLengthLimit = 52_428_800;
+
 });
+
+
 
 // Application services and repositories
+
 builder.Services.AddScoped<ITradeLicenceRepository, TradeLicenceRepository>();
+
 builder.Services.AddScoped<ITradeLicenceService, TradeLicenceService>();
+
 builder.Services.AddScoped<IFileEncryptionService, FileEncryptionService>();
+
 builder.Services.AddScoped<TradeLicence.Interfaces.ICafFormService, TradeLicence.Services.CafFormService>();
+
 builder.Services.AddScoped<TradeLicence.Repositories.ApplicationRepository>();
+
 builder.Services.AddScoped<ICafDepartmentProvider, StaticCafDepartmentProvider>();
-// CAF certificate template - swap this one line when the final certificate format is ready
-builder.Services.AddSingleton<TradeLicence.Interfaces.ICafCertificateGenerator, TradeLicence.Services.TradeLicenceStyleCafCertificateGenerator>();
+
+
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddDbContext<WaterApplicationDbContext>(options =>
+
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddDbContext<ElectricityApplicationDbContext>(options =>
+
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-// Registration of Firms + Registration / Renewal of Society
-builder.Services.AddDbContext<FirmRegistrationDbContext>(options =>
+
+// Restricted Drug Licence services (Form 20A / Form 21A)
+
+builder.Services.AddDbContext<DrugsApplicationDbContext>(options =>
+
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddDbContext<SocietyRegistrationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
 
 builder.Services.AddDistributedMemoryCache();   // required by session
+
 builder.Services.AddSession(options =>
+
 {
+
     options.IdleTimeout = TimeSpan.FromMinutes(10);
+
     options.Cookie.HttpOnly = true;
+
     options.Cookie.IsEssential = true;
+
 });
 
+
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+
     .AddCookie(options =>
+
     {
+
         options.LoginPath = "/Account/Login";
+
         options.Cookie.HttpOnly = true;
+
         options.Cookie.SameSite = SameSiteMode.Strict;
+
         options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+
         options.SlidingExpiration = true;
+
     });
+
+
 
 builder.Services.AddScoped<CaptchaService>();
 
+
+
 // ---- Registration: PAN verification + mobile OTP ----
+
 builder.Services.AddScoped<OtpService>();
 
+
+
 if (builder.Configuration.GetValue<bool>("PanApi:UseMock", true))
+
     builder.Services.AddScoped<IPanVerificationService, MockPanVerificationService>();
+
 else
+
     builder.Services.AddHttpClient<IPanVerificationService, ApiPanVerificationService>();
 
+
+
 if (builder.Configuration.GetValue<bool>("Sms:UseConsole", true))
+
     builder.Services.AddScoped<ISmsSender, ConsoleSmsSender>();
+
 else
+
     builder.Services.AddHttpClient<ISmsSender, HttpSmsSender>();
 
+
+
 // ---- Registration: EMAIL OTP ----
+
 // Always send real emails through SMTP
+
 builder.Services.AddScoped<EmailOtpService>();
+
 var emailProvider = builder.Configuration["Email:Provider"] ?? "Brevo";
+
 if (emailProvider.Equals("Console", StringComparison.OrdinalIgnoreCase))
+
     builder.Services.AddScoped<IOtpEmailSender, ConsoleOtpEmailSender>();
+
 else if (emailProvider.Equals("Smtp", StringComparison.OrdinalIgnoreCase))
+
     builder.Services.AddScoped<IOtpEmailSender, SmtpOtpEmailSender>();
+
 else
+
     builder.Services.AddHttpClient<IOtpEmailSender, BrevoApiOtpEmailSender>();
+
+
 
 var app = builder.Build();
 
+
+
 // Configure the HTTP request pipeline.
+
 if (app.Environment.IsDevelopment())
+
 {
+
     app.UseDeveloperExceptionPage();
-}
-else
-{
-    app.UseExceptionHandler("/Error/Index");
-    app.UseHsts();
+
 }
 
+else
+
+{
+
+    app.UseExceptionHandler("/Error/Index");
+
+    app.UseHsts();
+
+}
+
+
+
 // Catches non-exception failures too — 404 Not Found, 403 Forbidden, etc.
+
 app.UseStatusCodePagesWithReExecute("/Error/StatusCode/{0}");
+
+
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
+
+
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
+
 app.UseRouting();
 
+
+
 app.UseSession();
+
 app.UseAuthentication();
+
 app.UseAuthorization();
+
+
 
 app.MapStaticAssets();
 
+
+
 app.MapControllerRoute(
+
     name: "default",
+
     pattern: "{controller=PYGuidancehome}/{action=Index}/{id?}")
+
     .WithStaticAssets();
+
+
 
 app.Run();

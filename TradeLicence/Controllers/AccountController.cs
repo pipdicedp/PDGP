@@ -123,7 +123,7 @@ namespace TradeLicence.Controllers
             if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
                 return Redirect(model.ReturnUrl);
 
-            return RedirectToAction("Status", "Dashboard");
+            return RedirectToAction("Index", "Dashboard");
         }
         [HttpPost]
         [ValidateAntiForgeryToken]

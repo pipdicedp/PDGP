@@ -255,13 +255,7 @@
                                 <div class="tl-history-body">
                                     <div class="tl-history-action">@doc.Stage</div>
                                     <div class="tl-history-meta">
-                                        <button type="button" class="btn btn-sm btn-secondary tl-stage-preview-btn"
-                                                data-preview-url="@Url.Action("PreviewStageDocument", new { docId = doc.WorkflowSupportingDocumentId })"
-                                                data-content-type="@doc.ContentType"
-                                                data-file-name="@doc.FileName">
-                                            <i class="fas fa-eye"></i> @doc.FileName
-                                        </button>
-                                        <a href="@Url.Action("DownloadStageDocument", new { docId = doc.WorkflowSupportingDocumentId })" title="Download"><i class="fas fa-download"></i></a><br />
+                                        <a href="@Url.Action("DownloadStageDocument", new { docId = doc.WorkflowSupportingDocumentId })" target="_blank">@doc.FileName</a><br />
                                         Uploaded by @uploaderName on @doc.UploadedDate.ToLocalTime().ToString("dd-MM-yyyy hh:mm tt")
                                     </div>
                                 </div>

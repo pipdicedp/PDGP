@@ -1,0 +1,42 @@
+/* Restricted Drug Licence (Form 20A / 21A) - uses TradeLicence's tl-section / tl-grid-2 / form-group; only extras live here. */
+.drug-wrapper { max-width: 1100px; margin: 0 auto; }
+.drug-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 14px; }
+.drug-header h2 { color: #1a3a52; font-size: 1.35rem; margin: 0 0 4px; }
+.drug-header p { color: #6b7385; margin: 0; }
+.drug-link { color: #1a3a52; font-weight: 600; text-decoration: underline; white-space: nowrap; }
+.drug-appno { color: #1a3a52; margin-bottom: 10px; }
+.drug-summary { display: none; }
+.drug-summary.validation-summary-errors { display: block; }
+.drug-summary ul { margin: 0; padding-left: 18px; }
+.req { color: #B3261E; }
+
+.drug-radio-row { display: flex; justify-content: center; gap: 28px; margin: 6px 0 14px; font-weight: 700; }
+.drug-radio-row.drug-radio-left { justify-content: flex-start; }
+.drug-radio-row label, .drug-radio-col label { font-weight: 700; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.drug-radio-col { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+
+/* the separate "Pharmacist / Competent Details" box (light-blue border, like the portal's sample) */
+.drug-pharmacist-box { border: 2px solid #a9d6ea; border-radius: 4px; padding: 14px 18px 18px; background: #fbfdfe; }
+.drug-pharmacist-box legend { color: #1a3a52; }
+.drug-add-btn { font-weight: 700; margin-top: 4px; }
+.drug-table-wrap { margin-top: 16px; overflow-x: auto; }
+.drug-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.drug-table th { background: #1a3a52; color: #fff; text-align: left; padding: 8px 10px; white-space: nowrap; }
+.drug-table td { padding: 7px 10px; border-bottom: 1px solid #e3e8ee; vertical-align: middle; }
+.drug-row-actions { white-space: nowrap; }
+
+.drug-uploads { margin-top: 18px; }
+.drug-upload { margin-bottom: 16px; }
+.drug-upload > label { font-weight: 700; display: block; margin-bottom: 4px; }
+.drug-uploaded { font-size: 0.88rem; margin-top: 4px; }
+.drug-uploaded i { color: #B3261E; margin-right: 4px; }
+.drug-file-error { display: block; font-size: 0.85rem; }
+
+.drug-actions { display: flex; gap: 12px; justify-content: center; margin: 22px 0 10px; }
+
+/* details page */
+.drug-detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px 26px; }
+.drug-detail-field { padding-bottom: 8px; border-bottom: 1px solid #eee; }
+.drug-detail-label { display: block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #8a92a3; margin-bottom: 2px; }
+.drug-detail-value { display: block; font-size: 0.92rem; color: #1a3a52; font-weight: 600; word-break: break-word; }
+.drug-doc-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid #eee; }

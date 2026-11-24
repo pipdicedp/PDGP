@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using TradeLicence.Helpers;
 using TradeLicence.Interfaces;
 
 namespace TradeLicence.Services
@@ -12,11 +13,13 @@ namespace TradeLicence.Services
     {
         private static readonly List<string> Departments = new()
         {
-            "Town & Country Planning",
+            CafWorkflowConfig.TownAndCountryPlanningDepartment,
             "Factory & Boiler",
             "Electricity",
             "Science & Technology",
-            "Water"
+            "Water",
+            CafWorkflowConfig.PlanningAuthorityDepartment,
+            CafWorkflowConfig.RevenueDepartment
         };
 
         public Task<List<string>> GetForwardableDepartmentsAsync() => Task.FromResult(new List<string>(Departments));

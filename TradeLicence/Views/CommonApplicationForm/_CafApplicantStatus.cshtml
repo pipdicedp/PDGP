@@ -28,59 +28,6 @@
             <p class="caf-st-remarks"><strong>Remarks from the Industry Department:</strong> @Model.Remarks</p>
         }
 
-        @if (Model.ReviewStatus == "Approved")
-        {
-            <div class="caf-st-cert">
-                @if (Model.CertificateAvailable)
-                {
-                    <p class="caf-st-cert-text">
-                        Your certificate is ready. It can be downloaded <strong>only once</strong> - please save the file after downloading.
-                    </p>
-                    <a id="cafCertBtn" class="btn btn-success" href="@Url.Action("DownloadCertificate", "CommonApplicationForm")">
-                        <i class="fas fa-download"></i> Download Certificate
-                    </a>
-                }
-                else if (Model.CertificateDownloaded)
-                {
-                    <p class="caf-st-cert-text caf-st-cert-done">
-                        <i class="fas fa-circle-check"></i> Certificate downloaded@(Model.CertificateDownloadedDate.HasValue ? " on " + Model.CertificateDownloadedDate.Value.ToString("dd-MM-yyyy hh:mm tt") : "").
-                        It cannot be downloaded again.
-                    </p>
-                }
-                @if (!string.IsNullOrEmpty(Model.CertificateNumber))
-                {
-                    <span class="caf-st-cert-no">Certificate No: @Model.CertificateNumber</span>
-                }
-            </div>
-
-            <script>
-                        (function () {
-                            var btn = document.getElementById('cafCertBtn');
-                            if (!btn) return;
-                            btn.addEventListener('click', function (e) {
-                                e.preventDefault();
-                                var url = btn.getAttribute('href');
-                                var go = function () {
-                                    window.location.href = url;                       // starts the file download
-                                    setTimeout(function () { window.location.reload(); }, 2500); // button is gone afterwards
-                                };
-                                if (window.Swal) {
-                                    Swal.fire({
-                                        icon: 'warning',
-                                        title: 'Download certificate?',
-                                        text: 'The certificate can be downloaded only once. Continue?',
-                                        showCancelButton: true,
-                                        confirmButtonText: 'Yes, download',
-                                        confirmButtonColor: '#1a3a52'
-                                    }).then(function (r) { if (r.isConfirmed) go(); });
-                                } else if (confirm('The certificate can be downloaded only once. Continue?')) {
-                                    go();
-                                }
-                            });
-                        })();
-            </script>
-        }
-
         @if (!Model.Returned)
         {
             <ol class="caf-st-steps">

@@ -1,0 +1,17 @@
+/*
+  The original page loaded Sora & Poppins as self-hosted Next.js font files
+  (next/font). Those .woff2 files are not part of a "Save Page As" export,
+  so this project loads the same two families from Google Fonts instead via
+  the <link> tag in _Layout.cshtml, and only re-declares the CSS variables
+  and utility classes the rest of the stylesheet depends on.
+*/
+:root {
+  --font-sora: "Sora", "Sora Fallback", sans-serif;
+  --font-poppins: "Poppins", "Poppins Fallback", sans-serif;
+}
+
+.sora_fbe13bf1-module__L_RVWW__className { font-family: Sora, sans-serif; font-style: normal; }
+.sora_fbe13bf1-module__L_RVWW__variable { --font-sora: "Sora", sans-serif; }
+
+.poppins_fb95fc0b-module__j3Zrza__className { font-family: Poppins, sans-serif; font-style: normal; }
+.poppins_fb95fc0b-module__j3Zrza__variable { --font-poppins: "Poppins", sans-serif; }

@@ -33,16 +33,5 @@ namespace TradeLicence.Models
         /// <summary>Remarks given with the latest Approve / Reject / Return — shown to the applicant.</summary>
         [StringLength(1000)]
         public string? Remarks { get; set; }
-
-        // ---------------- Certificate (set when the Industry officer approves) ----------------
-
-        /// <summary>Allocated at approval. Null = no certificate (not approved, or approved before this feature).</summary>
-        [StringLength(50)]
-        public string? CertificateNumber { get; set; }
-        public DateTime? CertificateIssuedDate { get; set; }
-
-        /// <summary>The applicant may download the certificate ONCE; this flips on that download.</summary>
-        public bool IsCertificateDownloaded { get; set; }
-        public DateTime? CertificateDownloadedDate { get; set; }
     }
 }

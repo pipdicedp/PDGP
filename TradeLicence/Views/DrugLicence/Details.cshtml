@@ -1,0 +1,78 @@
+@model TradeLicence.Models.Drugs.DrugLicenceDetailsViewModel
+@using TradeLicence.Models.Drugs
+@{
+    ViewData["Title"] = "Application Details";
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    var app = Model.Application;
+    var form = Model.Form;
+    var stages = TradeLicence.Models.OfficerWorkflow.Stages;
+    var stageIndex = TradeLicence.Models.OfficerWorkflow.StageIndex(app.CurrentStage);
+    var finished = app.Status == "Approved";
+    string Dash(string? v) => string.IsNullOrWhiteSpace(v) ? "-" : v;
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/tl_css/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/drugs_css/drug_licence.css" asp-append-version="true" />
+}
+<div class="dashboard-body drug-wrapper">
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success">@TempData["Message"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="drug-header">
+        <div>
+            <h2>@form.Title</h2>
+            <p>
+                Application No.: <strong>@Dash(app.ApplicationNumber)</strong> &bull; Status:
+                <strong>@(app.Status == "ReturnedToApplicant" ? "Returned for Correction" : app.Status == "Submitted" ? $"In Progress — {app.CurrentStage}" : app.Status)</strong>
+            </p>
+        </div>
+        <a class="drug-link" asp-controller="@form.Controller" asp-action="MyApplications">&laquo; My Applications</a>
+    </div>
+
+    @if (app.Status == "Submitted" || app.Status == "Approved")
+    {
+        <div class="tl-stepper-bar">
+            <div class="tl-stepper">
+                @for (int i = 0; i < stages.Length; i++)
+                {
+                    var done = finished || i < stageIndex;
+                    var cls = done ? "tl-step-done" : i == stageIndex ? "tl-step-current" : "tl-step-upcoming";
+                    <div class="tl-step @cls">
+                        <div class="tl-step-circle">@if (done) {
+                            <i class="fa-solid fa-check"></i>
+                        } else
+                        {
+
+                            @(i + 1)
+                        }
+                    </div>
+                    <div class="tl-step-label">@stages[i]</div>
+                </div>
+                if (i < stages.Length - 1)
+                {
+
+                    <div class="tl-step-connector @(done ? "tl-step-connector-done" : "")"></div>
+                }
+            }
+        </div>
+    </div>
+}
+
+@if (app.Status == "Approved")
+{
+    <p><a class="btn btn-primary" asp-controller="@form.Controller" asp-action="DownloadApproval" asp-route-id="@app.ApplicationId"><i class="fa-solid fa-download"></i> Download Approval</a></p>
+}
+@if (app.Status == "Rejected" && !string.IsNullOrWhiteSpace(app.OfficerRemarks))
+{
+    <div class="alert alert-danger"><strong>Rejected.</strong> Officer's note: @app.OfficerRemarks</div>
+}
+
+<partial name="~/Views/DrugLicence/_DrugApplicationSummary.cshtml" model="Model" />
+</div>

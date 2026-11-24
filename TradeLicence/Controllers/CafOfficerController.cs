@@ -413,13 +413,6 @@ namespace TradeLicence.Controllers
             }
 
             review.Status = decision == "approve" ? "Approved" : decision == "reject" ? "Rejected" : "Returned";
-            if (decision == "approve" && string.IsNullOrEmpty(review.CertificateNumber))
-            {
-                // The certificate exists from this moment; its PDF is rendered when the applicant
-                // downloads it (ICafCertificateGenerator), so the template can change later.
-                review.CertificateNumber = $"CAF/{DateTime.Now:yyyy}/{id:D6}";
-                review.CertificateIssuedDate = now;
-            }
             review.LastActionDate = now;
             review.LastActionByOfficerId = officer.OfficerId;
             review.Remarks = remarks;

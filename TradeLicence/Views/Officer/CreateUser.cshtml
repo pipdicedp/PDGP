@@ -71,7 +71,14 @@
 
                         <div class="form-group">
                             <label asp-for="Department">Department</label>
-                            <input asp-for="Department" class="form-control" placeholder="e.g. Industries and Commerce" />
+                            <input asp-for="Department" class="form-control" placeholder="e.g. Industries and Commerce" list="cafDepartmentList" autocomplete="off" />
+                            <datalist id="cafDepartmentList">
+                                @foreach (var d in (IEnumerable<string>)(ViewBag.CafDepartments ?? Array.Empty<string>()))
+                                {
+                                    <option value="@d"></option>
+                                }
+                            </datalist>
+                            <small class="text-muted">For officers who receive forwarded CAFs, pick the department name from the list &mdash; it must match exactly.</small>
                             <span asp-validation-for="Department" class="text-danger"></span>
                         </div>
 
